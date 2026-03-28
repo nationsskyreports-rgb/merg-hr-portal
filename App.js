@@ -177,7 +177,7 @@ export default function App() {
 
   const ActionBtn = ({ icon, label, color, lightColor, onPress, disabled, loading: btnLoading }) => (
     <TouchableOpacity onPress={onPress} disabled={disabled || btnLoading} activeOpacity={0.8}
-      style={{ backgroundColor: disabled ? (darkMode ? '#1E293B' : '#F3F4F6'), borderRadius: 14, padding: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: disabled ? border : color + '40', flex: 1 }}>
+     style={{ backgroundColor: disabled ? (darkMode ? '#1E293B' : '#F3F4F6') : 'transparent', borderRadius: 14, padding: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: disabled ? border : color + '40', flex: 1 }}>
       {btnLoading
         ? <ActivityIndicator color={color} size="small" />
         : <>
