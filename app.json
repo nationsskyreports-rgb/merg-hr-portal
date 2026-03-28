@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "merg-hr-portal",
-    "slug": "snack-e7a2c642-9b0e-4042-82de-955ea889c8a5",
+    "name": "Merg HR",
+    "slug": "merg-hr-portal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,21 +10,30 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1E3A8A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.merge.hrportal"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1E3A8A"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.merge.hrportal"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Merg HR",
+      "shortName": "Merg HR",
+      "description": "Merg HR Employee Portal",
+      "themeColor": "#1E3A8A",
+      "backgroundColor": "#1E3A8A",
+      "display": "standalone",
+      "orientation": "portrait"
     },
-    "description": "Internal Portal"
+    "description": "Merg HR Employee Portal"
   }
 }
