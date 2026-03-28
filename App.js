@@ -1,10 +1,9 @@
-import { Text, View, TextInput, Alert, ActivityIndicator, Switch, TouchableOpacity, Animated, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { Text, View, TextInput, Alert, ActivityIndicator, TouchableOpacity, Animated, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
 import * as Location from 'expo-location';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Imports of Screens
 import HistoryScreen from "./screens/HistoryScreen";
 import MyLocationScreen from "./screens/MyLocationScreen";
 import LeaveRequestScreen from "./screens/LeaveRequestScreen";
@@ -15,26 +14,28 @@ import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 import Logo from './components/Logo';
 import { getStyles } from "./styles";
 
-// ─── Constants ─────────────────────────────────────────────
 const BRAND_NAVY   = '#0F172A';
 const BRAND_CARD   = '#1E293B';
 const BRAND_BLUE   = '#1D4ED8';
 const BRAND_LIGHT  = '#60A5FA';
 const BRAND_GREEN  = '#3AAA35';
 const BRAND_INDIGO = '#4F46E5';
-const { width, height } = Dimensions.get('window');
+
+// ألوان الوضع الفاتح
+const LIGHT_BG     = '#FFFFFF';
+const LIGHT_CARD   = '#FFFFFF';
+const LIGHT_INPUT  = '#F3F4F6';
 
 const ScreenWrapper = ({ children, darkMode }) => {
   const insets = useSafeAreaInsets();
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: darkMode ? BRAND_NAVY : '#F8FAFF' }}>
+    <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: darkMode ? '#0F172A' : '#F8FAFF' }}>
       {children}
     </View>
   );
 };
 
 export default function App() {
-  // ─── State Management ─────────────────────────────────────
   const [screen, setScreen] = useState("login");
   const [darkMode, setDarkMode] = useState(false);
   const styles = getStyles(darkMode);
@@ -46,7 +47,6 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [employee, setEmployee] = useState(null);
   const [employeeRole, setEmployeeRole] = useState(null);
-  
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [isClockedIn, setIsClockedIn] = useState(false);
@@ -55,7 +55,6 @@ export default function App() {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // ─── Animations ───────────────────────────────────────────
   const startAnimation = () => {
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 600, useNativeDriver: true }),
@@ -63,7 +62,6 @@ export default function App() {
     ]).start();
   };
 
-  // ─── Effects ──────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -80,7 +78,6 @@ export default function App() {
   useEffect(() => { if (session?.user) getEmployeeProfile(); }, [session]);
   useEffect(() => { if (employee?.id) { fetchUnreadCount(); checkTodayStatus(); fetchEmployeeRole(); } }, [employee]);
 
-  // ─── Data Fetching Functions (Logic Intact) ───────────────
   const getEmployeeProfile = async () => {
     const { data } = await supabase.from('employees').select('*').eq('email', session.user.email);
     if (data?.length > 0) setEmployee(data[0]);
@@ -104,7 +101,6 @@ export default function App() {
     setIsClockedIn(!!(data && data.check_in_time && !data.check_out_time));
   };
 
-  // ─── Location & Attendance Logic (Logic Intact) ───────────
   const getOfficeLocation = async () => {
     const { data } = await supabase.from("office_location").select("*").eq("is_active", true).single();
     return data;
@@ -151,10 +147,8 @@ export default function App() {
     const now = new Date();
     const today = now.toISOString().split("T")[0];
     const currentTime = now.toTimeString().split(" ")[0];
-    
     const { data: existing } = await supabase.from("attendance_records").select("id").eq("employee_id", employee.id).eq("attendance_date", today).maybeSingle();
     if (existing) { Alert.alert("⚠️ Already Checked In", "You already checked in today."); setCheckingIn(false); return; }
-    
     const { error } = await supabase.from("attendance_records").insert([{ employee_id: employee.id, attendance_date: today, check_in_time: currentTime, office_id: result.office.id }]);
     if (error) { Alert.alert("Error", error.message); }
     else { Alert.alert("✅ Checked In!", `Time: ${currentTime.slice(0, 5)}\nDistance: ${result.distance.toFixed(0)}m`); setIsClockedIn(true); }
@@ -167,40 +161,28 @@ export default function App() {
     const now = new Date();
     const today = now.toISOString().split("T")[0];
     const currentTime = now.toTimeString().split(" ")[0];
-    
     const { data: todayRecord } = await supabase.from("attendance_records").select("*").eq("employee_id", employee.id).eq("attendance_date", today).maybeSingle();
     if (!todayRecord) { Alert.alert("⚠️ Not Checked In", "You haven't checked in today."); setCheckingOut(false); return; }
     if (todayRecord.check_out_time) { Alert.alert("⚠️ Already Checked Out", "You already checked out today."); setCheckingOut(false); return; }
-    
     const { error } = await supabase.from("attendance_records").update({ check_out_time: currentTime }).eq("id", todayRecord.id);
     if (error) { Alert.alert("Error", error.message); }
     else { Alert.alert("👋 Checked Out!", `Time: ${currentTime.slice(0, 5)}`); setIsClockedIn(false); }
     setCheckingOut(false);
   };
 
-  const handleLogin = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) Alert.alert("Login Error", error.message);
-    setLoading(false);
-  };
-
-  // ─── Permissions Logic ────────────────────────────────────
   const adminRoles = ['a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002'];
   const isHROrAdmin = employeeRole === 'admin' || employeeRole === 'manager' || adminRoles.includes(employee?.role_id);
 
-  // ─── Theme Variables ───────────────────────────────────────
-  const bg    = darkMode ? BRAND_NAVY : '#FFFFFF';
-  const card  = darkMode ? BRAND_CARD : '#FFFFFF';
+  const bg    = darkMode ? '#0F172A' : '#F8FAFF';
+  const card  = darkMode ? '#1E293B' : '#FFFFFF';
   const text  = darkMode ? '#F1F5F9' : '#111827';
   const sub   = darkMode ? '#94A3B8' : '#6B7280';
   const border = darkMode ? '#334155' : '#E5E7EB';
-  const inputLine = darkMode ? '#4B5563' : '#D1D5DB';
+  const inputBg = darkMode ? '#0F172A' : '#F9FAFB';
 
-  // ─── Reusable Component: Action Button ─────────────────────
-  const ActionBtn = ({ icon, label, color, onPress, disabled, loading: btnLoading }) => (
+  const ActionBtn = ({ icon, label, color, lightColor, onPress, disabled, loading: btnLoading }) => (
     <TouchableOpacity onPress={onPress} disabled={disabled || btnLoading} activeOpacity={0.8}
-     style={{ backgroundColor: disabled ? (darkMode ? BRAND_CARD : '#F3F4F6') : 'transparent', borderRadius: 14, padding: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: disabled ? border : color + '40', flex: 1 }}>
+     style={{ backgroundColor: disabled ? (darkMode ? '#1E293B' : '#F3F4F6') : 'transparent', borderRadius: 14, padding: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: disabled ? border : color + '40', flex: 1 }}>
       {btnLoading
         ? <ActivityIndicator color={color} size="small" />
         : <>
@@ -211,10 +193,7 @@ export default function App() {
     </TouchableOpacity>
   );
 
-  // ─── Render Main Function ──────────────────────────────────
   const renderScreen = () => {
-    
-    // Other Screens Wrappers
     if (screen === "history") return <ScreenWrapper darkMode={darkMode}><HistoryScreen employee={employee} goBack={() => setScreen("home")} darkMode={darkMode} /></ScreenWrapper>;
     if (screen === "map") return <ScreenWrapper darkMode={darkMode}><MyLocationScreen goBack={() => setScreen("home")} darkMode={darkMode} /></ScreenWrapper>;
     if (screen === "leave") return <ScreenWrapper darkMode={darkMode}><LeaveRequestScreen employee={employee} goBack={() => setScreen("home")} darkMode={darkMode} /></ScreenWrapper>;
@@ -227,111 +206,90 @@ export default function App() {
     if (screen === "hr_dashboard") return <HRDashboardScreen goBack={() => setScreen("home")} session={session} />;
     if (screen === "change_password") return <ChangePasswordScreen goBack={() => setScreen("home")} darkMode={darkMode} />;
 
-    // ── LOGIN SCREEN (New UI) ──────────────────────────────────────────────────
+    // ── LOGIN ──────────────────────────────────────────────────
     if (screen === "login") {
       return (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: bg }}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: LIGHT_BG }}>
           
-          {/* Background Elements */}
-          <View style={StyleSheet.absoluteFillObject}>
-            {/* Watermark Logo in Center */}
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', opacity: darkMode ? 0.03 : 0.04 }}>
-               <View style={{ width: 300, height: 300, alignItems: 'center', justifyContent: 'center' }}>
-                 <Logo darkMode={!darkMode} /> 
-                 <Text style={{ fontSize: 50, fontWeight: '900', color: '#000', marginTop: 20 }}>MERGE</Text>
-               </View>
-            </View>
+          {/* الخلفية وعلامة مائية للوجو */}
+          <View style={loginStyles.backgroundContainer}>
+             {/* دائرة زرقاء للتزيين */}
+             <View style={loginStyles.topCircle} />
+             
+             {/* الوجو كخلفية شفافة */}
+             <View style={loginStyles.watermarkContainer}>
+                <Logo darkMode={false} /> 
+                <Text style={loginStyles.watermarkText}>MERGE</Text>
+             </View>
           </View>
 
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} bounces={false}>
-            <View style={{ paddingHorizontal: '8%', width: '100%', maxWidth: 400, alignSelf: 'center' }}>
-              
-              {/* Header */}
-              <View style={{ alignItems: 'center', marginBottom: 50 }}>
-                <View style={{ width: 70, height: 70, borderRadius: 20, backgroundColor: darkMode ? BRAND_CARD : '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: border }}>
-                   <Logo darkMode={darkMode} />
-                </View>
-                <Text style={{ fontSize: 28, fontWeight: '800', color: text, letterSpacing: 0.5 }}>Merge HR Portal</Text>
-                <Text style={{ fontSize: 13, color: sub, marginTop: 8, letterSpacing: 1 }}>EMPLOYEE MANAGEMENT</Text>
-              </View>
-
-              {/* Form */}
-              <View style={{ marginBottom: 30 }}>
-                
-                {/* Email Input - No Frame */}
-                <View style={{ marginBottom: 30 }}>
-                  <Text style={{ color: sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Email Address</Text>
-                  <View style={{ borderBottomWidth: 1, borderBottomColor: inputLine, paddingBottom: 8 }}>
-                    <TextInput
-                      style={{ fontSize: 16, color: text, paddingVertical: 0 }}
-                      placeholder="example@merge.com"
-                      placeholderTextColor={sub}
-                      onChangeText={setEmail}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      value={email}
-                    />
-                  </View>
-                </View>
-
-                {/* Password Input - No Frame */}
-                <View style={{ marginBottom: 45 }}>
-                  <Text style={{ color: sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Password</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: inputLine, paddingBottom: 8 }}>
-                    <TextInput
-                      style={{ flex: 1, fontSize: 16, color: text, paddingVertical: 0 }}
-                      placeholder="Enter your password"
-                      placeholderTextColor={sub}
-                      secureTextEntry={!showPassword}
-                      onChangeText={setPassword}
-                      value={password}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                      <Text style={{ fontSize: 18, color: sub }}>{showPassword ? '🙈' : '👁️'}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Login Button */}
-                <TouchableOpacity
-                  onPress={handleLogin}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                  style={{
-                    backgroundColor: BRAND_BLUE,
-                    height: 52,
-                    borderRadius: 14,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    shadowColor: BRAND_BLUE,
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: darkMode ? 0.3 : 0.2,
-                    shadowRadius: 16,
-                    elevation: 5,
-                  }}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Sign In</Text>}
-                </TouchableOpacity>
-
-              </View>
-
-              {/* Dark Mode Toggle */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                <Text style={{ color: sub, fontSize: 13 }}>Dark Mode</Text>
-                <Switch 
-                  value={darkMode} 
-                  onValueChange={setDarkMode} 
-                  trackColor={{ false: '#E5E7EB', true: BRAND_INDIGO }} 
-                  thumbColor="#fff" 
-                />
-              </View>
-
+          {/* المحتوى الرئيسي */}
+          <ScrollView contentContainerStyle={loginStyles.scrollContainer} bounces={false}>
+            
+            {/* الهيدر */}
+            <View style={loginStyles.headerContainer}>
+               <Text style={loginStyles.brandSubTitle}>Employee Management System</Text>
+               <Text style={loginStyles.brandTitle}>Merge HR Portal</Text>
             </View>
+
+            {/* كارت الدخول */}
+            <View style={loginStyles.card}>
+              <Text style={loginStyles.welcomeTitle}>Welcome back</Text>
+              <Text style={loginStyles.welcomeSub}>Sign in to your account</Text>
+
+              {/* Email Input */}
+              <View style={loginStyles.inputGroup}>
+                <Text style={loginStyles.inputLabel}>Email Address</Text>
+                <View style={loginStyles.inputWrapper}>
+                  <TextInput
+                    style={loginStyles.input}
+                    placeholder="example@merge.com"
+                    placeholderTextColor="#9CA3AF"
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+              </View>
+
+              {/* Password Input */}
+              <View style={loginStyles.inputGroup}>
+                <Text style={loginStyles.inputLabel}>Password</Text>
+                <View style={loginStyles.inputWrapper}>
+                  <TextInput
+                    style={loginStyles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showPassword}
+                    onChangeText={setPassword}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={loginStyles.eyeIcon}>
+                    <Text style={{ fontSize: 18 }}>{showPassword ? '🙈' : '👁️'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                onPress={async () => { setLoading(true); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) Alert.alert("Login Error", error.message); setLoading(false); }}
+                disabled={loading} 
+                activeOpacity={0.85}
+                style={loginStyles.loginButton}>
+                {loading ? <ActivityIndicator color="#fff" /> : (
+                  <Text style={loginStyles.loginButtonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* تم إزالة زر الدارك مود من هنا */}
+              
+            </View>
+            
           </ScrollView>
         </KeyboardAvoidingView>
       );
     }
 
-    // ── HOME SCREEN (Logic Intact, UI as previous) ──────────────────────────────────────────────────
+    // ── HOME ──────────────────────────────────────────────────
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
         <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
@@ -412,3 +370,131 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+// ─── STYLES FOR LOGIN SCREEN ───────────────────────────────────────────
+const loginStyles = StyleSheet.create({
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: LIGHT_BG,
+    overflow: 'hidden',
+  },
+  topCircle: {
+    position: 'absolute',
+    top: -100,
+    left: -100,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: 'rgba(29, 78, 216, 0.05)',
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: '25%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    opacity: 0.04,
+    transform: [{ scale: 2.5 }], 
+  },
+  watermarkText: {
+    fontSize: 40,
+    fontWeight: '900',
+    color: '#000',
+    marginTop: 10,
+    letterSpacing: 2,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  headerContainer: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  brandTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: BRAND_NAVY,
+    letterSpacing: 0.5,
+  },
+  brandSubTitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 6,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  card: {
+    backgroundColor: LIGHT_CARD,
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.1,
+    shadowRadius: 40,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: BRAND_NAVY,
+    marginBottom: 6,
+  },
+  welcomeSub: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 30,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    letterSpacing: 0.6,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_INPUT,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  input: {
+    flex: 1,
+    color: '#111827',
+    fontSize: 15,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  loginButton: {
+    backgroundColor: BRAND_BLUE,
+    borderRadius: 12,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    shadowColor: BRAND_BLUE,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+});
