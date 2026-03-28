@@ -1,4 +1,4 @@
-import { Text, View, TextInput, Alert, ActivityIndicator, Switch, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import { Text, View, TextInput, Alert, ActivityIndicator, Switch, TouchableOpacity, Animated, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
 import * as Location from 'expo-location';
@@ -20,6 +20,11 @@ const BRAND_BLUE   = '#1D4ED8';
 const BRAND_LIGHT  = '#60A5FA';
 const BRAND_GREEN  = '#3AAA35';
 const BRAND_INDIGO = '#4F46E5';
+
+// ألوان الوضع الفاتح الجديد
+const LIGHT_BG     = '#FFFFFF';
+const LIGHT_CARD   = '#FFFFFF';
+const LIGHT_INPUT  = '#F3F4F6';
 
 const ScreenWrapper = ({ children, darkMode }) => {
   const insets = useSafeAreaInsets();
@@ -204,74 +209,86 @@ export default function App() {
     // ── LOGIN ──────────────────────────────────────────────────
     if (screen === "login") {
       return (
-        <View style={{ flex: 1, backgroundColor: BRAND_NAVY, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-
-          {/* Logo Area */}
-          <View style={{ alignItems: 'center', marginBottom: 32 }}>
-            <View style={{ width: 72, height: 72, borderRadius: 20, backgroundColor: '#1E3A8A', borderWidth: 1, borderColor: '#2563EB', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Logo darkMode={true} />
-            </View>
-            <Text style={{ color: BRAND_LIGHT, fontSize: 11, letterSpacing: 3, textTransform: 'uppercase' }}>Merg HR Portal</Text>
-            <Text style={{ color: '#475569', fontSize: 11, marginTop: 4, letterSpacing: 1 }}>Employee Management System</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: LIGHT_BG }}>
+          
+          {/* الخلفية وعلامة مائية للوجو */}
+          <View style={loginStyles.backgroundContainer}>
+             {/* دائرة زرقاء للتزيين */}
+             <View style={loginStyles.topCircle} />
+             
+             {/* الوجو كخلفية شفافة */}
+             <View style={loginStyles.watermarkContainer}>
+                <Logo darkMode={false} /> 
+                <Text style={loginStyles.watermarkText}>MERGE</Text>
+             </View>
           </View>
 
-          {/* Card */}
-          <View style={{ backgroundColor: BRAND_CARD, borderWidth: 1, borderColor: '#334155', borderRadius: 20, padding: 28, width: '100%', maxWidth: 400 }}>
-            <Text style={{ color: '#F1F5F9', fontSize: 20, fontWeight: '500', marginBottom: 4 }}>Welcome back</Text>
-            <Text style={{ color: '#64748B', fontSize: 14, marginBottom: 28 }}>Sign in to your account</Text>
+          {/* المحتوى الرئيسي */}
+          <ScrollView contentContainerStyle={loginStyles.scrollContainer} bounces={false}>
+            
+            {/* الهيدر */}
+            <View style={loginStyles.headerContainer}>
+               <Text style={loginStyles.brandSubTitle}>Employee Management System</Text>
+               <Text style={loginStyles.brandTitle}>Merge HR Portal</Text>
+            </View>
 
-            {/* Email */}
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 11, color: '#94A3B8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Email</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', borderRadius: 12, paddingHorizontal: 14, height: 48 }}>
-                <Text style={{ fontSize: 16, marginRight: 10 }}>📧</Text>
-                <TextInput
-                  style={{ flex: 1, color: '#F1F5F9', fontSize: 14 }}
-                  placeholder="example@merge.com"
-                  placeholderTextColor="#475569"
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
+            {/* كارت الدخول */}
+            <View style={loginStyles.card}>
+              <Text style={loginStyles.welcomeTitle}>Welcome back</Text>
+              <Text style={loginStyles.welcomeSub}>Sign in to your account</Text>
+
+              {/* Email Input */}
+              <View style={loginStyles.inputGroup}>
+                <Text style={loginStyles.inputLabel}>Email Address</Text>
+                <View style={loginStyles.inputWrapper}>
+                  <TextInput
+                    style={loginStyles.input}
+                    placeholder="example@merge.com"
+                    placeholderTextColor="#9CA3AF"
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+              </View>
+
+              {/* Password Input */}
+              <View style={loginStyles.inputGroup}>
+                <Text style={loginStyles.inputLabel}>Password</Text>
+                <View style={loginStyles.inputWrapper}>
+                  <TextInput
+                    style={loginStyles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showPassword}
+                    onChangeText={setPassword}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={loginStyles.eyeIcon}>
+                    <Text style={{ fontSize: 18 }}>{showPassword ? '🙈' : '👁️'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                onPress={async () => { setLoading(true); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) Alert.alert("Login Error", error.message); setLoading(false); }}
+                disabled={loading} 
+                activeOpacity={0.85}
+                style={loginStyles.loginButton}>
+                {loading ? <ActivityIndicator color="#fff" /> : (
+                  <Text style={loginStyles.loginButtonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Footer Toggle */}
+              <View style={loginStyles.footerToggle}>
+                 <Text style={{ color: '#64748B', fontSize: 13 }}>Dark Mode</Text>
+                 <Switch value={darkMode} onValueChange={setDarkMode} trackColor={{ false: '#E5E7EB', true: BRAND_BLUE }} thumbColor="#fff" />
               </View>
             </View>
-
-            {/* Password */}
-            <View style={{ marginBottom: 28 }}>
-              <Text style={{ fontSize: 11, color: '#94A3B8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Password</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', borderRadius: 12, paddingHorizontal: 14, height: 48 }}>
-                <Text style={{ fontSize: 16, marginRight: 10 }}>🔒</Text>
-                <TextInput
-                  style={{ flex: 1, color: '#F1F5F9', fontSize: 14 }}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#475569"
-                  secureTextEntry={!showPassword}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={{ fontSize: 18 }}>{showPassword ? '🙈' : '👁️'}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              onPress={async () => { setLoading(true); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) Alert.alert("Login Error", error.message); setLoading(false); }}
-              disabled={loading} activeOpacity={0.85}
-              style={{ backgroundColor: BRAND_BLUE, borderRadius: 12, height: 50, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginBottom: 20 }}>
-              {loading ? <ActivityIndicator color="#fff" /> : <>
-                <Text style={{ color: '#fff', fontWeight: '500', fontSize: 15 }}>Sign in</Text>
-                <Text style={{ color: '#fff', fontSize: 16, marginLeft: 8 }}>→</Text>
-              </>}
-            </TouchableOpacity>
-
-            {/* Dark Mode */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Text style={{ color: '#475569', fontSize: 13 }}>🌙 Dark Mode</Text>
-              <Switch value={darkMode} onValueChange={setDarkMode} trackColor={{ false: '#334155', true: BRAND_BLUE }} thumbColor="#fff" />
-            </View>
-          </View>
-        </View>
+            
+          </ScrollView>
+        </KeyboardAvoidingView>
       );
     }
 
@@ -279,7 +296,6 @@ export default function App() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
         <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
-
           {/* Header */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <Logo darkMode={darkMode} />
@@ -357,3 +373,138 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+// ─── STYLES FOR LOGIN SCREEN ───────────────────────────────────────────
+const loginStyles = StyleSheet.create({
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: LIGHT_BG,
+    overflow: 'hidden',
+  },
+  topCircle: {
+    position: 'absolute',
+    top: -100,
+    left: -100,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: 'rgba(29, 78, 216, 0.05)', // لون أزرق شفاف خفيف جداً
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: '25%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    opacity: 0.04, // شفافية عالية جداً ليعمل كخلفية
+    transform: [{ scale: 2.5 }], 
+  },
+  watermarkText: {
+    fontSize: 40,
+    fontWeight: '900',
+    color: '#000',
+    marginTop: 10,
+    letterSpacing: 2,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  headerContainer: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  brandTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: BRAND_NAVY,
+    letterSpacing: 0.5,
+  },
+  brandSubTitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 6,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  card: {
+    backgroundColor: LIGHT_CARD,
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.1,
+    shadowRadius: 40,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: BRAND_NAVY,
+    marginBottom: 6,
+  },
+  welcomeSub: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 30,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    letterSpacing: 0.6,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_INPUT,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  input: {
+    flex: 1,
+    color: '#111827',
+    fontSize: 15,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  loginButton: {
+    backgroundColor: BRAND_BLUE,
+    borderRadius: 12,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    shadowColor: BRAND_BLUE,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  footerToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+  }
+});
