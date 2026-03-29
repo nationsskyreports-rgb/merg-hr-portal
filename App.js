@@ -1001,17 +1001,6 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
   const initials = employee ? (employee.first_name?.[0] || '') + (employee.last_name?.[0] || '') : '??';
   const dateStr = new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const= () => {
-    Alert.alert(
-      l.logout_title,
-      l.logout_confirm,
-      [
-        { text: l.no, style: 'cancel' },
-        { text: l.yes, style: 'destructive', onPress: onLogout },
-      ]
-    );
-  };
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: t.bg }}
