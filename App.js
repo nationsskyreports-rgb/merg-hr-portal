@@ -714,35 +714,65 @@ const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
   );
 };
 
-/* ═══════════════════ NOTIFICATIONS ═══════════════════ */
-const NotificationsScreenComp = ({dark,employee,goBack,onRead,lang,setLang}) => {
+/* ═══════════════════ LEAVE REQUEST ═══════════════════ */
+const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
   const t=useT_hook(dark),l=L[lang];
-  const [notifs,setNotifs]=useState([]),[loading,setLoading]=useState(true);
-  const fetchN=async()=>{if(!employee?.id)return;const{data}=await supabase.from('notifications').select('*').or(`employee_id.eq.${employee.id},employee_id.is.null`).order('created_at',{ascending:false}).limit(50);setNotifs(data||[]);setLoading(false);};
-  useEffect(()=>{fetchN();},[employee]);
-  const markRead=async id=>{await supabase.from('notifications').update({is_read:true}).eq('id',id);setNotifs(p=>p.map(n=>n.id===id?{...n,is_read:true}:n));onRead?.();};
-  const tc=type=>type==='leave'?t.purple:type==='attendance'?t.green:t.sky;
+  const types=['Annual','Sick','Emergency','Personal','Maternity','Unpaid'];
+  const [type,setType]=useState('Annual'),[startDate,setStartDate]=useState(''),[endDate,setEndDate]=useState(''),[reason,setReason]=useState('');
+  const [submitting,setSubmitting]=useState(false),[myLeaves,setMyLeaves]=useState([]),[tab,setTab]=useState('new');
+  useEffect(()=>{if(!employee?.id)return;(async()=>{const{data}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(20);setMyLeaves(data||[]);})();},[employee]);
+  const totalDays=useMemo(()=>{if(!startDate||!endDate)return 0;const s=new Date(startDate),e=new Date(endDate);if(e<s)return 0;return Math.ceil((e-s)/86400000)+1;},[startDate,endDate]);
+  const handleSubmit=async()=>{
+    if(!startDate||!endDate)return Alert.alert('',l.missing_dates);
+    if(totalDays<=0)return Alert.alert('',l.invalid_dates);
+    if(!reason.trim())return Alert.alert('',l.missing_reason);
+    setSubmitting(true);
+    const{error}=await supabase.from('leave_requests').insert([{employee_id:employee.id,leave_type:type,start_date:startDate,end_date:endDate,total_days:totalDays,reason:reason.trim(),status:'pending'}]);
+    setSubmitting(false);
+    if(error){Alert.alert('Error',error.message);return;}
+    Alert.alert(l.submitted,`${l.submitted_msg} ${totalDays} ${totalDays>1?l.days:l.day}.`,async()=>{setStartDate('');setEndDate('');setReason('');const{data}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(20);setMyLeaves(data||[]);setTab('history');});
+  };
+  const sc=s=>s==='approved'?t.green:s==='rejected'?t.red:t.amber;
   return (
     <ScreenWrap dark={dark}>
-      <ScreenHeader dark={dark} title={l.notifications} onBack={goBack} lang={lang} setLang={setLang}
-        right={notifs.filter(n=>!n.is_read).length>0?<TouchableOpacity onPress={async()=>{const ur=notifs.filter(n=>!n.is_read);for(const u of ur)await supabase.from('notifications').update({is_read:true}).eq('id',u.id);setNotifs(p=>p.map(n=>({...n,is_read:true})));onRead?.();}}
-          style={{paddingHorizontal:10,paddingVertical:6,borderRadius:8,backgroundColor:t.skyDim}}><Text style={{color:t.sky,fontSize:11,fontWeight:'700'}}>{l.mark_all_read}</Text></TouchableOpacity>:null} />
-      {loading?<View style={{flex:1,alignItems:'center',justifyContent:'center'}}><ActivityIndicator color={t.sky} /></View>
-        :notifs.length===0?<Empty dark={dark} icon="🔕" title={l.no_notifs} sub={l.no_notifs_sub} />
-        :<ScrollView style={{flex:1}} contentContainerStyle={{padding:16, alignItems: 'center'}} showsVerticalScrollIndicator={false}>
-          <View style={{width: '100%', maxWidth: 800}}>
-            {notifs.map((n,i)=>(<TouchableOpacity key={n.id||i} onPress={()=>!n.is_read&&markRead(n.id)} activeOpacity={0.7} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:n.is_read?t.border:t.skyBorder,flexDirection:'row'}}>
-              {!n.is_read&&<View style={{width:8,height:8,borderRadius:4,backgroundColor:t.sky,marginHorizontal:12,marginTop:6}} />}
-              <View style={{flex:1}}>
-                <View style={{flexDirection:'row',alignItems:'center',marginBottom:6,gap:8}}><Badge dark={dark} label={n.type||'INFO'} color={tc(n.type)} /><Text style={{color:t.sub,fontSize:11}}>{n.created_at?new Date(n.created_at).toLocaleDateString():''}</Text></View>
-                <Text style={{color:t.text,fontSize:14,fontWeight:'600',lineHeight:20,textAlign:lang==='ar'?'right':'left'}}>{n.title||n.message||'Notification'}</Text>
-                {n.message&&n.title&&<Text style={{color:t.sub,fontSize:13,marginTop:4,lineHeight:18,textAlign:lang==='ar'?'right':'left'}}>{n.message}</Text>}</View></TouchableOpacity>))}
+      <ScreenHeader dark={dark} title={l.leave_request} onBack={goBack} lang={lang} setLang={setLang} />
+      <View style={{alignItems: 'center', flex: 1}}>
+        <View style={{width: '100%', maxWidth: 800, flex: 1}}>
+          <View style={{flexDirection:'row',marginHorizontal:16,marginTop: 16, marginBottom:12,backgroundColor:t.surface,borderRadius:12,padding:4}}>
+            {[['new',l.new_request],['history',l.my_leaves]].map(([k,v])=>(<TouchableOpacity key={k} onPress={()=>setTab(k)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:tab===k?t.card:'transparent',shadowColor:tab===k?'#000':'transparent',shadowOffset:{width:0,height:2},shadowOpacity:0.08,shadowRadius:8,elevation:tab===k?2:0}}>
+              <Text style={{color:tab===k?t.sky:t.sub,fontWeight:'700',fontSize:13}}>{v}</Text></TouchableOpacity>))}
           </View>
-        </ScrollView>}
+          {tab==='new'?(
+            <ScrollView style={{flex:1,paddingHorizontal:16}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.leave_type}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom:18}}>
+                {types.map(lt=>(<TouchableOpacity key={lt} onPress={()=>setType(lt)} style={{paddingHorizontal:16,paddingVertical:9,borderRadius:20,marginRight:8,backgroundColor:type===lt?t.sky:t.card,borderWidth:1.5,borderColor:type===lt?t.sky:t.border}}>
+                  <Text style={{color:type===lt?'#fff':t.sub,fontWeight:'700',fontSize:13}}>{lt}</Text></TouchableOpacity>))}
+              </ScrollView>
+              <View style={{flexDirection: IS_DESKTOP ? 'row' : 'column', gap:10, marginBottom:12}}>
+                <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.start_date}</Text><CalendarPicker dark={dark} value={startDate} onChange={setStartDate} lang={lang} /></View>
+                <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.end_date}</Text><CalendarPicker dark={dark} value={endDate} onChange={setEndDate} lang={lang} /></View>
+              </View>
+              {totalDays>0&&<View style={{backgroundColor:t.green+'10',borderWidth:1.5,borderColor:t.green+'25',borderRadius:12,padding:12,marginBottom:12,alignItems:'center'}}><Text style={{color:t.green,fontWeight:'700',fontSize:15}}>{totalDays} {totalDays>1?l.days:l.day}</Text></View>}
+              <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.reason}</Text>
+              <TextInput style={{height:110,backgroundColor:t.inputBg,borderRadius:12,paddingHorizontal:14,paddingTop:14,color:t.text,fontSize:14,fontWeight:'500',borderWidth:1.5,borderColor:t.border,textAlignVertical:'top',textAlign:lang==='ar'?'right':'left'}}
+                placeholder={l.describe_reason} placeholderTextColor="#8BA0B8" value={reason} onChangeText={setReason} multiline numberOfLines={4} />
+              <AppBtn dark={dark} label={l.submit_request} icon="📤" color={t.sky} loading={submitting} onPress={handleSubmit} style={{marginTop:20,marginBottom:30}} />
+            </ScrollView>
+          ):(
+            <ScrollView style={{flex:1,paddingHorizontal:16}} showsVerticalScrollIndicator={false}>
+              {myLeaves.length===0?<Empty dark={dark} icon="🌴" title={l.no_leaves} sub={l.no_leaves_sub} />
+                :myLeaves.map((lv,i)=>(<View key={lv.id||i} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:t.border}}>
+                  <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:8}}><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{lv.leave_type} {l.leave}</Text><Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} /></View>
+                  <Text style={{color:t.sub,fontSize:13}}>{fmtDate(lv.start_date,lang)} — {fmtDate(lv.end_date,lang)} · {lv.total_days} {lv.total_days>1?l.days:l.day}</Text>
+                  {lv.reason&&<Text style={{color:t.sub,fontSize:12,marginTop:6,fontStyle:'italic',textAlign:lang==='ar'?'right':'left'}}>"{lv.reason}"</Text>}</View>))}
+            </ScrollView>
+          )}
+        </View>
+      </View>
     </ScreenWrap>
   );
 };
-
 /* ═══════════════════ PROFILE ═══════════════════ */
 const ProfileScreenComp = ({dark,employee,goBack,setDarkMode,onChangePassword,lang,setLang}) => {
   const t=useT_hook(dark),l=L[lang];
