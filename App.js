@@ -2826,6 +2826,29 @@ export default function App() {
     }
   };
 
+  const handleCheckOut = async () => {
+    if (!employee) return;
+    if (!isConnected) return Alert.alert(L[lang].no_internet, L[lang].no_internet_sub);
+    setCheckingOut(true);
+    try {
+      const today = nowISO(), time = nowTime();
+      const { data: rec } = await supabase.from('attendance_records').select('*')
+        .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      if (!rec) { Alert.alert('', L[lang].not_checked_in); return; }
+      if (rec.check_out_time) { Alert.alert('', L[lang].already_out); return; }
+      const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
+      if (error) { Alert.alert('Error', error.message); return; }
+      Alert.alert(L[lang].checked_out, lang === 'ar' ? `الوقت: ${fmtTime(time)}` : `Time: ${fmtTime(time)}`);
+      setIsClockedIn(false);
+    } catch (e) {
+      console.error('Check-out error:', e);
+      Alert.alert('Error', L[lang].no_internet_sub);
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
+
   const handleLogout = useCallback(() => {
     if (Platform.OS === 'web') {
       const l = L[lang];
