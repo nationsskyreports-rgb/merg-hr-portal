@@ -2782,15 +2782,6 @@ const nav = useCallback((s) => {
   setScreen(s);
 }, [checkTodayStatus, fetchUnread]);
   
-const nav = useCallback((s) => {
-    if (s === 'refresh') {
-      checkTodayStatus();
-      fetchUnread();
-      return;
-    }
-    setScreen(s);
-  }, [checkTodayStatus, fetchUnread]);
-
   const handleCheckIn = async () => {
     if (!employee) return;
     if (!isConnected) return Alert.alert(L[lang].no_internet, L[lang].no_internet_sub);
