@@ -1276,7 +1276,7 @@ const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from('office_location').select('*').eq('is_active', true).single();
+      const { data: officeArr } = await supabase.from('office_location').select('*').eq('is_active', true).limit(1); const data = officeArr?.[0] || null;
       if (data) setOffice(data);
       if (Platform.OS !== 'web') {
         try {
@@ -2721,7 +2721,7 @@ export default function App() {
 
   const getOffice = async () => {
     try {
-      const { data } = await supabase.from('office_location').select('*').eq('is_active', true).single();
+      const { data: officeArr } = await supabase.from('office_location').select('*').eq('is_active', true).limit(1); const data = officeArr?.[0] || null;
       return data;
     } catch (e) {
       console.error('getOffice error:', e);
