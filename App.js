@@ -117,7 +117,6 @@ const useNetworkStatus = () => {
 
 /* ═══════════════════ OFFLINE BANNER ═══════════════════ */
 const OfflineBanner = ({ dark, lang }) => {
-  const t = useT(dark);
   return (
     <View style={{
       backgroundColor: '#EF4444', paddingVertical: 10, paddingHorizontal: 16,
@@ -200,7 +199,6 @@ const MergeLogo = ({ size = 'md', dark }) => {
 
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      {/* Icon block */}
       <View style={{
         width: s.boxW, height: size === 'lg' ? 70 : s.boxH,
         borderRadius: size === 'lg' ? 20 : 16,
@@ -210,7 +208,6 @@ const MergeLogo = ({ size = 'md', dark }) => {
         shadowOpacity: 0.4, shadowRadius: 20, elevation: 8,
         marginBottom: size === 'lg' ? 12 : 6,
       }}>
-        {/* Abstract bars inside the logo block */}
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: s.gap + 1 }}>
           {[0.5, 0.8, 1, 0.7, 0.55].map((h, i) => (
             <View key={i} style={{
@@ -222,7 +219,6 @@ const MergeLogo = ({ size = 'md', dark }) => {
           ))}
         </View>
       </View>
-      {/* Brand Text */}
       {size === 'lg' && (
         <View style={{ alignItems: 'center' }}>
           <Text style={{
@@ -656,7 +652,6 @@ const CalendarPicker = ({ dark, value, onChange, lang, minDate }) => {
       {triggerBtn}
       <SafeModal visible={open} onClose={() => setOpen(false)} dark={dark}>
         <View style={{ padding: 22 }}>
-          {/* Month Nav */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <TouchableOpacity onPress={() => setMonth(new Date(yr, mo - 1, 1))} hitSlop={12}
               style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}>
@@ -668,7 +663,6 @@ const CalendarPicker = ({ dark, value, onChange, lang, minDate }) => {
               <Text style={{ color: t.text, fontSize: 18, fontWeight: '700' }}>›</Text>
             </TouchableOpacity>
           </View>
-          {/* Day Names */}
           <View style={{ flexDirection: 'row', marginBottom: 6 }}>
             {dNames.map(d => (
               <View key={d} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}>
@@ -676,7 +670,6 @@ const CalendarPicker = ({ dark, value, onChange, lang, minDate }) => {
               </View>
             ))}
           </View>
-          {/* Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {days.map((d, i) => {
               if (d === null) return <View key={`e${i}`} style={{ width: '14.28%', height: 44 }} />;
@@ -787,12 +780,10 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
 
       {!isConnected && <OfflineBanner dark={false} lang={lang} />}
 
-      {/* Decorative bg circles */}
       <View style={{ position: 'absolute', top: -80, right: -50, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(56,189,248,0.06)' }} />
       <View style={{ position: 'absolute', top: 60, left: -90, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(34,197,94,0.04)' }} />
       <View style={{ position: 'absolute', bottom: -100, right: -60, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(56,189,248,0.05)' }} />
 
-      {/* Language Toggle */}
       <View style={{ position: 'absolute', top: 54, right: 20, zIndex: 10 }}>
         <LangToggle dark={false} lang={lang} setLang={setLang} />
       </View>
@@ -802,7 +793,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo block */}
         <View style={{ alignItems: 'center', marginBottom: 36 }}>
           <Animated.View style={{ opacity: logoOp, transform: [{ scale: logoScale }] }}>
             <MergeLogo size="lg" dark={false} />
@@ -816,7 +806,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
           </Animated.Text>
         </View>
 
-        {/* Login Card */}
         <Animated.View style={{ opacity: cardOp, transform: [{ translateY: cardY }] }}>
           <Text style={{
             color: '#0B1120', fontSize: 24, fontWeight: '800',
@@ -827,7 +816,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
             textAlign: lang === 'ar' ? 'right' : 'left', lineHeight: 20,
           }}>{l.sign_in_sub}</Text>
 
-          {/* Email Field */}
           <View style={{ marginBottom: 16 }}>
             <Text style={{
               color: '#475569', fontSize: 11, fontWeight: '700',
@@ -852,7 +840,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
             </View>
           </View>
 
-          {/* Password Field */}
           <View style={{ marginBottom: 10 }}>
             <Text style={{
               color: '#475569', fontSize: 11, fontWeight: '700',
@@ -878,7 +865,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
             </View>
           </View>
 
-          {/* Forgot Password */}
           <TouchableOpacity onPress={() => setResetOpen(true)} style={{ marginBottom: 24, paddingVertical: 4 }}>
             <Text style={{
               color: '#0284C7', fontSize: 13, fontWeight: '600',
@@ -886,7 +872,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
             }}>{l.forgot_pw}</Text>
           </TouchableOpacity>
 
-          {/* Sign In Button */}
           <TouchableOpacity
             onPress={handleLogin} disabled={loading} activeOpacity={0.82}
             style={{
@@ -909,7 +894,6 @@ const LoginScreen = ({ onLogin, lang, setLang }) => {
         </Animated.View>
       </ScrollView>
 
-      {/* Reset Password Modal */}
       <SafeModal visible={resetOpen} onClose={() => setResetOpen(false)} dark={false}>
         <View style={{ padding: 26 }}>
           <Text style={{
@@ -993,13 +977,23 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // parent will re-fetch employee data & attendance status via onNav('refresh')
     if (onNav) onNav('refresh');
     setTimeout(() => setRefreshing(false), 1200);
   }, [onNav]);
 
   const initials = employee ? (employee.first_name?.[0] || '') + (employee.last_name?.[0] || '') : '??';
   const dateStr = new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const confirmLogout = () => {
+    Alert.alert(
+      l.logout_title,
+      l.logout_confirm,
+      [
+        { text: l.no, style: 'cancel' },
+        { text: l.yes, style: 'destructive', onPress: onLogout },
+      ]
+    );
+  };
 
   return (
     <ScrollView
@@ -1017,7 +1011,6 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
     >
       {!isConnected && <OfflineBanner dark={dark} lang={lang} />}
 
-      {/* Top bar */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingTop: 4 }}>
         <Animated.View style={{ transform: [{ translateY: floatAnim }] }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1051,7 +1044,6 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
       </View>
 
       <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-        {/* Greeting */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ fontSize: IS_SMALL ? 20 : 22, fontWeight: '800', color: t.text, letterSpacing: -0.3 }}>
             {getGreeting(lang)} 👋
@@ -1059,7 +1051,6 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
           <Text style={{ fontSize: 12, color: t.sub, marginTop: 3, fontWeight: '400' }}>{dateStr}</Text>
         </View>
 
-        {/* Profile Card */}
         {employee ? (
           <TouchableOpacity
             onPress={() => onNav('profile')} activeOpacity={0.82}
@@ -1104,7 +1095,6 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
           </View>
         )}
 
-        {/* Attendance Card */}
         <View style={{
           backgroundColor: t.card, borderRadius: 20, padding: IS_SMALL ? 16 : 20,
           marginBottom: 18, borderWidth: 1, borderColor: t.border, ...shadow('md'),
@@ -1133,21 +1123,18 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
           </View>
         </View>
 
-        {/* Quick Actions Label */}
         <Text style={{
           fontSize: 11, fontWeight: '700', color: t.sub,
           textTransform: 'uppercase', letterSpacing: 0.9,
           marginBottom: 12, textAlign: lang === 'ar' ? 'right' : 'left',
         }}>{l.quick_actions}</Text>
 
-        {/* Action Cards Row 1 */}
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
           <ActionCard dark={dark} icon="🗺️" label={l.location} color={t.sky} onPress={() => onNav('map')} />
           <ActionCard dark={dark} icon="📊" label={l.history} color={t.green} onPress={() => onNav('history')} />
           <ActionCard dark={dark} icon="🌴" label={l.leave} color={t.purple} onPress={() => onNav('leave')} />
         </View>
 
-        {/* Action Cards Row 2 */}
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
           <ActionCard dark={dark} icon="🔐" label={l.change_pw} color={t.sub} onPress={() => onNav('change_password')} />
           <ActionCard dark={dark} icon="🏢" label={l.hr_panel} color={t.indigo} onPress={() => onNav('hr_dashboard')} />
@@ -1162,12 +1149,11 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
   );
 };
 
-/* ═══════════════════ HISTORY (FlatList + pull-to-refresh) ═══════════════════ */
+/* ═══════════════════ HISTORY SCREEN ═══════════════════ */
 const HistoryScreenComp = ({ dark, employee, goBack, lang, setLang, isConnected, shiftStart }) => {
   const t = useT(dark), l = L[lang];
   const [records, setRecords] = useState([]), [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const lateThreshold = shiftStart || '09:15:00';
 
   const fetchRecords = useCallback(async () => {
@@ -1179,16 +1165,11 @@ const HistoryScreenComp = ({ dark, employee, goBack, lang, setLang, isConnected,
   }, [employee]);
 
   useEffect(() => {
-    (async () => {
-      await fetchRecords();
-      setLoading(false);
-    })();
+    (async () => { await fetchRecords(); setLoading(false); })();
   }, [fetchRecords]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchRecords();
-    setRefreshing(false);
+    setRefreshing(true); await fetchRecords(); setRefreshing(false);
   }, [fetchRecords]);
 
   const renderItem = useCallback(({ item: r }) => {
@@ -1197,18 +1178,13 @@ const HistoryScreenComp = ({ dark, employee, goBack, lang, setLang, isConnected,
     return (
       <View style={{
         backgroundColor: t.card, borderRadius: 16, padding: IS_SMALL ? 14 : 18,
-        marginBottom: 10,
-        borderWidth: 1, borderColor: ok ? `${t.green}22` : t.border,
-        ...shadow('sm'),
+        marginBottom: 10, borderWidth: 1, borderColor: ok ? `${t.green}22` : t.border, ...shadow('sm'),
       }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ color: t.text, fontWeight: '700', fontSize: 15 }}>{fmtDate(r.attendance_date, lang)}</Text>
-          {ok
-            ? <Badge dark={dark} label={l.complete} color={t.green} />
-            : r.check_in_time
-              ? <Badge dark={dark} label={l.in_progress} color={t.amber} />
-              : <Badge dark={dark} label={l.missing} color={t.red} />
-          }
+          {ok ? <Badge dark={dark} label={l.complete} color={t.green} />
+            : r.check_in_time ? <Badge dark={dark} label={l.in_progress} color={t.amber} />
+              : <Badge dark={dark} label={l.missing} color={t.red} />}
         </View>
         <View style={{ flexDirection: 'row', gap: 16 }}>
           <View style={{ flex: 1 }}>
@@ -1227,34 +1203,17 @@ const HistoryScreenComp = ({ dark, employee, goBack, lang, setLang, isConnected,
 
   return (
     <ScreenWrap dark={dark} isConnected={isConnected} lang={lang}>
-      <ScreenHeader
-        dark={dark} title={l.attendance_history} onBack={goBack}
-        lang={lang} setLang={setLang}
-        right={<Badge dark={dark} label={`${records.length} ${l.records}`} />}
-      />
+      <ScreenHeader dark={dark} title={l.attendance_history} onBack={goBack} lang={lang} setLang={setLang} right={<Badge dark={dark} label={`${records.length} ${l.records}`} />} />
       {loading
         ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={t.sky} size="large" /></View>
         : records.length === 0
           ? <Empty dark={dark} icon="📋" title={l.no_records} sub={l.no_records_sub} />
-          : <FlatList
-            data={records}
-            keyExtractor={(r, i) => r.id?.toString() || i.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
-            showsVerticalScrollIndicator={false}
-            initialNumToRender={12}
-            maxToRenderPerBatch={15}
-            windowSize={8}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />
-            }
-          />
-      }
+          : <FlatList data={records} keyExtractor={(r, i) => r.id?.toString() || i.toString()} renderItem={renderItem} contentContainerStyle={{ padding: 16, paddingBottom: 30 }} showsVerticalScrollIndicator={false} initialNumToRender={12} maxToRenderPerBatch={15} windowSize={8} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />} />}
     </ScreenWrap>
   );
 };
 
-/* ═══════════════════ MY LOCATION ═══════════════════ */
+/* ═══════════════════ MY LOCATION SCREEN ═══════════════════ */
 const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
   const t = useT(dark), l = L[lang];
   const [office, setOffice] = useState(null);
@@ -1272,10 +1231,9 @@ const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
           let { status } = await Location.requestForegroundPermissionsAsync();
           if (status === 'granted') {
             let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-            const ul = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-            setUserLoc(ul);
+            setUserLoc({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
             setGpsAccuracy(loc.coords.accuracy || null);
-            if (data) setDist(haversine(ul.latitude, ul.longitude, data.latitude, data.longitude));
+            if (data) setDist(haversine(loc.coords.latitude, loc.coords.longitude, data.latitude, data.longitude));
           }
         } catch (e) { console.log('Location error:', e.message); }
       }
@@ -1301,10 +1259,8 @@ const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
       <ScreenWrap dark={dark} isConnected={isConnected} lang={lang}>
         <ScreenHeader dark={dark} title={l.my_location} onBack={goBack} lang={lang} setLang={setLang} />
         <View style={{ flex: 1, margin: 16, borderRadius: 18, overflow: 'hidden', ...shadow('md') }}>
-          {office
-            ? <iframe src={mapsUrl} style={{ flex: 1, width: '100%', border: 'none', borderRadius: 18 }} allowFullScreen title="Office Map" />
-            : <Empty dark={dark} icon="🗺️" title="Not Available" sub="No office location configured." />
-          }
+          {office ? <iframe src={mapsUrl} style={{ flex: 1, width: '100%', border: 'none', borderRadius: 18 }} allowFullScreen title="Office Map" />
+            : <Empty dark={dark} icon="🗺️" title="Not Available" sub="No office location configured." />}
         </View>
       </ScreenWrap>
     );
@@ -1315,43 +1271,16 @@ const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
       <ScreenHeader dark={dark} title={l.my_location} onBack={goBack} lang={lang} setLang={setLang} />
       {MapView && office ? (
         <View style={{ flex: 1 }}>
-          <MapView
-            style={{ flex: 1 }}
-            initialRegion={{ latitude: office.latitude, longitude: office.longitude, latitudeDelta: 0.012, longitudeDelta: 0.012 }}
-          >
+          <MapView style={{ flex: 1 }} initialRegion={{ latitude: office.latitude, longitude: office.longitude, latitudeDelta: 0.012, longitudeDelta: 0.012 }}>
             <Marker coordinate={{ latitude: office.latitude, longitude: office.longitude }} title="Office" />
-            {Circle && <Circle
-              center={{ latitude: office.latitude, longitude: office.longitude }}
-              radius={office.radius_meters}
-              strokeColor="rgba(56,189,248,0.6)"
-              fillColor="rgba(56,189,248,0.08)"
-              strokeWidth={2}
-            />}
+            {Circle && <Circle center={{ latitude: office.latitude, longitude: office.longitude }} radius={office.radius_meters} strokeColor="rgba(56,189,248,0.6)" fillColor="rgba(56,189,248,0.08)" strokeWidth={2} />}
             {userLoc && <Marker coordinate={userLoc} pinColor="green" title="You" />}
           </MapView>
-          {/* Info Bar */}
-          <View style={{
-            backgroundColor: t.card, padding: 18,
-            borderTopWidth: 1, borderTopColor: t.border,
-            flexDirection: 'row', justifyContent: 'space-around',
-            ...shadow('lg'),
-          }}>
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>{l.allowed_radius}</Text>
-              <Text style={{ color: t.sky, fontSize: 22, fontWeight: '800' }}>{office.radius_meters}m</Text>
-            </View>
+          <View style={{ backgroundColor: t.card, padding: 18, borderTopWidth: 1, borderTopColor: t.border, flexDirection: 'row', justifyContent: 'space-around', ...shadow('lg') }}>
+            <View style={{ alignItems: 'center' }}><Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>{l.allowed_radius}</Text><Text style={{ color: t.sky, fontSize: 22, fontWeight: '800' }}>{office.radius_meters}m</Text></View>
             <View style={{ width: 1, backgroundColor: t.border }} />
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>{l.your_distance}</Text>
-              <Text style={{
-                color: dist !== null ? (inRange ? t.green : t.red) : t.sub,
-                fontSize: 22, fontWeight: '800',
-              }}>{dist !== null ? `${dist.toFixed(0)}m` : '—'}</Text>
-            </View>
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Status</Text>
-              <Text style={{ fontSize: 22 }}>{dist !== null ? (inRange ? '✅' : '❌') : '📍'}</Text>
-            </View>
+            <View style={{ alignItems: 'center' }}><Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>{l.your_distance}</Text><Text style={{ color: dist !== null ? (inRange ? t.green : t.red) : t.sub, fontSize: 22, fontWeight: '800' }}>{dist !== null ? `${dist.toFixed(0)}m` : '—'}</Text></View>
+            <View style={{ alignItems: 'center' }}><Text style={{ color: t.sub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Status</Text><Text style={{ fontSize: 22 }}>{dist !== null ? (inRange ? '✅' : '❌') : '📍'}</Text></View>
           </View>
         </View>
       ) : (
@@ -1361,7 +1290,7 @@ const MyLocationScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
   );
 };
 
-/* ═══════════════════ LEAVE REQUEST ═══════════════════ */
+/* ═══════════════════ LEAVE REQUEST SCREEN ═══════════════════ */
 const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang, isConnected }) => {
   const t = useT(dark), l = L[lang];
   const types = ['Annual', 'Sick', 'Emergency', 'Personal', 'Maternity', 'Unpaid'];
@@ -1376,18 +1305,13 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang, isConne
 
   const refreshLeaves = useCallback(async () => {
     if (!employee?.id) return;
-    const { data } = await supabase.from('leave_requests').select('*')
-      .eq('employee_id', employee.id).order('created_at', { ascending: false }).limit(20);
+    const { data } = await supabase.from('leave_requests').select('*').eq('employee_id', employee.id).order('created_at', { ascending: false }).limit(20);
     setMyLeaves(data || []);
   }, [employee]);
 
   useEffect(() => { refreshLeaves(); }, [refreshLeaves]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refreshLeaves();
-    setRefreshing(false);
-  }, [refreshLeaves]);
+  const onRefresh = useCallback(async () => { setRefreshing(true); await refreshLeaves(); setRefreshing(false); }, [refreshLeaves]);
 
   const totalDays = useMemo(() => {
     if (!startDate || !endDate) return 0;
@@ -1402,10 +1326,7 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang, isConne
     if (totalDays <= 0) return Alert.alert('', l.invalid_dates);
     if (!reason.trim()) return Alert.alert('', l.missing_reason);
     setSubmitting(true);
-    const { error } = await supabase.from('leave_requests').insert([{
-      employee_id: employee.id, leave_type: type, start_date: startDate,
-      end_date: endDate, total_days: totalDays, reason: reason.trim(), status: 'pending',
-    }]);
+    const { error } = await supabase.from('leave_requests').insert([{ employee_id: employee.id, leave_type: type, start_date: startDate, end_date: endDate, total_days: totalDays, reason: reason.trim(), status: 'pending' }]);
     setSubmitting(false);
     if (error) { Alert.alert('Error', error.message); return; }
     Alert.alert(l.submitted, `${l.submitted_msg} ${totalDays} ${totalDays > 1 ? l.days : l.day}.`);
@@ -1414,52 +1335,26 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang, isConne
   };
 
   const sc = s => s === 'approved' ? t.green : s === 'rejected' ? t.red : t.amber;
+  const todayStr = nowISO();
 
   const renderLeave = useCallback(({ item: lv }) => (
-    <View style={{
-      backgroundColor: t.card, borderRadius: 16, padding: 16, marginBottom: 10,
-      borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-    }}>
+    <View style={{ backgroundColor: t.card, borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <Text style={{ color: t.text, fontWeight: '700', fontSize: 15 }}>{lv.leave_type} {l.leave}</Text>
         <Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} />
       </View>
-      <Text style={{ color: t.sub, fontSize: 13, marginBottom: 4 }}>
-        📅 {fmtDate(lv.start_date, lang)} — {fmtDate(lv.end_date, lang)}
-      </Text>
-      <Text style={{ color: t.sub, fontSize: 12 }}>
-        ⏱ {lv.total_days} {lv.total_days > 1 ? l.days : l.day}
-      </Text>
-      {lv.reason && (
-        <Text style={{
-          color: t.muted, fontSize: 12, marginTop: 8, fontStyle: 'italic',
-          textAlign: lang === 'ar' ? 'right' : 'left', lineHeight: 18,
-        }}>"{lv.reason}"</Text>
-      )}
+      <Text style={{ color: t.sub, fontSize: 13, marginBottom: 4 }}>📅 {fmtDate(lv.start_date, lang)} — {fmtDate(lv.end_date, lang)}</Text>
+      <Text style={{ color: t.sub, fontSize: 12 }}>⏱ {lv.total_days} {lv.total_days > 1 ? l.days : l.day}</Text>
+      {lv.reason && <Text style={{ color: t.muted, fontSize: 12, marginTop: 8, fontStyle: 'italic', textAlign: lang === 'ar' ? 'right' : 'left', lineHeight: 18 }}>"{lv.reason}"</Text>}
     </View>
   ), [dark, lang, t]);
-
-  const todayStr = nowISO();
 
   return (
     <ScreenWrap dark={dark} isConnected={isConnected} lang={lang}>
       <ScreenHeader dark={dark} title={l.leave_request} onBack={goBack} lang={lang} setLang={setLang} />
-
-      {/* Tab switcher */}
-      <View style={{
-        flexDirection: 'row', marginHorizontal: 16, marginTop: 12, marginBottom: 4,
-        backgroundColor: t.surface, borderRadius: 14, padding: 4,
-      }}>
+      <View style={{ flexDirection: 'row', marginHorizontal: 16, marginTop: 12, marginBottom: 4, backgroundColor: t.surface, borderRadius: 14, padding: 4 }}>
         {[['new', l.new_request, '📝'], ['history', l.my_leaves, '📋']].map(([k, v, ic]) => (
-          <TouchableOpacity
-            key={k} onPress={() => setTab(k)}
-            style={{
-              flex: 1, paddingVertical: 11, borderRadius: 11, alignItems: 'center',
-              backgroundColor: tab === k ? t.card : 'transparent',
-              flexDirection: 'row', justifyContent: 'center', gap: 6,
-              ...tab === k ? shadow('sm') : {},
-            }}
-          >
+          <TouchableOpacity key={k} onPress={() => setTab(k)} style={{ flex: 1, paddingVertical: 11, borderRadius: 11, alignItems: 'center', backgroundColor: tab === k ? t.card : 'transparent', flexDirection: 'row', justifyContent: 'center', gap: 6, ...tab === k ? shadow('sm') : {} }}>
             <Text style={{ fontSize: 13 }}>{ic}</Text>
             <Text style={{ color: tab === k ? t.sky : t.sub, fontWeight: '700', fontSize: 13 }}>{v}</Text>
           </TouchableOpacity>
@@ -1467,108 +1362,43 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang, isConne
       </View>
 
       {tab === 'new' ? (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Leave Type */}
-          <Text style={{
-            color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-            letterSpacing: 0.9, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left',
-          }}>{l.leave_type}</Text>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }}>{l.leave_type}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
             {types.map(lt => (
-              <TouchableOpacity
-                key={lt} onPress={() => setType(lt)}
-                style={{
-                  paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, marginRight: 8,
-                  backgroundColor: type === lt ? t.sky : t.card,
-                  borderWidth: 1.5, borderColor: type === lt ? t.sky : t.border,
-                  ...type === lt ? shadow('sm') : {},
-                }}
-              >
+              <TouchableOpacity key={lt} onPress={() => setType(lt)} style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, marginRight: 8, backgroundColor: type === lt ? t.sky : t.card, borderWidth: 1.5, borderColor: type === lt ? t.sky : t.border, ...type === lt ? shadow('sm') : {} }}>
                 <Text style={{ color: type === lt ? '#fff' : t.sub, fontWeight: '700', fontSize: 13 }}>{lt}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
-
-          {/* Date pickers with minDate = today */}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{
-                color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-                letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left',
-              }}>{l.start_date}</Text>
+              <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{l.start_date}</Text>
               <CalendarPicker dark={dark} value={startDate} onChange={setStartDate} lang={lang} minDate={todayStr} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{
-                color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-                letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left',
-              }}>{l.end_date}</Text>
+              <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{l.end_date}</Text>
               <CalendarPicker dark={dark} value={endDate} onChange={setEndDate} lang={lang} minDate={startDate || todayStr} />
             </View>
           </View>
-
-          {/* Duration pill */}
           {totalDays > 0 && (
-            <View style={{
-              backgroundColor: `${t.green}12`, borderWidth: 1.5, borderColor: `${t.green}22`,
-              borderRadius: 14, padding: 14, marginBottom: 16,
-              flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
+            <View style={{ backgroundColor: `${t.green}12`, borderWidth: 1.5, borderColor: `${t.green}22`, borderRadius: 14, padding: 14, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Text style={{ fontSize: 18 }}>📅</Text>
-              <Text style={{ color: t.green, fontWeight: '800', fontSize: 16 }}>
-                {totalDays} {totalDays > 1 ? l.days : l.day}
-              </Text>
+              <Text style={{ color: t.green, fontWeight: '800', fontSize: 16 }}>{totalDays} {totalDays > 1 ? l.days : l.day}</Text>
             </View>
           )}
-
-          {/* Reason */}
-          <Text style={{
-            color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-            letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left',
-          }}>{l.reason}</Text>
-          <TextInput
-            style={{
-              minHeight: 110, backgroundColor: t.inputBg, borderRadius: 14,
-              paddingHorizontal: 16, paddingTop: 14, color: t.text, fontSize: 14, fontWeight: '500',
-              borderWidth: 1.5, borderColor: t.border, textAlignVertical: 'top',
-              textAlign: lang === 'ar' ? 'right' : 'left', lineHeight: 22,
-            }}
-            placeholder={l.describe_reason}
-            placeholderTextColor={t.muted}
-            value={reason}
-            onChangeText={setReason}
-            multiline numberOfLines={4}
-          />
-          <AppBtn
-            dark={dark} label={l.submit_request} icon="📤" color={t.sky}
-            loading={submitting} disabled={!isConnected} onPress={handleSubmit}
-            style={{ marginTop: 20 }}
-          />
+          <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{l.reason}</Text>
+          <TextInput style={{ minHeight: 110, backgroundColor: t.inputBg, borderRadius: 14, paddingHorizontal: 16, paddingTop: 14, color: t.text, fontSize: 14, fontWeight: '500', borderWidth: 1.5, borderColor: t.border, textAlignVertical: 'top', textAlign: lang === 'ar' ? 'right' : 'left', lineHeight: 22 }} placeholder={l.describe_reason} placeholderTextColor={t.muted} value={reason} onChangeText={setReason} multiline numberOfLines={4} />
+          <AppBtn dark={dark} label={l.submit_request} icon="📤" color={t.sky} loading={submitting} disabled={!isConnected} onPress={handleSubmit} style={{ marginTop: 20 }} />
         </ScrollView>
       ) : (
-        <FlatList
-          data={myLeaves}
-          keyExtractor={(lv, i) => lv.id?.toString() || i.toString()}
-          renderItem={renderLeave}
-          contentContainerStyle={{ padding: 16, paddingBottom: 30, flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<Empty dark={dark} icon="🌴" title={l.no_leaves} sub={l.no_leaves_sub} />}
-          initialNumToRender={10}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />
-          }
-        />
+        <FlatList data={myLeaves} keyExtractor={(lv, i) => lv.id?.toString() || i.toString()} renderItem={renderLeave} contentContainerStyle={{ padding: 16, paddingBottom: 30, flexGrow: 1 }} showsVerticalScrollIndicator={false} ListEmptyComponent={<Empty dark={dark} icon="🌴" title={l.no_leaves} sub={l.no_leaves_sub} />} initialNumToRender={10} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />} />
       )}
     </ScreenWrap>
   );
 };
 
-/* ═══════════════════ NOTIFICATIONS (Real-time + pull-to-refresh) ═══════════════════ */
+/* ═══════════════════ NOTIFICATIONS SCREEN ═══════════════════ */
 const NotificationsScreenComp = ({ dark, employee, goBack, onRead, lang, setLang, isConnected }) => {
   const t = useT(dark), l = L[lang];
   const [notifs, setNotifs] = useState([]), [loading, setLoading] = useState(true);
@@ -1576,106 +1406,54 @@ const NotificationsScreenComp = ({ dark, employee, goBack, onRead, lang, setLang
 
   const fetchN = useCallback(async () => {
     if (!employee?.id) return;
-    const { data } = await supabase.from('notifications').select('*')
-      .or(`employee_id.eq.${employee.id},employee_id.is.null`)
-      .order('created_at', { ascending: false }).limit(50);
-    setNotifs(data || []);
-    setLoading(false);
+    const { data } = await supabase.from('notifications').select('*').or(`employee_id.eq.${employee.id},employee_id.is.null`).order('created_at', { ascending: false }).limit(50);
+    setNotifs(data || []); setLoading(false);
   }, [employee]);
 
   useEffect(() => { fetchN(); }, [fetchN]);
 
-  // Real-time subscription for new notifications
   useEffect(() => {
     if (!employee?.id) return;
-    const channel = supabase
-      .channel('notifications-realtime')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload) => {
-          const newNotif = payload.new;
-          if (newNotif.employee_id === employee.id || newNotif.employee_id === null) {
-            setNotifs(prev => [newNotif, ...prev]);
-            onRead?.();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const channel = supabase.channel('notifications-realtime').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+      const newNotif = payload.new;
+      if (newNotif.employee_id === employee.id || newNotif.employee_id === null) { setNotifs(prev => [newNotif, ...prev]); onRead?.(); }
+    }).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [employee]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchN();
-    setRefreshing(false);
-  }, [fetchN]);
+  const onRefresh = useCallback(async () => { setRefreshing(true); await fetchN(); setRefreshing(false); }, [fetchN]);
 
   const markRead = useCallback(async id => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
-    onRead?.();
+    setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n)); onRead?.();
   }, [onRead]);
 
   const markAllRead = useCallback(async () => {
-    const ur = notifs.filter(n => !n.is_read);
-    if (ur.length === 0) return;
+    const ur = notifs.filter(n => !n.is_read); if (ur.length === 0) return;
     const ids = ur.map(u => u.id);
-    // Batch update
-    for (const id of ids) {
-      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    }
-    setNotifs(p => p.map(n => ({ ...n, is_read: true })));
-    onRead?.();
+    for (const id of ids) { await supabase.from('notifications').update({ is_read: true }).eq('id', id); }
+    setNotifs(p => p.map(n => ({ ...n, is_read: true }))); onRead?.();
   }, [notifs, onRead]);
 
   const tc = type => type === 'leave' ? t.purple : type === 'attendance' ? t.green : t.sky;
   const unreadCount = notifs.filter(n => !n.is_read).length;
 
   const renderItem = useCallback(({ item: n }) => (
-    <TouchableOpacity
-      onPress={() => !n.is_read && markRead(n.id)} activeOpacity={0.75}
-      style={{
-        backgroundColor: t.card, borderRadius: 16, padding: 16, marginBottom: 10,
-        borderWidth: 1, borderColor: n.is_read ? t.border : t.skyBorder,
-        flexDirection: 'row', ...shadow('sm'),
-        opacity: n.is_read ? 0.78 : 1,
-      }}
-    >
-      {!n.is_read && (
-        <View style={{
-          width: 9, height: 9, borderRadius: 4.5,
-          backgroundColor: t.sky, marginRight: 12, marginTop: 5, flexShrink: 0,
-        }} />
-      )}
+    <TouchableOpacity onPress={() => !n.is_read && markRead(n.id)} activeOpacity={0.75} style={{ backgroundColor: t.card, borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: n.is_read ? t.border : t.skyBorder, flexDirection: 'row', ...shadow('sm'), opacity: n.is_read ? 0.78 : 1 }}>
+      {!n.is_read && <View style={{ width: 9, height: 9, borderRadius: 4.5, backgroundColor: t.sky, marginRight: 12, marginTop: 5, flexShrink: 0 }} />}
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 7, gap: 8, flexWrap: 'wrap' }}>
           <Badge dark={dark} label={n.type?.toUpperCase() || 'INFO'} color={tc(n.type)} />
-          <Text style={{ color: t.muted, fontSize: 11 }}>
-            {n.created_at ? new Date(n.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }) : ''}
-          </Text>
+          <Text style={{ color: t.muted, fontSize: 11 }}>{n.created_at ? new Date(n.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }) : ''}</Text>
         </View>
-        <Text style={{
-          color: t.text, fontSize: 14, fontWeight: n.is_read ? '500' : '600',
-          lineHeight: 21, textAlign: lang === 'ar' ? 'right' : 'left',
-        }}>{n.title || n.message || 'Notification'}</Text>
-        {n.message && n.title && (
-          <Text style={{
-            color: t.sub, fontSize: 13, marginTop: 5, lineHeight: 19,
-            textAlign: lang === 'ar' ? 'right' : 'left',
-          }}>{n.message}</Text>
-        )}
+        <Text style={{ color: t.text, fontSize: 14, fontWeight: n.is_read ? '500' : '600', lineHeight: 21, textAlign: lang === 'ar' ? 'right' : 'left' }}>{n.title || n.message || 'Notification'}</Text>
+        {n.message && n.title && <Text style={{ color: t.sub, fontSize: 13, marginTop: 5, lineHeight: 19, textAlign: lang === 'ar' ? 'right' : 'left' }}>{n.message}</Text>}
       </View>
     </TouchableOpacity>
   ), [dark, lang, t, markRead]);
 
   const headerRight = unreadCount > 0 ? (
-    <TouchableOpacity
-      onPress={markAllRead}
-      style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: t.skyDim, borderWidth: 1, borderColor: t.skyBorder }}
-    >
+    <TouchableOpacity onPress={markAllRead} style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: t.skyDim, borderWidth: 1, borderColor: t.skyBorder }}>
       <Text style={{ color: t.sky, fontSize: 11, fontWeight: '700' }}>{l.mark_all_read}</Text>
     </TouchableOpacity>
   ) : null;
@@ -1685,31 +1463,18 @@ const NotificationsScreenComp = ({ dark, employee, goBack, onRead, lang, setLang
       <ScreenHeader dark={dark} title={l.notifications} onBack={goBack} lang={lang} setLang={setLang} right={headerRight} />
       {loading
         ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={t.sky} size="large" /></View>
-        : <FlatList
-          data={notifs}
-          keyExtractor={(n, i) => n.id?.toString() || i.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={{ padding: 16, paddingBottom: 30, flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<Empty dark={dark} icon="🔕" title={l.no_notifs} sub={l.no_notifs_sub} />}
-          initialNumToRender={15}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />
-          }
-        />
-      }
+        : <FlatList data={notifs} keyExtractor={(n, i) => n.id?.toString() || i.toString()} renderItem={renderItem} contentContainerStyle={{ padding: 16, paddingBottom: 30, flexGrow: 1 }} showsVerticalScrollIndicator={false} ListEmptyComponent={<Empty dark={dark} icon="🔕" title={l.no_notifs} sub={l.no_notifs_sub} />} initialNumToRender={15} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />} />}
     </ScreenWrap>
   );
 };
 
-/* ═══════════════════ PROFILE ═══════════════════ */
+/* ═══════════════════ PROFILE SCREEN ═══════════════════ */
 const ProfileScreenComp = ({ dark, employee, goBack, setDarkMode, onChangePassword, lang, setLang, isConnected, shiftStart }) => {
   const t = useT(dark), l = L[lang];
   const initials = employee ? (employee.first_name?.[0] || '') + (employee.last_name?.[0] || '') : '??';
   const [stats, setStats] = useState({ days: 0, month: 0, onTime: 0 });
   const [leaves, setLeaves] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-
   const lateThreshold = shiftStart || '09:15:00';
 
   const fetchData = useCallback(async () => {
@@ -1720,18 +1485,13 @@ const ProfileScreenComp = ({ dark, employee, goBack, setDarkMode, onChangePasswo
     const n = new Date();
     const mo = done.filter(r => { const d = new Date(r.attendance_date); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); });
     setStats({ days: done.length, month: mo.length, onTime: ot.length });
-    const { data: lv } = await supabase.from('leave_requests').select('*')
-      .eq('employee_id', employee.id).order('created_at', { ascending: false }).limit(10);
+    const { data: lv } = await supabase.from('leave_requests').select('*').eq('employee_id', employee.id).order('created_at', { ascending: false }).limit(10);
     setLeaves(lv || []);
   }, [employee, lateThreshold]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, [fetchData]);
+  const onRefresh = useCallback(async () => { setRefreshing(true); await fetchData(); setRefreshing(false); }, [fetchData]);
 
   const sc = s => s === 'approved' ? t.green : s === 'rejected' ? t.red : t.amber;
   const pct = stats.days > 0 ? Math.round(stats.onTime / stats.days * 100) : 0;
@@ -1739,138 +1499,63 @@ const ProfileScreenComp = ({ dark, employee, goBack, setDarkMode, onChangePasswo
   return (
     <ScreenWrap dark={dark} isConnected={isConnected} lang={lang}>
       <ScreenHeader dark={dark} title={l.my_profile} onBack={goBack} lang={lang} setLang={setLang} />
-      <ScrollView
-        style={{ flex: 1 }} showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />
-        }
-      >
-
-        {/* Avatar + Name */}
-        <View style={{
-          alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20,
-          backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border,
-          marginBottom: 16,
-        }}>
-          <View style={{
-            width: IS_SMALL ? 80 : 96, height: IS_SMALL ? 80 : 96,
-            borderRadius: IS_SMALL ? 40 : 48, backgroundColor: t.sky,
-            alignItems: 'center', justifyContent: 'center',
-            shadowColor: t.sky, shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.35, shadowRadius: 22, elevation: 8,
-          }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />}>
+        <View style={{ alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20, backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border, marginBottom: 16 }}>
+          <View style={{ width: IS_SMALL ? 80 : 96, height: IS_SMALL ? 80 : 96, borderRadius: IS_SMALL ? 40 : 48, backgroundColor: t.sky, alignItems: 'center', justifyContent: 'center', shadowColor: t.sky, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 22, elevation: 8 }}>
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: IS_SMALL ? 28 : 36 }}>{initials}</Text>
           </View>
-          <Text style={{ color: t.text, fontWeight: '800', fontSize: IS_SMALL ? 18 : 22, marginTop: 14, letterSpacing: -0.3 }}>
-            {employee?.first_name} {employee?.last_name}
-          </Text>
+          <Text style={{ color: t.text, fontWeight: '800', fontSize: IS_SMALL ? 18 : 22, marginTop: 14, letterSpacing: -0.3 }}>{employee?.first_name} {employee?.last_name}</Text>
           <Text style={{ color: t.sub, fontSize: 14, marginTop: 4 }}>{employee?.job_title || employee?.position}</Text>
-          <View style={{
-            marginTop: 10, paddingHorizontal: 14, paddingVertical: 7,
-            borderRadius: 10, backgroundColor: t.skyDim, borderWidth: 1, borderColor: t.skyBorder,
-          }}>
+          <View style={{ marginTop: 10, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, backgroundColor: t.skyDim, borderWidth: 1, borderColor: t.skyBorder }}>
             <Text style={{ color: t.sky, fontWeight: '700', fontSize: 12 }}>{employee?.department}</Text>
           </View>
         </View>
-
-        {/* Stats */}
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 20 }}>
           <StatBox dark={dark} value={stats.days} label={l.total_days} color={t.sky} />
           <StatBox dark={dark} value={stats.month} label={l.this_month} color={t.green} />
           <StatBox dark={dark} value={`${pct}%`} label={l.on_time} color={t.amber} />
         </View>
-
-        {/* Info Card */}
-        <View style={{
-          backgroundColor: t.card, borderRadius: 18, paddingHorizontal: 20,
-          marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-        }}>
+        <View style={{ backgroundColor: t.card, borderRadius: 18, paddingHorizontal: 20, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}>
           <InfoRow dark={dark} label={l.email} value={employee?.email} lang={lang} />
           <InfoRow dark={dark} label={l.phone} value={employee?.phone} lang={lang} />
           <InfoRow dark={dark} label={l.position} value={employee?.position} lang={lang} />
           <InfoRow dark={dark} label={l.department} value={employee?.department} lang={lang} />
           <InfoRow dark={dark} label={l.joined} value={employee?.hire_date ? fmtDate(employee.hire_date, lang) : '—'} lang={lang} />
         </View>
-
-        {/* Dark Mode Toggle */}
-        <View style={{
-          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-          backgroundColor: t.card, borderRadius: 16, padding: 18,
-          marginHorizontal: 16, marginBottom: 10, borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-        }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: t.card, borderRadius: 16, padding: 18, marginHorizontal: 16, marginBottom: 10, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{
-              width: 42, height: 42, borderRadius: 14, backgroundColor: t.surface,
-              alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Text style={{ fontSize: 20 }}>{dark ? '🌙' : '☀️'}</Text>
-            </View>
+            <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 20 }}>{dark ? '🌙' : '☀️'}</Text></View>
             <Text style={{ color: t.text, fontWeight: '600', fontSize: 15 }}>{dark ? l.dark_mode : l.light_mode}</Text>
           </View>
-          <Switch
-            value={dark} onValueChange={setDarkMode}
-            trackColor={{ false: t.border, true: `${t.sky}90` }}
-            thumbColor={dark ? t.sky : '#fff'}
-          />
+          <Switch value={dark} onValueChange={setDarkMode} trackColor={{ false: t.border, true: `${t.sky}90` }} thumbColor={dark ? t.sky : '#fff'} />
         </View>
-
-        {/* Change Password */}
-        <TouchableOpacity
-          onPress={onChangePassword} activeOpacity={0.75}
-          style={{
-            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-            backgroundColor: t.card, borderRadius: 16, padding: 18,
-            marginHorizontal: 16, marginBottom: 24, borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-          }}
-        >
+        <TouchableOpacity onPress={onChangePassword} activeOpacity={0.75} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: t.card, borderRadius: 16, padding: 18, marginHorizontal: 16, marginBottom: 24, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{
-              width: 42, height: 42, borderRadius: 14, backgroundColor: t.surface,
-              alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Text style={{ fontSize: 20 }}>🔐</Text>
-            </View>
+            <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 20 }}>🔐</Text></View>
             <Text style={{ color: t.text, fontWeight: '600', fontSize: 15 }}>{l.change_password}</Text>
           </View>
           <Text style={{ color: t.sub, fontSize: 20 }}>›</Text>
         </TouchableOpacity>
-
-        {/* Recent Leaves */}
-        {leaves.length > 0 && (
-          <>
-            <Text style={{
-              color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-              letterSpacing: 0.9, paddingHorizontal: 16, marginBottom: 10,
-            }}>{l.recent_leaves}</Text>
-            <View style={{
-              backgroundColor: t.card, borderRadius: 18, paddingHorizontal: 16,
-              marginHorizontal: 16, marginBottom: 30, borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-            }}>
-              {leaves.slice(0, 5).map((lv, i) => (
-                <View key={lv.id || i} style={{
-                  flexDirection: 'row', alignItems: 'center', paddingVertical: 14,
-                  borderBottomWidth: i < Math.min(4, leaves.length - 1) ? 1 : 0, borderBottomColor: t.border,
-                }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: t.text, fontWeight: '600', fontSize: 14, marginBottom: 2 }}>
-                      {lv.leave_type} · {lv.total_days}d
-                    </Text>
-                    <Text style={{ color: t.sub, fontSize: 12 }}>
-                      {fmtDate(lv.start_date, lang)} — {fmtDate(lv.end_date, lang)}
-                    </Text>
-                  </View>
-                  <Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} />
+        {leaves.length > 0 && (<>
+          <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, paddingHorizontal: 16, marginBottom: 10 }}>{l.recent_leaves}</Text>
+          <View style={{ backgroundColor: t.card, borderRadius: 18, paddingHorizontal: 16, marginHorizontal: 16, marginBottom: 30, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}>
+            {leaves.slice(0, 5).map((lv, i) => (
+              <View key={lv.id || i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: i < Math.min(4, leaves.length - 1) ? 1 : 0, borderBottomColor: t.border }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: t.text, fontWeight: '600', fontSize: 14, marginBottom: 2 }}>{lv.leave_type} · {lv.total_days}d</Text>
+                  <Text style={{ color: t.sub, fontSize: 12 }}>{fmtDate(lv.start_date, lang)} — {fmtDate(lv.end_date, lang)}</Text>
                 </View>
-              ))}
-            </View>
-          </>
-        )}
+                <Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} />
+              </View>
+            ))}
+          </View>
+        </>)}
       </ScrollView>
     </ScreenWrap>
   );
 };
 
-/* ═══════════════════ CHANGE PASSWORD ═══════════════════ */
+/* ═══════════════════ CHANGE PASSWORD SCREEN ═══════════════════ */
 const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang, isConnected }) => {
   const t = useT(dark), l = L[lang];
   const [cur, setCur] = useState('');
@@ -1889,35 +1574,15 @@ const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang, isConnected }) 
     const { error } = await supabase.auth.updateUser({ password: nw });
     setLoading(false);
     if (error) { Alert.alert('Error', error.message); return; }
-    Alert.alert(l.pw_success, '');
-    goBack();
+    Alert.alert(l.pw_success, ''); goBack();
   };
 
   const PwField = ({ label, value, setValue, show, setShow }) => (
     <View style={{ marginBottom: 18 }}>
-      <Text style={{
-        color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase',
-        letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left',
-      }}>{label}</Text>
-      <View style={{
-        flexDirection: 'row', alignItems: 'center', height: 54,
-        backgroundColor: t.inputBg, borderRadius: 14, paddingHorizontal: 16,
-        borderWidth: 1.5, borderColor: t.border,
-      }}>
-        <TextInput
-          style={{
-            flex: 1, color: t.text, fontSize: 15, fontWeight: '500',
-            padding: 0, textAlign: lang === 'ar' ? 'right' : 'left',
-          }}
-          placeholder="••••••••"
-          placeholderTextColor={t.muted}
-          value={value}
-          onChangeText={setValue}
-          secureTextEntry={!show}
-        />
-        <TouchableOpacity onPress={() => setShow(!show)} hitSlop={12} style={{ marginLeft: 10 }}>
-          <Text style={{ fontSize: 18, color: t.sub }}>{show ? '🙈' : '👁'}</Text>
-        </TouchableOpacity>
+      <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', height: 54, backgroundColor: t.inputBg, borderRadius: 14, paddingHorizontal: 16, borderWidth: 1.5, borderColor: t.border }}>
+        <TextInput style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: '500', padding: 0, textAlign: lang === 'ar' ? 'right' : 'left' }} placeholder="••••••••" placeholderTextColor={t.muted} value={value} onChangeText={setValue} secureTextEntry={!show} />
+        <TouchableOpacity onPress={() => setShow(!show)} hitSlop={12} style={{ marginLeft: 10 }}><Text style={{ fontSize: 18, color: t.sub }}>{show ? '🙈' : '👁'}</Text></TouchableOpacity>
       </View>
     </View>
   );
@@ -1926,16 +1591,8 @@ const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang, isConnected }) 
     <ScreenWrap dark={dark} isConnected={isConnected} lang={lang}>
       <ScreenHeader dark={dark} title={l.change_password} onBack={goBack} lang={lang} setLang={setLang} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={{
-            backgroundColor: t.card, borderRadius: 20, padding: 24,
-            borderWidth: 1, borderColor: t.border, marginBottom: 20, ...shadow('md'),
-          }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View style={{ backgroundColor: t.card, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: t.border, marginBottom: 20, ...shadow('md') }}>
             <PwField label={l.current_pw} value={cur} setValue={setCur} show={showCur} setShow={setShowCur} />
             <PwField label={l.new_pw} value={nw} setValue={setNw} show={showNw} setShow={setShowNw} />
             <PwField label={l.confirm_pw} value={cnf} setValue={setCnf} show={showNw} setShow={setShowNw} />
@@ -1948,7 +1605,7 @@ const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang, isConnected }) 
   );
 };
 
-/* ═══════════════════ HR DASHBOARD (Lazy Tab Loading) ═══════════════════ */
+/* ═══════════════════ HR DASHBOARD SCREEN ═══════════════════ */
 const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
   const t = useT(dark), l = L[lang];
   const [tab, setTab] = useState('overview');
@@ -1967,10 +1624,8 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
   const [expTo, setExpTo] = useState('');
   const [expLoading, setExpLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const insets = useSafeAreaInsets();
-
-  // Track which tabs have been loaded
   const [loadedTabs, setLoadedTabs] = useState({});
+  const insets = useSafeAreaInsets();
 
   const loadStats = useCallback(async () => {
     const today = nowISO();
@@ -1982,27 +1637,20 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
   }, []);
 
   const loadAttendance = useCallback(async () => {
-    const { data } = await supabase.from('attendance_records')
-      .select('*,employees(first_name,last_name,employee_code,department)')
-      .eq('attendance_date', nowISO()).order('check_in_time', { ascending: false });
+    const { data } = await supabase.from('attendance_records').select('*,employees(first_name,last_name,employee_code,department)').eq('attendance_date', nowISO()).order('check_in_time', { ascending: false });
     setAttendance(data || []);
   }, []);
 
   const loadLeaves = useCallback(async () => {
-    const { data } = await supabase.from('leave_requests')
-      .select('*,employees(first_name,last_name,employee_code,department)')
-      .order('created_at', { ascending: false });
+    const { data } = await supabase.from('leave_requests').select('*,employees(first_name,last_name,employee_code,department)').order('created_at', { ascending: false });
     setLeaveRequests(data || []);
   }, []);
 
   const loadEmployees = useCallback(async () => {
-    const { data } = await supabase.from('employees')
-      .select('id,employee_code,first_name,last_name,department,job_title,status,email')
-      .order('employee_code');
+    const { data } = await supabase.from('employees').select('id,employee_code,first_name,last_name,department,job_title,status,email').order('employee_code');
     setEmployees(data || []);
   }, []);
 
-  // Load overview on mount
   useEffect(() => {
     (async () => {
       await Promise.all([loadStats(), loadAttendance()]);
@@ -2011,46 +1659,25 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
     })();
   }, []);
 
-  // Lazy load tab data when switching tabs
   useEffect(() => {
     if (loadedTabs[tab]) return;
     (async () => {
       switch (tab) {
-        case 'attendance':
-          if (!loadedTabs.attendance) {
-            await loadAttendance();
-            setLoadedTabs(p => ({ ...p, attendance: true }));
-          }
-          break;
-        case 'leaves':
-          if (!loadedTabs.leaves) {
-            await loadLeaves();
-            setLoadedTabs(p => ({ ...p, leaves: true }));
-          }
-          break;
-        case 'employees':
-          if (!loadedTabs.employees) {
-            await loadEmployees();
-            setLoadedTabs(p => ({ ...p, employees: true }));
-          }
-          break;
+        case 'attendance': if (!loadedTabs.attendance) { await loadAttendance(); setLoadedTabs(p => ({ ...p, attendance: true })); } break;
+        case 'leaves': if (!loadedTabs.leaves) { await loadLeaves(); setLoadedTabs(p => ({ ...p, leaves: true })); } break;
+        case 'employees': if (!loadedTabs.employees) { await loadEmployees(); setLoadedTabs(p => ({ ...p, employees: true })); } break;
       }
     })();
   }, [tab]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([loadStats(), loadAttendance()]);
-    // Reset loaded tabs so they refresh on next visit
-    setLoadedTabs({ overview: true });
-    setRefreshing(false);
+    setRefreshing(true); await Promise.all([loadStats(), loadAttendance()]); setLoadedTabs({ overview: true }); setRefreshing(false);
   }, []);
 
   const handleLeaveAction = async (id, action) => {
     setLeaveLoading(true);
     await supabase.from('leave_requests').update({ status: action }).eq('id', id);
-    await loadLeaves(); await loadStats();
-    setLeaveLoading(false);
+    await loadLeaves(); await loadStats(); setLeaveLoading(false);
   };
 
   const sendNotification = async () => {
@@ -2061,8 +1688,7 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
       const { data: emps } = await supabase.from('employees').select('id').eq('status', 'active');
       const inserts = emps.map(e => ({ employee_id: e.id, type: notifType, message: notifMsg, is_read: false }));
       await supabase.from('notifications').insert(inserts);
-      setNotifMsg('');
-      Alert.alert(lang === 'ar' ? 'تم' : 'Done', lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
+      setNotifMsg(''); Alert.alert(lang === 'ar' ? 'تم' : 'Done', lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
     } catch (_) { Alert.alert('Error', 'Failed.'); }
     finally { setNotifSending(false); }
   };
@@ -2075,8 +1701,7 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
       let rows = [], sheetName = 'Data', fileName = 'merge_export.xlsx';
       if (expType === 'attendance') {
         let q = supabase.from('attendance_records').select('attendance_date,check_in_time,check_out_time,employees!inner(first_name,last_name,employee_code,department)');
-        if (expFrom) q = q.gte('attendance_date', expFrom);
-        if (expTo) q = q.lte('attendance_date', expTo);
+        if (expFrom) q = q.gte('attendance_date', expFrom); if (expTo) q = q.lte('attendance_date', expTo);
         const { data } = await q.order('attendance_date', { ascending: false });
         rows = (data || []).map(r => ({ 'Date': r.attendance_date, 'Employee': `${r.employees.first_name} ${r.employees.last_name}`, 'Code': r.employees.employee_code, 'Department': r.employees.department, 'Check In': r.check_in_time?.slice(0, 5) || '', 'Check Out': r.check_out_time?.slice(0, 5) || '' }));
         sheetName = 'Attendance'; fileName = `attendance_${nowISO()}.xlsx`;
@@ -2086,470 +1711,87 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
         sheetName = 'Employees'; fileName = `employees_${nowISO()}.xlsx`;
       } else {
         let q = supabase.from('leave_requests').select('leave_type,start_date,end_date,total_days,reason,status,created_at,employees!inner(first_name,last_name,department)');
-        if (expFrom) q = q.gte('start_date', expFrom);
-        if (expTo) q = q.lte('start_date', expTo);
+        if (expFrom) q = q.gte('start_date', expFrom); if (expTo) q = q.lte('start_date', expTo);
         const { data } = await q.order('created_at', { ascending: false });
         rows = (data || []).map(r => ({ 'Employee': `${r.employees.first_name} ${r.employees.last_name}`, 'Type': r.leave_type, 'Start': r.start_date, 'End': r.end_date, 'Days': r.total_days, 'Reason': r.reason, 'Status': r.status }));
         sheetName = 'Leaves'; fileName = `leaves_${nowISO()}.xlsx`;
       }
       if (rows.length === 0) { setExpLoading(false); return Alert.alert('', lang === 'ar' ? 'لا توجد بيانات' : 'No data found.'); }
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      XLSX.writeFile(wb, fileName);
+      const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName);
     } catch (e) { Alert.alert('Error', e.message); }
     setExpLoading(false);
   };
 
-  const stCfg = s => ({
-    approved: { color: t.green, bg: t.greenDim, label: 'Approved' },
-    present: { color: t.green, bg: t.greenDim, label: 'Present' },
-    rejected: { color: t.red, bg: t.redDim, label: 'Rejected' },
-    pending: { color: t.amber, bg: t.amberDim, label: 'Pending' },
-  }[s] || { color: t.sub, bg: t.border, label: s });
+  const stCfg = s => ({ approved: { color: t.green, bg: t.greenDim, label: 'Approved' }, present: { color: t.green, bg: t.greenDim, label: 'Present' }, rejected: { color: t.red, bg: t.redDim, label: 'Rejected' }, pending: { color: t.amber, bg: t.amberDim, label: 'Pending' } }[s] || { color: t.sub, bg: t.border, label: s });
+  const filteredEmps = useMemo(() => employees.filter(e => empSearch === '' || `${e.first_name} ${e.last_name}`.toLowerCase().includes(empSearch.toLowerCase()) || e.employee_code?.toLowerCase().includes(empSearch.toLowerCase()) || e.department?.toLowerCase().includes(empSearch.toLowerCase())), [employees, empSearch]);
+  const tabs = [{ id: 'overview', label: l.overview, icon: '📊' }, { id: 'attendance', label: l.attendance_tab, icon: '📍' }, { id: 'leaves', label: l.leaves_tab, icon: '🌴' }, { id: 'employees', label: l.employees_tab, icon: '👥' }, { id: 'notifications', label: l.notifs_tab, icon: '🔔' }, { id: 'export', label: l.export_tab, icon: '📤' }];
 
-  const filteredEmps = useMemo(() =>
-    employees.filter(e =>
-      empSearch === '' ||
-      `${e.first_name} ${e.last_name}`.toLowerCase().includes(empSearch.toLowerCase()) ||
-      e.employee_code?.toLowerCase().includes(empSearch.toLowerCase()) ||
-      e.department?.toLowerCase().includes(empSearch.toLowerCase())
-    ), [employees, empSearch]);
+  const HRStat = ({ icon, label, value, color, bg }) => (<View style={{ flex: 1, backgroundColor: t.card, borderRadius: 18, padding: IS_SMALL ? 14 : 18, borderWidth: 1, borderColor: t.border, ...shadow('sm') }}><View style={{ width: 42, height: 42, borderRadius: 13, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}><Text style={{ fontSize: IS_SMALL ? 17 : 20 }}>{icon}</Text></View><Text style={{ fontSize: IS_SMALL ? 20 : 26, fontWeight: '800', color, marginBottom: 2 }}>{value}</Text><Text style={{ fontSize: 11, color: t.sub, lineHeight: 15 }}>{label}</Text></View>);
+  const HRBadge = ({ label, color, bg }) => (<View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: bg, borderWidth: 1, borderColor: `${color}22` }}><Text style={{ fontSize: 11, fontWeight: '700', color }}>{label}</Text></View>);
+  const HRCard = ({ children, hl }) => (<View style={{ backgroundColor: t.card, borderRadius: 18, padding: 18, marginBottom: 10, borderWidth: 1, borderColor: hl ? `${t.amber}40` : t.border, ...shadow('sm') }}>{children}</View>);
+  const HREmpRow = ({ e }) => (<View style={{ backgroundColor: t.card, borderRadius: 16, padding: IS_SMALL ? 12 : 15, marginBottom: 8, borderWidth: 1, borderColor: t.border, flexDirection: 'row', alignItems: 'center', ...shadow('sm') }}><View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: t.skyDim, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.skyBorder }}><Text style={{ color: t.sky, fontWeight: '700', fontSize: 16 }}>{e.first_name?.[0]}{e.last_name?.[0]}</Text></View><View style={{ flex: 1, marginLeft: 12 }}><Text style={{ color: t.text, fontWeight: '700', fontSize: 14 }}>{e.first_name} {e.last_name}</Text><Text style={{ color: t.sub, fontSize: 11, marginTop: 2 }}>{e.job_title} · {e.department}</Text></View><HRBadge label={e.status === 'active' ? l.active_st : l.inactive_st} color={e.status === 'active' ? t.green : t.red} bg={e.status === 'active' ? t.greenDim : t.redDim} /></View>);
 
-  const tabs = [
-    { id: 'overview', label: l.overview, icon: '📊' },
-    { id: 'attendance', label: l.attendance_tab, icon: '📍' },
-    { id: 'leaves', label: l.leaves_tab, icon: '🌴' },
-    { id: 'employees', label: l.employees_tab, icon: '👥' },
-    { id: 'notifications', label: l.notifs_tab, icon: '🔔' },
-    { id: 'export', label: l.export_tab, icon: '📤' },
-  ];
-
-  const HRStat = ({ icon, label, value, color, bg }) => (
-    <View style={{
-      flex: 1, backgroundColor: t.card, borderRadius: 18, padding: IS_SMALL ? 14 : 18,
-      borderWidth: 1, borderColor: t.border, ...shadow('sm'),
-    }}>
-      <View style={{
-        width: 42, height: 42, borderRadius: 13, backgroundColor: bg,
-        alignItems: 'center', justifyContent: 'center', marginBottom: 10,
-      }}>
-        <Text style={{ fontSize: IS_SMALL ? 17 : 20 }}>{icon}</Text>
-      </View>
-      <Text style={{ fontSize: IS_SMALL ? 20 : 26, fontWeight: '800', color, marginBottom: 2 }}>{value}</Text>
-      <Text style={{ fontSize: 11, color: t.sub, lineHeight: 15 }}>{label}</Text>
-    </View>
-  );
-
-  const HRBadge = ({ label, color, bg }) => (
-    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: bg, borderWidth: 1, borderColor: `${color}22` }}>
-      <Text style={{ fontSize: 11, fontWeight: '700', color }}>{label}</Text>
-    </View>
-  );
-
-  const HRCard = ({ children, hl }) => (
-    <View style={{
-      backgroundColor: t.card, borderRadius: 18, padding: 18, marginBottom: 10,
-      borderWidth: 1, borderColor: hl ? `${t.amber}40` : t.border, ...shadow('sm'),
-    }}>{children}</View>
-  );
-
-  const HREmpRow = ({ e }) => (
-    <View style={{
-      backgroundColor: t.card, borderRadius: 16, padding: IS_SMALL ? 12 : 15,
-      marginBottom: 8, borderWidth: 1, borderColor: t.border,
-      flexDirection: 'row', alignItems: 'center', ...shadow('sm'),
-    }}>
-      <View style={{
-        width: 46, height: 46, borderRadius: 23,
-        backgroundColor: t.skyDim, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: t.skyBorder,
-      }}>
-        <Text style={{ color: t.sky, fontWeight: '700', fontSize: 16 }}>
-          {e.first_name?.[0]}{e.last_name?.[0]}
-        </Text>
-      </View>
-      <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={{ color: t.text, fontWeight: '700', fontSize: 14 }}>
-          {e.first_name} {e.last_name}
-        </Text>
-        <Text style={{ color: t.sub, fontSize: 11, marginTop: 2 }}>
-          {e.job_title} · {e.department}
-        </Text>
-      </View>
-      <HRBadge
-        label={e.status === 'active' ? l.active_st : l.inactive_st}
-        color={e.status === 'active' ? t.green : t.red}
-        bg={e.status === 'active' ? t.greenDim : t.redDim}
-      />
-    </View>
-  );
-
-  if (loading) return (
-    <View style={{
-      flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center',
-      paddingTop: insets.top,
-    }}>
-      <ActivityIndicator size="large" color={t.sky} />
-      <Text style={{ color: t.sub, marginTop: 14, fontSize: 13 }}>{l.loading}</Text>
-    </View>
-  );
+  if (loading) return (<View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', paddingTop: insets.top }}><ActivityIndicator size="large" color={t.sky} /><Text style={{ color: t.sub, marginTop: 14, fontSize: 13 }}>{l.loading}</Text></View>);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }}>
       {!isConnected && <OfflineBanner dark={dark} lang={lang} />}
-      {/* Header */}
-      <View style={{
-        paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14,
-        backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        ...shadow('sm'),
-      }}>
-        <View>
-          <Text style={{ fontSize: IS_SMALL ? 17 : 20, fontWeight: '800', color: t.text, letterSpacing: -0.3 }}>{l.hr_dashboard}</Text>
-          <Text style={{ fontSize: 12, color: t.sub, marginTop: 2 }}>
-            {new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={goBack}
-          style={{
-            backgroundColor: t.skyDim, paddingHorizontal: 14, paddingVertical: 9,
-            borderRadius: 12, borderWidth: 1, borderColor: t.skyBorder,
-          }}
-        >
-          <Text style={{ color: t.sky, fontWeight: '700', fontSize: 13 }}>‹ {l.back}</Text>
-        </TouchableOpacity>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14, backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...shadow('sm') }}>
+        <View><Text style={{ fontSize: IS_SMALL ? 17 : 20, fontWeight: '800', color: t.text, letterSpacing: -0.3 }}>{l.hr_dashboard}</Text><Text style={{ fontSize: 12, color: t.sub, marginTop: 2 }}>{new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</Text></View>
+        <TouchableOpacity onPress={goBack} style={{ backgroundColor: t.skyDim, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: t.skyBorder }}><Text style={{ color: t.sky, fontWeight: '700', fontSize: 13 }}>‹ {l.back}</Text></TouchableOpacity>
       </View>
-
-      {/* Tab bar */}
       <View style={{ backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border }}>
-        <ScrollView
-          horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 6 }}
-        >
-          {tabs.map(tb => (
-            <TouchableOpacity
-              key={tb.id} onPress={() => setTab(tb.id)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-                backgroundColor: tab === tb.id ? t.sky : 'transparent',
-                borderWidth: tab === tb.id ? 0 : 1, borderColor: t.border,
-              }}
-            >
-              <Text style={{
-                fontSize: 12, fontWeight: '600',
-                color: tab === tb.id ? '#fff' : t.sub,
-              }}>{tb.icon} {tb.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 6 }}>
+          {tabs.map(tb => (<TouchableOpacity key={tb.id} onPress={() => setTab(tb.id)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: tab === tb.id ? t.sky : 'transparent', borderWidth: tab === tb.id ? 0 : 1, borderColor: t.border }}><Text style={{ fontSize: 12, fontWeight: '600', color: tab === tb.id ? '#fff' : t.sub }}>{tb.icon} {tb.label}</Text></TouchableOpacity>))}
         </ScrollView>
       </View>
-
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />
-        }
-      >
-        {/* ── OVERVIEW ── */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.sky} colors={[t.sky]} />}>
         {tab === 'overview' && <>
-          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
-            <HRStat icon="👥" label={l.total_employees} value={stats.total} color={t.sky} bg={t.skyDim} />
-            <HRStat icon="✅" label={l.present} value={stats.present} color={t.green} bg={t.greenDim} />
-          </View>
-          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-            <HRStat icon="❌" label={l.absent} value={stats.absent} color={t.red} bg={t.redDim} />
-            <HRStat icon="🌴" label={l.pending_leaves} value={stats.pendingLeaves} color={t.amber} bg={t.amberDim} />
-          </View>
-
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}><HRStat icon="👥" label={l.total_employees} value={stats.total} color={t.sky} bg={t.skyDim} /><HRStat icon="✅" label={l.present} value={stats.present} color={t.green} bg={t.greenDim} /></View>
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}><HRStat icon="❌" label={l.absent} value={stats.absent} color={t.red} bg={t.redDim} /><HRStat icon="🌴" label={l.pending_leaves} value={stats.pendingLeaves} color={t.amber} bg={t.amberDim} /></View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
-            {[
-              { label: l.review_att, g: 'attendance', icon: '📍', c: t.sky, bg: t.skyDim },
-              { label: l.leave_req, g: 'leaves', icon: '🌴', c: t.amber, bg: t.amberDim },
-              { label: l.emp_list, g: 'employees', icon: '👥', c: t.green, bg: t.greenDim },
-              { label: l.send_notif, g: 'notifications', icon: '🔔', c: t.indigo, bg: t.indigoDim },
-            ].map(a => (
-              <TouchableOpacity
-                key={a.g} onPress={() => setTab(a.g)}
-                style={{
-                  width: '48%', borderRadius: 16, padding: IS_SMALL ? 14 : 18,
-                  borderWidth: 1, alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: a.bg, borderColor: `${a.c}22`, ...shadow('sm'),
-                }}
-              >
-                <Text style={{ fontSize: IS_SMALL ? 22 : 26, marginBottom: 8 }}>{a.icon}</Text>
-                <Text style={{ fontSize: 12, fontWeight: '700', textAlign: 'center', color: a.c }}>{a.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {[{ label: l.review_att, g: 'attendance', icon: '📍', c: t.sky, bg: t.skyDim }, { label: l.leave_req, g: 'leaves', icon: '🌴', c: t.amber, bg: t.amberDim }, { label: l.emp_list, g: 'employees', icon: '👥', c: t.green, bg: t.greenDim }, { label: l.send_notif, g: 'notifications', icon: '🔔', c: t.indigo, bg: t.indigoDim }].map(a => (<TouchableOpacity key={a.g} onPress={() => setTab(a.g)} style={{ width: '48%', borderRadius: 16, padding: IS_SMALL ? 14 : 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: a.bg, borderColor: `${a.c}22`, ...shadow('sm') }}><Text style={{ fontSize: IS_SMALL ? 22 : 26, marginBottom: 8 }}>{a.icon}</Text><Text style={{ fontSize: 12, fontWeight: '700', textAlign: 'center', color: a.c }}>{a.label}</Text></TouchableOpacity>))}
           </View>
-
           <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 12 }}>{l.latest_att}</Text>
-          {attendance.slice(0, 4).map(a => (
-            <View key={a.id} style={{
-              backgroundColor: t.card, borderRadius: 14, padding: 14, marginBottom: 8,
-              borderWidth: 1, borderColor: t.border, flexDirection: 'row', alignItems: 'center',
-              ...shadow('sm'),
-            }}>
-              <View style={{
-                width: 44, height: 44, borderRadius: 22, backgroundColor: t.skyDim,
-                alignItems: 'center', justifyContent: 'center', marginRight: 12,
-                borderWidth: 1, borderColor: t.skyBorder,
-              }}>
-                <Text style={{ color: t.sky, fontWeight: '700', fontSize: 15 }}>
-                  {a.employees?.first_name?.[0]}{a.employees?.last_name?.[0]}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: t.text, fontWeight: '700', fontSize: 14 }}>
-                  {a.employees?.first_name} {a.employees?.last_name}
-                </Text>
-                <Text style={{ color: t.sub, fontSize: 11, marginTop: 2 }}>{a.employees?.department}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ color: t.green, fontSize: 15, fontWeight: '700' }}>{a.check_in_time?.slice(0, 5) || '--:--'}</Text>
-                <Text style={{ color: t.sub, fontSize: 10, marginTop: 2 }}>{l.entry}</Text>
-              </View>
-            </View>
-          ))}
-          {attendance.length === 0 && (
-            <View style={{
-              alignItems: 'center', padding: 32, backgroundColor: t.card,
-              borderRadius: 16, borderWidth: 1, borderColor: t.border,
-            }}>
-              <Text style={{ fontSize: 44, marginBottom: 8 }}>📭</Text>
-              <Text style={{ color: t.sub, fontSize: 14 }}>{l.no_att_today}</Text>
-            </View>
-          )}
+          {attendance.slice(0, 4).map(a => (<View key={a.id} style={{ backgroundColor: t.card, borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: t.border, flexDirection: 'row', alignItems: 'center', ...shadow('sm') }}><View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.skyDim, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: t.skyBorder }}><Text style={{ color: t.sky, fontWeight: '700', fontSize: 15 }}>{a.employees?.first_name?.[0]}{a.employees?.last_name?.[0]}</Text></View><View style={{ flex: 1 }}><Text style={{ color: t.text, fontWeight: '700', fontSize: 14 }}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{ color: t.sub, fontSize: 11, marginTop: 2 }}>{a.employees?.department}</Text></View><View style={{ alignItems: 'flex-end' }}><Text style={{ color: t.green, fontSize: 15, fontWeight: '700' }}>{a.check_in_time?.slice(0, 5) || '--:--'}</Text><Text style={{ color: t.sub, fontSize: 10, marginTop: 2 }}>{l.entry}</Text></View></View>))}
+          {attendance.length === 0 && (<View style={{ alignItems: 'center', padding: 32, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.border }}><Text style={{ fontSize: 44, marginBottom: 8 }}>📭</Text><Text style={{ color: t.sub, fontSize: 14 }}>{l.no_att_today}</Text></View>)}
         </>}
-
-        {/* ── ATTENDANCE ── */}
         {tab === 'attendance' && <>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 12 }}>
-            {l.att_records} ({attendance.length})
-          </Text>
-          {attendance.map(a => {
-            const st = stCfg(a.status);
-            return (
-              <HRCard key={a.id}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                  <View>
-                    <Text style={{ color: t.text, fontWeight: '700', fontSize: 15, marginBottom: 2 }}>
-                      {a.employees?.first_name} {a.employees?.last_name}
-                    </Text>
-                    <Text style={{ color: t.sub, fontSize: 11 }}>{a.employees?.employee_code} · {a.employees?.department}</Text>
-                  </View>
-                  <HRBadge label={st.label} color={st.color} bg={st.bg} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: t.greenDim, borderWidth: 1, borderColor: `${t.green}20` }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: t.green, marginBottom: 4, letterSpacing: 0.5 }}>{l.entry}</Text>
-                    <Text style={{ fontWeight: '700', fontSize: IS_SMALL ? 15 : 17, color: t.green }}>{a.check_in_time?.slice(0, 5) || '---'}</Text>
-                  </View>
-                  <View style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: t.redDim, borderWidth: 1, borderColor: `${t.red}20` }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: t.red, marginBottom: 4, letterSpacing: 0.5 }}>{l.exit}</Text>
-                    <Text style={{ fontWeight: '700', fontSize: IS_SMALL ? 15 : 17, color: a.check_out_time ? t.red : t.muted }}>{a.check_out_time?.slice(0, 5) || '---'}</Text>
-                  </View>
-                </View>
-              </HRCard>
-            );
-          })}
-          {attendance.length === 0 && (
-            <View style={{ alignItems: 'center', padding: 32, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.border }}>
-              <Text style={{ fontSize: 44, marginBottom: 8 }}>📭</Text>
-              <Text style={{ color: t.sub }}>{l.no_records}</Text>
-            </View>
-          )}
+          <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 12 }}>{l.att_records} ({attendance.length})</Text>
+          {attendance.map(a => { const st = stCfg(a.status); return (<HRCard key={a.id}><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}><View><Text style={{ color: t.text, fontWeight: '700', fontSize: 15, marginBottom: 2 }}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{ color: t.sub, fontSize: 11 }}>{a.employees?.employee_code} · {a.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{ flexDirection: 'row', gap: 10 }}><View style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: t.greenDim, borderWidth: 1, borderColor: `${t.green}20` }}><Text style={{ fontSize: 10, fontWeight: '700', color: t.green, marginBottom: 4, letterSpacing: 0.5 }}>{l.entry}</Text><Text style={{ fontWeight: '700', fontSize: IS_SMALL ? 15 : 17, color: t.green }}>{a.check_in_time?.slice(0, 5) || '---'}</Text></View><View style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: t.redDim, borderWidth: 1, borderColor: `${t.red}20` }}><Text style={{ fontSize: 10, fontWeight: '700', color: t.red, marginBottom: 4, letterSpacing: 0.5 }}>{l.exit}</Text><Text style={{ fontWeight: '700', fontSize: IS_SMALL ? 15 : 17, color: a.check_out_time ? t.red : t.muted }}>{a.check_out_time?.slice(0, 5) || '---'}</Text></View></View></HRCard>); })}
+          {attendance.length === 0 && (<View style={{ alignItems: 'center', padding: 32, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.border }}><Text style={{ fontSize: 44, marginBottom: 8 }}>📭</Text><Text style={{ color: t.sub }}>{l.no_records}</Text></View>)}
         </>}
-
-        {/* ── LEAVES ── */}
         {tab === 'leaves' && <>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{l.leave_reqs}</Text>
-            <Badge dark={dark} label={`${leaveRequests.filter(lv => lv.status === 'pending').length} ${l.under_review}`} color={t.amber} />
-          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}><Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{l.leave_reqs}</Text><Badge dark={dark} label={`${leaveRequests.filter(lv => lv.status === 'pending').length} ${l.under_review}`} color={t.amber} /></View>
           {leaveLoading && <ActivityIndicator color={t.sky} style={{ marginBottom: 10 }} />}
-          {leaveRequests.map(lv => {
-            const st = stCfg(lv.status);
-            const days = lv.start_date && lv.end_date ? Math.ceil((new Date(lv.end_date) - new Date(lv.start_date)) / 86400000) + 1 : 0;
-            return (
-              <HRCard key={lv.id} hl={lv.status === 'pending'}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <View>
-                    <Text style={{ color: t.text, fontWeight: '700', fontSize: 15, marginBottom: 2 }}>
-                      {lv.employees?.first_name} {lv.employees?.last_name}
-                    </Text>
-                    <Text style={{ color: t.sub, fontSize: 11 }}>{lv.employees?.department}</Text>
-                  </View>
-                  <HRBadge label={st.label} color={st.color} bg={st.bg} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                  <View style={{ backgroundColor: t.indigoDim, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: `${t.indigo}20` }}>
-                    <Text style={{ color: t.indigo, fontSize: 11, fontWeight: '600' }}>{lv.leave_type}</Text>
-                  </View>
-                  <View style={{ backgroundColor: t.skyDim, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: `${t.sky}20` }}>
-                    <Text style={{ color: t.sky, fontSize: 11, fontWeight: '600' }}>{days} {l.day}</Text>
-                  </View>
-                </View>
-                <Text style={{ color: t.sub, fontSize: 12, marginBottom: 4 }}>📅 {lv.start_date} → {lv.end_date}</Text>
-                {lv.reason && <Text style={{ color: t.muted, fontSize: 11, marginBottom: 12, lineHeight: 17 }}>💬 {lv.reason}</Text>}
-                {lv.status === 'pending' && (
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <TouchableOpacity
-                      onPress={() => handleLeaveAction(lv.id, 'approved')}
-                      style={{
-                        flex: 1, paddingVertical: 11, borderRadius: 12, alignItems: 'center',
-                        backgroundColor: t.greenDim, borderWidth: 1, borderColor: `${t.green}30`,
-                      }}
-                    >
-                      <Text style={{ fontWeight: '700', fontSize: 13, color: t.green }}>✓ {l.approve}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleLeaveAction(lv.id, 'rejected')}
-                      style={{
-                        flex: 1, paddingVertical: 11, borderRadius: 12, alignItems: 'center',
-                        backgroundColor: t.redDim, borderWidth: 1, borderColor: `${t.red}30`,
-                      }}
-                    >
-                      <Text style={{ fontWeight: '700', fontSize: 13, color: t.red }}>✗ {l.reject}</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </HRCard>
-            );
-          })}
+          {leaveRequests.map(lv => { const st = stCfg(lv.status); const days = lv.start_date && lv.end_date ? Math.ceil((new Date(lv.end_date) - new Date(lv.start_date)) / 86400000) + 1 : 0; return (<HRCard key={lv.id} hl={lv.status === 'pending'}><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}><View><Text style={{ color: t.text, fontWeight: '700', fontSize: 15, marginBottom: 2 }}>{lv.employees?.first_name} {lv.employees?.last_name}</Text><Text style={{ color: t.sub, fontSize: 11 }}>{lv.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{ flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}><View style={{ backgroundColor: t.indigoDim, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: `${t.indigo}20` }}><Text style={{ color: t.indigo, fontSize: 11, fontWeight: '600' }}>{lv.leave_type}</Text></View><View style={{ backgroundColor: t.skyDim, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: `${t.sky}20` }}><Text style={{ color: t.sky, fontSize: 11, fontWeight: '600' }}>{days} {l.day}</Text></View></View><Text style={{ color: t.sub, fontSize: 12, marginBottom: 4 }}>📅 {lv.start_date} → {lv.end_date}</Text>{lv.reason && <Text style={{ color: t.muted, fontSize: 11, marginBottom: 12, lineHeight: 17 }}>💬 {lv.reason}</Text>}{lv.status === 'pending' && (<View style={{ flexDirection: 'row', gap: 10 }}><TouchableOpacity onPress={() => handleLeaveAction(lv.id, 'approved')} style={{ flex: 1, paddingVertical: 11, borderRadius: 12, alignItems: 'center', backgroundColor: t.greenDim, borderWidth: 1, borderColor: `${t.green}30` }}><Text style={{ fontWeight: '700', fontSize: 13, color: t.green }}>✓ {l.approve}</Text></TouchableOpacity><TouchableOpacity onPress={() => handleLeaveAction(lv.id, 'rejected')} style={{ flex: 1, paddingVertical: 11, borderRadius: 12, alignItems: 'center', backgroundColor: t.redDim, borderWidth: 1, borderColor: `${t.red}30` }}><Text style={{ fontWeight: '700', fontSize: 13, color: t.red }}>✗ {l.reject}</Text></TouchableOpacity></View>)}</HRCard>); })}
         </>}
-
-        {/* ── EMPLOYEES ── */}
         {tab === 'employees' && <>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{l.emp_list_title}</Text>
-            <Badge dark={dark} label={`${employees.length} ${l.employee_word}`} color={t.sky} />
-          </View>
-          <View style={{
-            flexDirection: 'row', alignItems: 'center', backgroundColor: t.card,
-            borderRadius: 14, borderWidth: 1.5, borderColor: t.border,
-            paddingHorizontal: 14, marginBottom: 14, ...shadow('sm'),
-          }}>
-            <Text style={{ fontSize: 15, marginRight: 8 }}>🔍</Text>
-            <TextInput
-              value={empSearch}
-              onChangeText={setEmpSearch}
-              placeholder={l.search_emp}
-              placeholderTextColor={t.muted}
-              style={{ flex: 1, color: t.text, paddingVertical: 13, fontSize: 14 }}
-            />
-          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}><Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{l.emp_list_title}</Text><Badge dark={dark} label={`${employees.length} ${l.employee_word}`} color={t.sky} /></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.card, borderRadius: 14, borderWidth: 1.5, borderColor: t.border, paddingHorizontal: 14, marginBottom: 14, ...shadow('sm') }}><Text style={{ fontSize: 15, marginRight: 8 }}>🔍</Text><TextInput value={empSearch} onChangeText={setEmpSearch} placeholder={l.search_emp} placeholderTextColor={t.muted} style={{ flex: 1, color: t.text, paddingVertical: 13, fontSize: 14 }} /></View>
           {filteredEmps.map(e => <HREmpRow key={e.id} e={e} />)}
         </>}
-
-        {/* ── NOTIFICATIONS ── */}
         {tab === 'notifications' && <>
           <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 16 }}>{l.send_notif_title}</Text>
           <HRCard>
             <Text style={{ color: t.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>{l.notif_type}</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>
-              {[{ id: 'announcement', label: l.announcement, icon: '📢' }, { id: 'reminder', label: l.reminder, icon: '⏰' }, { id: 'alert', label: l.alert, icon: '🚨' }].map(nt => (
-                <TouchableOpacity
-                  key={nt.id} onPress={() => setNotifType(nt.id)}
-                  style={{
-                    flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
-                    borderWidth: 1.5,
-                    borderColor: notifType === nt.id ? t.indigo : t.border,
-                    backgroundColor: notifType === nt.id ? t.indigoDim : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 16, marginBottom: 4 }}>{nt.icon}</Text>
-                  <Text style={{ fontSize: 11, color: notifType === nt.id ? t.indigo : t.sub, fontWeight: '600' }}>{nt.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>{[{ id: 'announcement', label: l.announcement, icon: '📢' }, { id: 'reminder', label: l.reminder, icon: '⏰' }, { id: 'alert', label: l.alert, icon: '🚨' }].map(nt => (<TouchableOpacity key={nt.id} onPress={() => setNotifType(nt.id)} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', borderWidth: 1.5, borderColor: notifType === nt.id ? t.indigo : t.border, backgroundColor: notifType === nt.id ? t.indigoDim : 'transparent' }}><Text style={{ fontSize: 16, marginBottom: 4 }}>{nt.icon}</Text><Text style={{ fontSize: 11, color: notifType === nt.id ? t.indigo : t.sub, fontWeight: '600' }}>{nt.label}</Text></TouchableOpacity>))}</View>
             <Text style={{ color: t.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>{l.notif_text}</Text>
-            <TextInput
-              value={notifMsg}
-              onChangeText={setNotifMsg}
-              placeholder={l.write_text}
-              placeholderTextColor={t.muted}
-              multiline
-              style={{
-                backgroundColor: t.inputBg, borderRadius: 14, padding: 14,
-                color: t.text, fontSize: 14, borderWidth: 1.5, borderColor: t.border,
-                minHeight: 110, textAlignVertical: 'top', marginBottom: 16, lineHeight: 22,
-              }}
-            />
-            <TouchableOpacity
-              onPress={sendNotification} disabled={notifSending || !isConnected}
-              style={{
-                backgroundColor: t.indigo, borderRadius: 14, padding: 15,
-                alignItems: 'center', opacity: (notifSending || !isConnected) ? 0.5 : 1, ...shadow('md'),
-              }}
-            >
-              {notifSending
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>📤 {l.send_all}</Text>
-              }
-            </TouchableOpacity>
+            <TextInput value={notifMsg} onChangeText={setNotifMsg} placeholder={l.write_text} placeholderTextColor={t.muted} multiline style={{ backgroundColor: t.inputBg, borderRadius: 14, padding: 14, color: t.text, fontSize: 14, borderWidth: 1.5, borderColor: t.border, minHeight: 110, textAlignVertical: 'top', marginBottom: 16, lineHeight: 22 }} />
+            <TouchableOpacity onPress={sendNotification} disabled={notifSending || !isConnected} style={{ backgroundColor: t.indigo, borderRadius: 14, padding: 15, alignItems: 'center', opacity: (notifSending || !isConnected) ? 0.5 : 1, ...shadow('md') }}>{notifSending ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>📤 {l.send_all}</Text>}</TouchableOpacity>
           </HRCard>
-          <View style={{
-            marginTop: 14, backgroundColor: t.indigoDim, borderRadius: 16,
-            padding: 18, flexDirection: 'row', alignItems: 'center', gap: 16,
-            borderWidth: 1, borderColor: `${t.indigo}22`,
-          }}>
-            <Text style={{ fontSize: 34 }}>👥</Text>
-            <View>
-              <Text style={{ color: t.indigo, fontWeight: '600', fontSize: 13, marginBottom: 2 }}>{l.will_send_to}</Text>
-              <Text style={{ color: t.text, fontSize: IS_SMALL ? 20 : 24, fontWeight: '800' }}>
-                {stats.total} {l.employee_word}
-              </Text>
-            </View>
-          </View>
+          <View style={{ marginTop: 14, backgroundColor: t.indigoDim, borderRadius: 16, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 16, borderWidth: 1, borderColor: `${t.indigo}22` }}><Text style={{ fontSize: 34 }}>👥</Text><View><Text style={{ color: t.indigo, fontWeight: '600', fontSize: 13, marginBottom: 2 }}>{l.will_send_to}</Text><Text style={{ color: t.text, fontSize: IS_SMALL ? 20 : 24, fontWeight: '800' }}>{stats.total} {l.employee_word}</Text></View></View>
         </>}
-
-        {/* ── EXPORT ── */}
         {tab === 'export' && <>
           <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 16 }}>📤 {l.export_tab}</Text>
           <HRCard>
             <Text style={{ color: t.sub, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>{l.select_type}</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>
-              {[{ id: 'attendance', icon: '📍', label: l.attendance_tab }, { id: 'employees', icon: '👥', label: l.employees_tab }, { id: 'leaves', icon: '🌴', label: l.leaves_tab }].map(et => (
-                <TouchableOpacity
-                  key={et.id} onPress={() => setExpType(et.id)}
-                  style={{
-                    flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
-                    borderWidth: 1.5,
-                    borderColor: expType === et.id ? t.sky : t.border,
-                    backgroundColor: expType === et.id ? t.skyDim : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 18, marginBottom: 5 }}>{et.icon}</Text>
-                  <Text style={{ fontSize: 11, color: expType === et.id ? t.sky : t.sub, fontWeight: '600' }}>{et.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {expType !== 'employees' && (
-              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>{l.from_date}</Text>
-                  <CalendarPicker dark={dark} value={expFrom} onChange={setExpFrom} lang={lang} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>{l.to_date}</Text>
-                  <CalendarPicker dark={dark} value={expTo} onChange={setExpTo} lang={lang} />
-                </View>
-              </View>
-            )}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>{[{ id: 'attendance', icon: '📍', label: l.attendance_tab }, { id: 'employees', icon: '👥', label: l.employees_tab }, { id: 'leaves', icon: '🌴', label: l.leaves_tab }].map(et => (<TouchableOpacity key={et.id} onPress={() => setExpType(et.id)} style={{ flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1.5, borderColor: expType === et.id ? t.sky : t.border, backgroundColor: expType === et.id ? t.skyDim : 'transparent' }}><Text style={{ fontSize: 18, marginBottom: 5 }}>{et.icon}</Text><Text style={{ fontSize: 11, color: expType === et.id ? t.sky : t.sub, fontWeight: '600' }}>{et.label}</Text></TouchableOpacity>))}</View>
+            {expType !== 'employees' && (<View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}><View style={{ flex: 1 }}><Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>{l.from_date}</Text><CalendarPicker dark={dark} value={expFrom} onChange={setExpFrom} lang={lang} /></View><View style={{ flex: 1 }}><Text style={{ color: t.sub, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>{l.to_date}</Text><CalendarPicker dark={dark} value={expTo} onChange={setExpTo} lang={lang} /></View></View>)}
             <AppBtn dark={dark} label={l.generate_download} icon="📥" color={t.sky} loading={expLoading} disabled={!isConnected} onPress={handleExport} />
-            {Platform.OS !== 'web' && (
-              <Text style={{ color: t.amber, fontSize: 11, marginTop: 12, textAlign: 'center', lineHeight: 16 }}>
-                ⚠️ {lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.'}
-              </Text>
-            )}
+            {Platform.OS !== 'web' && <Text style={{ color: t.amber, fontSize: 11, marginTop: 12, textAlign: 'center', lineHeight: 16 }}>⚠️ {lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.'}</Text>}
           </HRCard>
         </>}
-
         <View style={{ height: 20 }} />
       </ScrollView>
     </View>
@@ -2575,22 +1817,32 @@ export default function App() {
 
   useEffect(() => {
     AsyncStorage.getItem('app_lang').then(saved => { if (saved) setLang(saved); });
-    AsyncStorage.getItem('app_dark_mode').then(saved => { if (saved !== null) setDarkMode(saved === 'true'); });
+    AsyncStorage.getItem('app_dark_mode').then(saved => { if (saved !== null) setDarkMode(saved === '
+true'); });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s) setScreen('home');
+      if (s) {
+        setSession(s);
+        setScreen('home');
+      } else {
+        setScreen('login');
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       if (s) {
         setScreen('home');
       } else {
-        setScreen('login');
+        setSession(null);
         setEmployee(null);
         setEmployeeRole(null);
+        setIsClockedIn(false);
+        setUnreadCount(0);
+        setScreen('login');
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -2604,24 +1856,14 @@ export default function App() {
       try {
         const { data, error } = await supabase.auth.refreshSession();
         if (error) {
-          console.log('Session refresh failed:', error.message);
-          // Session truly expired — force logout
-          Alert.alert(
-            L[lang].session_expired,
-            L[lang].session_expired_msg,
-            [{ text: 'OK', onPress: () => supabase.auth.signOut() }]
-          );
+          Alert.alert(L[lang].session_expired, L[lang].session_expired_msg, [{ text: 'OK', onPress: () => supabase.auth.signOut() }]);
         } else if (data?.session) {
           setSession(data.session);
         }
-      } catch (e) {
-        console.log('Session refresh error:', e.message);
-      }
-    }, 10 * 60 * 1000); // 10 minutes
+      } catch (e) { console.log('Session refresh error:', e.message); }
+    }, 10 * 60 * 1000);
 
-    return () => {
-      if (sessionRefreshTimer.current) clearInterval(sessionRefreshTimer.current);
-    };
+    return () => { if (sessionRefreshTimer.current) clearInterval(sessionRefreshTimer.current); };
   }, [session, lang]);
 
   const handleSetDarkMode = useCallback((val) => {
@@ -2647,24 +1889,15 @@ export default function App() {
   useEffect(() => {
     if (!employee?.id) return;
     (async () => {
-      // Try to get shift timing from office_location or a shifts table
       try {
-        const { data: officeData } = await supabase
-          .from('office_location')
-          .select('shift_start_time')
-          .eq('is_active', true)
-          .single();
+        const { data: officeData } = await supabase.from('office_location').select('shift_start_time').eq('is_active', true).single();
         if (officeData?.shift_start_time) {
-          // Add 15 min grace period
           const parts = officeData.shift_start_time.split(':');
           const shiftDate = new Date(2000, 0, 1, parseInt(parts[0]), parseInt(parts[1]) + 15, 0);
           const threshold = `${String(shiftDate.getHours()).padStart(2, '0')}:${String(shiftDate.getMinutes()).padStart(2, '0')}:00`;
           setShiftStart(threshold);
         }
-      } catch (e) {
-        // Column might not exist — use default
-        setShiftStart('09:15:00');
-      }
+      } catch (e) { setShiftStart('09:15:00'); }
 
       if (employee.role_id) {
         const { data } = await supabase.from('roles').select('name').eq('id', employee.role_id).single();
@@ -2678,51 +1911,37 @@ export default function App() {
   // Real-time notification listener at app level
   useEffect(() => {
     if (!employee?.id) return;
-    const channel = supabase
-      .channel('app-notifications')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload) => {
-          const n = payload.new;
-          if (n.employee_id === employee.id || n.employee_id === null) {
-            setUnreadCount(prev => prev + 1);
-          }
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('app-notifications').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+      const n = payload.new;
+      if (n.employee_id === employee.id || n.employee_id === null) { setUnreadCount(prev => prev + 1); }
+    }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [employee]);
 
   const fetchUnread = useCallback(async () => {
     if (!employee?.id) return;
-    const { count } = await supabase.from('notifications').select('*', { count: 'exact', head: true })
-      .or(`employee_id.eq.${employee.id},employee_id.is.null`).eq('is_read', false);
+    const { count } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).or(`employee_id.eq.${employee.id},employee_id.is.null`).eq('is_read', false);
     setUnreadCount(count || 0);
   }, [employee]);
 
   const checkTodayStatus = useCallback(async () => {
     if (!employee?.id) return;
-    const { data } = await supabase.from('attendance_records').select('*')
-      .eq('employee_id', employee.id).eq('attendance_date', nowISO()).maybeSingle();
+    const { data } = await supabase.from('attendance_records').select('*').eq('employee_id', employee.id).eq('attendance_date', nowISO()).maybeSingle();
     setIsClockedIn(!!(data && data.check_in_time && !data.check_out_time));
   }, [employee]);
 
   const getOffice = async () => {
     try {
-      const { data: officeArr } = await supabase.from('office_location').select('*').eq('is_active', true).limit(1); const data = officeArr?.[0] || null;
-      return data;
-    } catch (e) {
-      console.error('getOffice error:', e);
-      return null;
-    }
+      const { data: officeArr } = await supabase.from('office_location').select('*').eq('is_active', true).limit(1);
+      return officeArr?.[0] || null;
+    } catch (e) { return null; }
   };
 
   const getUserLoc = async () => {
     if (Platform.OS === 'web') {
       return new Promise(res => {
         if (!navigator.geolocation) { res(null); return; }
-        const safetyTimer = setTimeout(() => { res(null); }, 12000);
+        const safetyTimer = setTimeout(() => res(null), 12000);
         navigator.geolocation.getCurrentPosition(
           p => { clearTimeout(safetyTimer); res({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy || 0 }); },
           () => { clearTimeout(safetyTimer); res(null); },
@@ -2746,80 +1965,51 @@ export default function App() {
     }
   };
 
-  // Biometric verification helper
   const verifyBiometric = async () => {
-    if (!LocalAuthentication) return true; // Not available, skip
+    if (!LocalAuthentication) return true;
     try {
       const compatible = await LocalAuthentication.hasHardwareAsync();
-      if (!compatible) return true; // No hardware, skip
+      if (!compatible) return true;
       const enrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!enrolled) return true; // No biometrics enrolled, skip
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: L[lang].biometric_prompt,
-        cancelLabel: L[lang].cancel,
-        disableDeviceFallback: false,
-      });
+      if (!enrolled) return true;
+      const result = await LocalAuthentication.authenticateAsync({ promptMessage: L[lang].biometric_prompt, cancelLabel: L[lang].cancel, disableDeviceFallback: false });
       return result.success;
-    } catch (e) {
-      console.log('Biometric error:', e);
-      return true; // On error, allow through
-    }
+    } catch (e) { return true; }
   };
-const nav = useCallback((s) => {
-  if (s === 'refresh') {
-    checkTodayStatus();
-    fetchUnread();
-    return;
-  }
-  setScreen(s);
-}, [checkTodayStatus, fetchUnread]);
-  
+
+  const nav = useCallback((s) => {
+    if (s === 'refresh') { checkTodayStatus(); fetchUnread(); return; }
+    setScreen(s);
+  }, [checkTodayStatus, fetchUnread]);
+
   const handleCheckIn = async () => {
     if (!employee) return;
     if (!isConnected) return Alert.alert(L[lang].no_internet, L[lang].no_internet_sub);
 
     const bioOk = await verifyBiometric();
-    if (!bioOk) {
-      Alert.alert('', L[lang].biometric_fail);
-      return;
-    }
+    if (!bioOk) { Alert.alert('', L[lang].biometric_fail); return; }
 
     setCheckingIn(true);
     try {
       const [office, userLoc] = await Promise.all([getOffice(), getUserLoc()]);
-      if (!office || !userLoc) {
-        Alert.alert(L[lang].loc_error, L[lang].enable_gps);
-        return;
-      }
+      if (!office || !userLoc) { Alert.alert(L[lang].loc_error, L[lang].enable_gps); return; }
       const dist = haversine(userLoc.latitude, userLoc.longitude, office.latitude, office.longitude);
       const gpsAccuracy = userLoc.accuracy || 0;
       const effectiveDist = Math.max(0, dist - gpsAccuracy);
 
       if (effectiveDist > office.radius_meters) {
-        Alert.alert(
-          L[lang].out_of_range,
-          lang === 'ar'
-            ? `أنت على بعد ${dist.toFixed(0)}m من المكتب.\nالنطاق المسموح: ${office.radius_meters}m\nدقة GPS: ±${gpsAccuracy.toFixed(0)}m`
-            : `You are ${dist.toFixed(0)}m away.\nMax allowed: ${office.radius_meters}m\nGPS Accuracy: ±${gpsAccuracy.toFixed(0)}m`
-        );
+        Alert.alert(L[lang].out_of_range, lang === 'ar' ? `أنت على بعد ${dist.toFixed(0)}m من المكتب.\nالنطاق المسموح: ${office.radius_meters}m\nدقة GPS: ±${gpsAccuracy.toFixed(0)}m` : `You are ${dist.toFixed(0)}m away.\nMax allowed: ${office.radius_meters}m\nGPS Accuracy: ±${gpsAccuracy.toFixed(0)}m`);
         return;
       }
       const today = nowISO(), time = nowTime();
-      const { data: existing } = await supabase.from('attendance_records').select('id')
-        .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      const { data: existing } = await supabase.from('attendance_records').select('id').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
       if (existing) { Alert.alert('', L[lang].already_in); return; }
-      const { error } = await supabase.from('attendance_records').insert([{
-        employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id,
-      }]);
+      const { error } = await supabase.from('attendance_records').insert([{ employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id }]);
       if (error) { Alert.alert('Error', error.message); return; }
       Alert.alert(L[lang].checked_in, lang === 'ar' ? `الوقت: ${fmtTime(time)}\nالمسافة: ${dist.toFixed(0)}m` : `Time: ${fmtTime(time)}\nDistance: ${dist.toFixed(0)}m`);
       setIsClockedIn(true);
-    } catch (e) {
-      console.error('Check-in error:', e);
-      Alert.alert(L[lang].loc_error, L[lang].enable_gps);
-    } finally {
-      setCheckingIn(false);
-    }
+    } catch (e) { Alert.alert(L[lang].loc_error, L[lang].enable_gps); }
+    finally { setCheckingIn(false); }
   };
 
   const handleCheckOut = async () => {
@@ -2828,26 +2018,36 @@ const nav = useCallback((s) => {
     setCheckingOut(true);
     try {
       const today = nowISO(), time = nowTime();
-      const { data: rec } = await supabase.from('attendance_records').select('*')
-        .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      const { data: rec } = await supabase.from('attendance_records').select('*').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
       if (!rec) { Alert.alert('', L[lang].not_checked_in); return; }
       if (rec.check_out_time) { Alert.alert('', L[lang].already_out); return; }
       const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
       if (error) { Alert.alert('Error', error.message); return; }
       Alert.alert(L[lang].checked_out, lang === 'ar' ? `الوقت: ${fmtTime(time)}` : `Time: ${fmtTime(time)}`);
       setIsClockedIn(false);
-    } catch (e) {
-      console.error('Check-out error:', e);
-      Alert.alert('Error', L[lang].no_internet_sub);
-    } finally {
-      setCheckingOut(false);
-    }
+    } catch (e) { Alert.alert('Error', L[lang].no_internet_sub); }
+    finally { setCheckingOut(false); }
   };
 
-  const handleLogout = useCallback(() => {
-    supabase.auth.signOut();
-}, []);
-  
+  /* ═══════════════════ FIXED LOGOUT FUNCTION ═══════════════════ */
+  const handleLogout = useCallback(async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
+      // Clear all states manually to ensure UI resets instantly
+      setSession(null);
+      setEmployee(null);
+      setEmployeeRole(null);
+      setIsClockedIn(false);
+      setUnreadCount(0);
+      setScreen('login');
+    } catch (e) {
+      Alert.alert('Error', L[lang].no_internet_sub);
+    }
+  }, [lang]);
 
   const renderScreen = () => {
     switch (screen) {
