@@ -2721,16 +2721,23 @@ export default function App() {
   }, [employee]);
 
   const getOffice = async () => {
-    const { data } = await supabase.from('office_location').select('*').eq('is_active', true).single();
-    return data;
+    try {
+      const { data } = await supabase.from('office_location').select('*').eq('is_active', true).single();
+      return data;
+    } catch (e) {
+      console.error('getOffice error:', e);
+      return null;
+    }
   };
 
   const getUserLoc = async () => {
     if (Platform.OS === 'web') {
       return new Promise(res => {
-        navigator.geolocation?.getCurrentPosition(
-          p => res({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy || 0 }),
-          () => res(null),
+        if (!navigator.geolocation) { res(null); return; }
+        const safetyTimer = setTimeout(() => { res(null); }, 12000);
+        navigator.geolocation.getCurrentPosition(
+          p => { clearTimeout(safetyTimer); res({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy || 0 }); },
+          () => { clearTimeout(safetyTimer); res(null); },
           { enableHighAccuracy: true, timeout: 10000 }
         );
       });
@@ -2775,7 +2782,6 @@ export default function App() {
     if (!employee) return;
     if (!isConnected) return Alert.alert(L[lang].no_internet, L[lang].no_internet_sub);
 
-    // Biometric verification
     const bioOk = await verifyBiometric();
     if (!bioOk) {
       Alert.alert('', L[lang].biometric_fail);
@@ -2783,67 +2789,59 @@ export default function App() {
     }
 
     setCheckingIn(true);
-    const [office, userLoc] = await Promise.all([getOffice(), getUserLoc()]);
-    if (!office || !userLoc) {
-      Alert.alert(L[lang].loc_error, L[lang].enable_gps);
-      setCheckingIn(false); return;
-    }
-    const dist = haversine(userLoc.latitude, userLoc.longitude, office.latitude, office.longitude);
-    const gpsAccuracy = userLoc.accuracy || 0;
+    try {
+      const [office, userLoc] = await Promise.all([getOffice(), getUserLoc()]);
+      if (!office || !userLoc) {
+        Alert.alert(L[lang].loc_error, L[lang].enable_gps);
+        return;
+      }
+      const dist = haversine(userLoc.latitude, userLoc.longitude, office.latitude, office.longitude);
+      const gpsAccuracy = userLoc.accuracy || 0;
+      const effectiveDist = Math.max(0, dist - gpsAccuracy);
 
-    // Factor in GPS accuracy: effective distance = dist - gpsAccuracy (min 0)
-    const effectiveDist = Math.max(0, dist - gpsAccuracy);
-
-    if (effectiveDist > office.radius_meters) {
-      Alert.alert(
-        L[lang].out_of_range,
-        `${lang === 'ar' ? 'أنت على بعد' : 'You are'} ${dist.toFixed(0)}m ${lang === 'ar' ? 'من المكتب' : 'away'}.\n${lang === 'ar' ? 'النطاق المسموح' : 'Max allowed'}: ${office.radius_meters}m\n${lang === 'ar' ? 'دقة GPS' : 'GPS Accuracy'}: ±${gpsAccuracy.toFixed(0)}m`
-      );
-      setCheckingIn(false); return;
-    }
-    const today = nowISO(), time = nowTime();
-    const { data: existing } = await supabase.from('attendance_records').select('id')
-      .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-    if (existing) { Alert.alert('', L[lang].already_in); setCheckingIn(false); return; }
-    const { error } = await supabase.from('attendance_records').insert([{
-      employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id,
-    }]);
-    if (error) Alert.alert('Error', error.message);
-    else {
-      Alert.alert(L[lang].checked_in, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}\n${lang === 'ar' ? 'المسافة' : 'Distance'}: ${dist.toFixed(0)}m`);
+      if (effectiveDist > office.radius_meters) {
+        Alert.alert(
+          L[lang].out_of_range,
+          lang === 'ar'
+            ? `أنت على بعد ${dist.toFixed(0)}m من المكتب.\nالنطاق المسموح: ${office.radius_meters}m\nدقة GPS: ±${gpsAccuracy.toFixed(0)}m`
+            : `You are ${dist.toFixed(0)}m away.\nMax allowed: ${office.radius_meters}m\nGPS Accuracy: ±${gpsAccuracy.toFixed(0)}m`
+        );
+        return;
+      }
+      const today = nowISO(), time = nowTime();
+      const { data: existing } = await supabase.from('attendance_records').select('id')
+        .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      if (existing) { Alert.alert('', L[lang].already_in); return; }
+      const { error } = await supabase.from('attendance_records').insert([{
+        employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id,
+      }]);
+      if (error) { Alert.alert('Error', error.message); return; }
+      Alert.alert(L[lang].checked_in, lang === 'ar' ? `الوقت: ${fmtTime(time)}\nالمسافة: ${dist.toFixed(0)}m` : `Time: ${fmtTime(time)}\nDistance: ${dist.toFixed(0)}m`);
       setIsClockedIn(true);
+    } catch (e) {
+      console.error('Check-in error:', e);
+      Alert.alert(L[lang].loc_error, L[lang].enable_gps);
+    } finally {
+      setCheckingIn(false);
     }
-    setCheckingIn(false);
-  };
-
-  const handleCheckOut = async () => {
-    if (!employee) return;
-    if (!isConnected) return Alert.alert(L[lang].no_internet, L[lang].no_internet_sub);
-    setCheckingOut(true);
-    const today = nowISO(), time = nowTime();
-    const { data: rec } = await supabase.from('attendance_records').select('*')
-      .eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-    if (!rec) { Alert.alert('', L[lang].not_checked_in); setCheckingOut(false); return; }
-    if (rec.check_out_time) { Alert.alert('', L[lang].already_out); setCheckingOut(false); return; }
-    const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
-    if (error) Alert.alert('Error', error.message);
-    else { Alert.alert(L[lang].checked_out, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}`); setIsClockedIn(false); }
-    setCheckingOut(false);
   };
 
   const handleLogout = useCallback(() => {
-    supabase.auth.signOut();
-  }, []);
-
-  const nav = useCallback(s => {
-    if (s === 'refresh') {
-      // Refresh home data
-      checkTodayStatus();
-      fetchUnread();
+    if (Platform.OS === 'web') {
+      const l = L[lang];
+      const confirmed = window.confirm(l.logout_confirm);
+      if (confirmed) supabase.auth.signOut();
       return;
     }
-    setScreen(s);
-  }, [checkTodayStatus, fetchUnread]);
+    Alert.alert(
+      L[lang].logout_title,
+      L[lang].logout_confirm,
+      [
+        { text: L[lang].no, style: 'cancel' },
+        { text: L[lang].yes, style: 'destructive', onPress: () => supabase.auth.signOut() },
+      ]
+    );
+  }, [lang]);
 
   const renderScreen = () => {
     switch (screen) {
