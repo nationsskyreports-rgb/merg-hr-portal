@@ -571,7 +571,7 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
             <View style={{backgroundColor:t.skyDim,paddingHorizontal:12,paddingVertical:7,borderRadius:10,borderWidth:1,borderColor:t.skyBorder}}><Text style={{color:t.sky,fontSize:12,fontWeight:'700'}}>{l.profile}</Text></View>
           </TouchableOpacity>
         ) : <View style={{backgroundColor:t.card,borderRadius:20,padding:32,marginBottom:16,alignItems:'center',borderWidth:1,borderColor:t.border}}><ActivityIndicator color={t.sky} size="large" /></View>}
-        <View style={{backgroundColor:t.card,borderRadius:20,padding:IS_SMALL?16:20,marginBottom:18,borderWidth:1,borderColor:t.border,...shadow('md'}}>
+          <View style={{backgroundColor:t.card,borderRadius:20,padding:IS_SMALL?16:20,marginBottom:18,borderWidth:1,borderColor:t.border,...shadow('md')}}>
           <View style={{flexDirection:'row',alignItems:'center',marginBottom:16,gap:8}}>
             <View style={{width:10,height:10,borderRadius:5,backgroundColor:isClockedIn?t.green:t.muted}} />
             <Text style={{fontSize:12,color:t.sub,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.7,flex:1}}>{isClockedIn?l.clocked_in:l.todays_att}</Text>
