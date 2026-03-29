@@ -48,7 +48,7 @@ const TH = {
     inputBg:'#F8FAFF',
   },
 };
-const useT = (d) => TH[d ? 'dark' : 'light'];
+const useT_hook = (d) => TH[d ? 'dark' : 'light'];
 
 /* ═══════════════════ i18n ═══════════════════ */
 const L = {
@@ -167,7 +167,6 @@ const L = {
     jul:'يوليو', aug:'أغسطس', sep:'سبتمبر', oct:'أكتوبر', nov:'نوفمبر', dec:'ديسمبر',
   },
 };
-const useT_hook = (d) => TH[d ? 'dark' : 'light'];
 
 /* ═══════════════════ UTILITIES ═══════════════════ */
 const haversine = (a,b,c,d) => {
@@ -773,7 +772,12 @@ const ProfileScreenComp = ({dark,employee,goBack,setDarkMode,onChangePassword,la
             <StatBox dark={dark} value={stats.month} label={l.this_month} color={t.green} />
             <StatBox dark={dark} value={`${stats.days>0?Math.round(stats.onTime/stats.days*100):0}%`} label={l.on_time} color={t.amber} /></View>
           <View style={{backgroundColor:t.card,borderRadius:16,padding:4,marginHorizontal:16,marginBottom:16,borderWidth:1,borderColor:t.border}}>
-            <InfoRow dark={dark} label={l.email} value={employee?.email} lang={lang} /><InfoRow dark={dark} label={l.phone} value={employee?.phone} lang={lang} /><InfoRow dark={dark} label={l.position} value={employee?.position} lang={lang} /><InfoRow dark={dark} label={l.department} value={employee?.department} lang={lang} /><InfoRow dark={dark} label={l.joined} value={employee?.hire_date?fmtDate(employee.hire_date,lang):'—'} lang={lang} /></View>
+            <InfoRow dark={dark} label={l.email} value={employee?.email} lang={lang} />
+            <InfoRow dark={dark} label={l.phone} value={employee?.phone} lang={lang} />
+            <InfoRow dark={dark} label={l.position} value={employee?.position} lang={lang} />
+            <InfoRow dark={dark} label={l.department} value={employee?.department} lang={lang} />
+            <InfoRow dark={dark} label={l.joined} value={employee?.hire_date?fmtDate(employee.hire_date,lang):'—'} lang={lang} />
+          </View>
           <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:t.card,borderRadius:14,padding:16,marginHorizontal:16,marginBottom:16,borderWidth:1,borderColor:t.border}}>
             <View style={{flexDirection:'row',alignItems:'center'}}><Text style={{fontSize:20,marginRight:12}}>🌓</Text><Text style={{color:t.text,fontWeight:'600'}}>{dark?l.dark_mode:l.light_mode}</Text></View>
             <Switch value={dark} onValueChange={setDarkMode} trackColor={{false:t.border,true:t.sky}} thumbColor="#fff" /></View>
@@ -783,6 +787,148 @@ const ProfileScreenComp = ({dark,employee,goBack,setDarkMode,onChangePassword,la
         </View>
       </ScrollView>
     </ScreenWrap>
+  );
+};
+
+/* ═══════════════════ CHANGE PASSWORD ═══════════════════ */
+const ChangePasswordScreenComp = ({dark,goBack,lang,setLang}) => {
+  const t=useT_hook(dark),l=L[lang];
+  const [cur,setCur]=useState(''),[nw,setNw]=useState(''),[cnf,setCnf]=useState(''),[showCur,setShowCur]=useState(false),[showNw,setShowNw]=useState(false),[loading,setLoading]=useState(false);
+  const handle=async()=>{if(!cur.trim()||!nw.trim()||!cnf.trim())return;if(nw.length<6)return Alert.alert('',l.weak_pw);if(nw!==cnf)return Alert.alert('',l.mismatch);setLoading(true);const{error}=await supabase.auth.updateUser({password:nw});setLoading(false);if(error){Alert.alert('Error',error.message);return;}Alert.alert(l.pw_success,'',goBack);};
+  const PwF=({label,value,setValue,show,setShow})=>(<View style={{marginBottom:16}}>
+    <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{label}</Text>
+    <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:t.inputBg,borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:t.border}}>
+      <TextInput style={{flex:1,color:t.text,fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}} placeholder="••••••••" placeholderTextColor="#8BA0B8" value={value} onChangeText={setValue} secureTextEntry={!show} />
+      <TouchableOpacity onPress={()=>setShow(!show)} hitSlop={8}><Text style={{fontSize:16,color:t.sub}}>{show?'🙈':'👁'}</Text></TouchableOpacity></View></View>);
+  return (
+    <ScreenWrap dark={dark}>
+      <ScreenHeader dark={dark} title={l.change_password} onBack={goBack} lang={lang} setLang={setLang} />
+      <ScrollView style={{flex:1}} contentContainerStyle={{alignItems: 'center'}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={{width: '100%', maxWidth: 600, padding: 16}}>
+          <View style={{backgroundColor:t.card,borderRadius:18,padding:24,borderWidth:1,borderColor:t.border,marginBottom:20}}>
+            <PwF label={l.current_pw} value={cur} setValue={setCur} show={showCur} setShow={setShowCur} />
+            <PwF label={l.new_pw} value={nw} setValue={setNw} show={showNw} setShow={setShowNw} />
+            <PwF label={l.confirm_pw} value={cnf} setValue={setCnf} show={showNw} setShow={setShowNw} />
+            <AppBtn dark={dark} label={l.update_pw} icon="🔒" color={t.sky} loading={loading} onPress={handle} /></View>
+          <Text style={{color:t.sub,fontSize:12,textAlign:'center',lineHeight:18}}>{l.pw_hint}</Text>
+        </View>
+      </ScrollView>
+    </ScreenWrap>
+  );
+};
+
+/* ═══════════════════ HR DASHBOARD ═══════════════════ */
+const HRDashboardScreenComp = ({dark,goBack,lang,setLang}) => {
+  const t=useT_hook(dark), l=L[lang];
+  const [tab,setTab]=useState('overview'),[loading,setLoading]=useState(true);
+  const [stats,setStats]=useState({present:0,absent:0,total:0,pendingLeaves:0});
+  const [attendance,setAttendance]=useState([]),[leaveRequests,setLeaveRequests]=useState([]),[leaveLoading,setLeaveLoading]=useState(false);
+  const [employees,setEmployees]=useState([]),[empSearch,setEmpSearch]=useState('');
+  const [notifMsg,setNotifMsg]=useState(''),[notifType,setNotifType]=useState('announcement'),[notifSending,setNotifSending]=useState(false);
+  const [expType,setExpType]=useState('attendance'),[expFrom,setExpFrom]=useState(''),[expTo,setExpTo]=useState(''),[expLoading,setExpLoading]=useState(false);
+  const insets=useSafeAreaInsets();
+
+  useEffect(()=>{loadAll();},[]);
+  const loadAll=async()=>{setLoading(true);await Promise.all([loadStats(),loadAttendance(),loadLeaves(),loadEmployees()]);setLoading(false);};
+  const loadStats=async()=>{const today=nowISO();const{data:empD}=await supabase.from('employees').select('id').eq('status','active');const{data:attD}=await supabase.from('attendance_records').select('employee_id').eq('attendance_date',today);const{data:lvD}=await supabase.from('leave_requests').select('id').eq('status','pending');const total=empD?.length||0,present=attD?.length||0;setStats({total,present,absent:total-present,pendingLeaves:lvD?.length||0});};
+  const loadAttendance=async()=>{const{data}=await supabase.from('attendance_records').select('*,employees(first_name,last_name,employee_code,department)').eq('attendance_date',nowISO()).order('check_in_time',{ascending:false});setAttendance(data||[]);};
+  const loadLeaves=async()=>{const{data}=await supabase.from('leave_requests').select('*,employees(first_name,last_name,employee_code,department)').order('created_at',{ascending:false});setLeaveRequests(data||[]);};
+  const loadEmployees=async()=>{const{data}=await supabase.from('employees').select('id,employee_code,first_name,last_name,department,job_title,status,email').order('employee_code');setEmployees(data||[]);};
+  const handleLeaveAction=async(id,action)=>{setLeaveLoading(true);await supabase.from('leave_requests').update({status:action}).eq('id',id);await loadLeaves();await loadStats();setLeaveLoading(false);};
+  const sendNotification=async()=>{if(!notifMsg.trim())return Alert.alert('',lang==='ar'?'الرجاء كتابة نص الإشعار':'Please write notification text.');setNotifSending(true);try{const{data:emps}=await supabase.from('employees').select('id').eq('status','active');const inserts=emps.map(e=>({employee_id:e.id,type:notifType,message:notifMsg,is_read:false}));await supabase.from('notifications').insert(inserts);setNotifMsg('');Alert.alert(lang==='ar'?'تم':'Done',lang==='ar'?'تم إرسال الإشعار بنجاح':'Notification sent successfully.');}catch(_){Alert.alert('Error','Failed.');}finally{setNotifSending(false);}};
+
+  const handleExport=async()=>{
+    if(Platform.OS!=='web')return Alert.alert(l.not_available,lang==='ar'?'التصدير متاح على المتصفح فقط':'Export is available on web browser only.');
+    setExpLoading(true);
+    try{const XLSX=await import('xlsx');let rows=[],sheetName='Data',fileName='merge_export.xlsx';
+      if(expType==='attendance'){let q=supabase.from('attendance_records').select('attendance_date,check_in_time,check_out_time,employees!inner(first_name,last_name,employee_code,department)');if(expFrom)q=q.gte('attendance_date',expFrom);if(expTo)q=q.lte('attendance_date',expTo);const{data}=await q.order('attendance_date',{ascending:false});rows=(data||[]).map(r=>({'Date':r.attendance_date,'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Code':r.employees.employee_code,'Department':r.employees.department,'Check In':r.check_in_time?.slice(0,5)||'','Check Out':r.check_out_time?.slice(0,5)||''}));sheetName='Attendance';fileName=`attendance_${nowISO()}.xlsx`;}
+      else if(expType==='employees'){const{data}=await supabase.from('employees').select('employee_code,first_name,last_name,email,department,job_title,status').order('employee_code');rows=(data||[]).map(r=>({'Code':r.employee_code,'Name':`${r.first_name} ${r.last_name}`,'Email':r.email,'Department':r.department,'Position':r.job_title,'Status':r.status}));sheetName='Employees';fileName=`employees_${nowISO()}.xlsx`;}
+      else{let q=supabase.from('leave_requests').select('leave_type,start_date,end_date,total_days,reason,status,created_at,employees!inner(first_name,last_name,department)');if(expFrom)q=q.gte('start_date',expFrom);if(expTo)q=q.lte('start_date',expTo);const{data}=await q.order('created_at',{ascending:false});rows=(data||[]).map(r=>({'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Type':r.leave_type,'Start':r.start_date,'End':r.end_date,'Days':r.total_days,'Reason':r.reason,'Status':r.status}));sheetName='Leaves';fileName=`leaves_${nowISO()}.xlsx`;}
+      if(rows.length===0){setExpLoading(false);return Alert.alert('',lang==='ar'?'لا توجد بيانات':'No data found.');}
+      const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);XLSX.writeFile(wb,fileName);
+    }catch(e){Alert.alert('Error',e.message);}setExpLoading(false);
+  };
+
+  const stCfg=s=>({approved:{color:t.green,bg:t.greenDim,label:lang==='ar'?'Approved':'Approved'},present:{color:t.green,bg:t.greenDim,label:lang==='ar'?'Present':'Present'},rejected:{color:t.red,bg:t.redDim,label:lang==='ar'?'Rejected':'Rejected'},pending:{color:t.amber,bg:t.amberDim,label:lang==='ar'?'Pending':'Pending'}}[s]||{color:t.sub,bg:t.border,label:s});
+  const filteredEmps=employees.filter(e=>empSearch===''||`${e.first_name} ${e.last_name}`.toLowerCase().includes(empSearch.toLowerCase())||e.employee_code?.toLowerCase().includes(empSearch.toLowerCase())||e.department?.toLowerCase().includes(empSearch.toLowerCase()));
+  const tabs=[{id:'overview',label:l.overview,icon:'📊'},{id:'attendance',label:l.attendance_tab,icon:'📍'},{id:'leaves',label:l.leaves_tab,icon:'🌴'},{id:'employees',label:l.employees_tab,icon:'👥'},{id:'notifications',label:l.notifs_tab,icon:'🔔'},{id:'export',label:l.export_tab,icon:'📤'}];
+
+  if(loading) return <View style={{flex:1,backgroundColor:t.bg,alignItems:'center',justifyContent:'center',paddingTop:insets.top}}><ActivityIndicator size="large" color={t.sky} /><Text style={{color:t.sub,marginTop:12}}>{l.loading}</Text></View>;
+
+  const HRStat=({icon,label,value,color,bg})=>(<View style={{flex:1,backgroundColor:t.card,borderRadius:16,padding:16,borderWidth:1,borderColor:t.border}}><View style={{width:40,height:40,borderRadius:12,backgroundColor:bg,alignItems:'center',justifyContent:'center',marginBottom:10}}><Text style={{fontSize:18}}>{icon}</Text></View><Text style={{fontSize:22,fontWeight:'800',color,marginBottom:2}}>{value}</Text><Text style={{fontSize:12,color:t.sub}}>{label}</Text></View>);
+  const HRBadge=({label,color,bg})=>(<View style={{paddingHorizontal:10,paddingVertical:5,borderRadius:8,backgroundColor:bg}}><Text style={{fontSize:11,fontWeight:'700',color}}>{label}</Text></View>);
+  const HRCard=({children,hl})=>(<View style={{backgroundColor:t.card,borderRadius:16,padding:16,marginBottom:10,borderWidth:1,borderColor:hl?t.amber+'50':t.border}}>{children}</View>);
+  const HREmpRow=({e})=>(<View style={{backgroundColor:t.card,borderRadius:14,padding:14,marginBottom:8,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}><View style={{width:44,height:44,borderRadius:22,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center'}}><Text style={{color:t.sky,fontWeight:'700',fontSize:15}}>{e.first_name?.[0]}{e.last_name?.[0]}</Text></View><View style={{flex:1,marginLeft:12}}><Text style={{color:t.text,fontWeight:'700',fontSize:14}}>{e.first_name} {e.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{e.job_title} · {e.department}</Text></View><HRBadge label={e.status==='active'?l.active_st:l.inactive_st} color={e.status==='active'?t.green:t.red} bg={e.status==='active'?t.greenDim:t.redDim} /></View>);
+
+  return (
+    <View style={{flex:1,backgroundColor:t.bg,paddingTop:insets.top,paddingBottom:insets.bottom}}>
+      <View style={{paddingHorizontal:16,paddingTop:10,paddingBottom:14,backgroundColor:t.card,borderBottomWidth:1,borderBottomColor:t.border,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+        <View><Text style={{fontSize:20,fontWeight:'800',color:t.text}}>{l.hr_dashboard}</Text><Text style={{fontSize:12,color:t.sub,marginTop:2}}>{new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'short',month:'short',day:'numeric'})}</Text></View>
+        <TouchableOpacity onPress={goBack} style={{backgroundColor:t.skyDim,paddingHorizontal:14,paddingVertical:8,borderRadius:10}}><Text style={{color:t.sky,fontWeight:'700',fontSize:13}}>{lang==='ar'?'رجوع ›':'‹ Back'}</Text></TouchableOpacity>
+      </View>
+      <View style={{backgroundColor:t.card,borderBottomWidth:1,borderBottomColor:t.border}}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal:12,paddingVertical:10}}>
+          {tabs.map(tb=>(<TouchableOpacity key={tb.id} onPress={()=>setTab(tb.id)} style={{paddingHorizontal:14,paddingVertical:8,borderRadius:10,marginRight:8,backgroundColor:tab===tb.id?t.sky:'transparent'}}><Text style={{fontSize:13,fontWeight:'600',color:tab===tb.id?'#fff':t.sub}}>{tb.icon} {tb.label}</Text></TouchableOpacity>))}
+        </ScrollView></View>
+      <ScrollView style={{flex:1}} contentContainerStyle={{padding:16, alignItems: 'center'}} showsVerticalScrollIndicator={false}>
+        <View style={{width: '100%', maxWidth: 800}}>
+          {tab==='overview'&&<>
+            <View style={{flexDirection:'row',marginBottom:10,gap:10}}><HRStat icon="👥" label={l.total_employees} value={stats.total} color={t.sky} bg={t.skyDim} /><HRStat icon="✅" label={l.present} value={stats.present} color={t.green} bg={t.greenDim} /></View>
+            <View style={{flexDirection:'row',marginBottom:16,gap:10}}><HRStat icon="❌" label={l.absent} value={stats.absent} color={t.red} bg={t.redDim} /><HRStat icon="🌴" label={l.pending_leaves} value={stats.pendingLeaves} color={t.amber} bg={t.amberDim} /></View>
+            <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,marginBottom:16}}>
+              {[{label:l.review_att,g:'attendance',icon:'📍',c:t.sky,bg:t.skyDim},{label:l.leave_req,g:'leaves',icon:'🌴',c:t.amber,bg:t.amberDim},{label:l.emp_list,g:'employees',icon:'👥',c:t.green,bg:t.greenDim},{label:l.send_notif,g:'notifications',icon:'🔔',c:t.indigo,bg:t.indigoDim}].map(a=>(<TouchableOpacity key={a.g} onPress={()=>setTab(a.g)} style={{width:'48%',borderRadius:14,padding:16,borderWidth:1,alignItems:'center',justifyContent:'center',backgroundColor:a.bg,borderColor:a.c+'25'}}><Text style={{fontSize:22,marginBottom:6,color:a.c}}>{a.icon}</Text><Text style={{fontSize:13,fontWeight:'700',textAlign:'center',color:a.c}}>{a.label}</Text></TouchableOpacity>))}
+            </View>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.latest_att}</Text>
+            {attendance.slice(0,4).map(a=>(<View key={a.id} style={{backgroundColor:t.card,borderRadius:14,padding:14,marginBottom:8,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}><View style={{width:44,height:44,borderRadius:22,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center',marginRight:12}}><Text style={{color:t.sky,fontWeight:'700',fontSize:15}}>{a.employees?.first_name?.[0]}{a.employees?.last_name?.[0]}</Text></View><View style={{flex:1}}><Text style={{color:t.text,fontWeight:'700',fontSize:14}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{a.employees?.department}</Text></View><View style={{alignItems:'flex-end'}}><Text style={{color:t.green,fontSize:14,fontWeight:'700'}}>{a.check_in_time?.slice(0,5)||'--:--'}</Text><Text style={{color:t.sub,fontSize:10,marginTop:2}}>{l.entry}</Text></View></View>))}
+            {attendance.length===0&&<View style={{alignItems:'center',padding:30,backgroundColor:t.card,borderRadius:14}}><Text style={{fontSize:40,marginBottom:8}}>📭</Text><Text style={{color:t.sub,fontSize:14}}>{l.no_att_today}</Text></View>}
+          </>}
+
+          {tab==='attendance'&&<>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.att_records} ({attendance.length})</Text>
+            {attendance.map(a=>{const st=stCfg(a.status);return <HRCard key={a.id}><View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}><View><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{a.employees?.employee_code} · {a.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{flexDirection:'row',gap:10}}><View style={{flex:1,padding:10,borderRadius:10,alignItems:'center',backgroundColor:t.greenDim}}><Text style={{fontSize:10,fontWeight:'600',color:t.green}}>{l.entry}</Text><Text style={{fontWeight:'700',fontSize:16,color:t.green,marginTop:2}}>{a.check_in_time?.slice(0,5)||'---'}</Text></View><View style={{flex:1,padding:10,borderRadius:10,alignItems:'center',backgroundColor:t.redDim}}><Text style={{fontSize:10,fontWeight:'600',color:t.red}}>{l.exit}</Text><Text style={{fontWeight:'700',fontSize:16,color:a.check_out_time?t.red:t.muted,marginTop:2}}>{a.check_out_time?.slice(0,5)||'---'}</Text></View></View></HRCard>;})}
+            {attendance.length===0&&<View style={{alignItems:'center',padding:30,backgroundColor:t.card,borderRadius:14}}><Text style={{fontSize:40,marginBottom:8}}>📭</Text><Text style={{color:t.sub}}>{l.no_records}</Text></View>}
+          </>}
+
+          {tab==='leaves'&&<>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:4}}>{l.leave_reqs}</Text>
+            <Text style={{fontSize:12,color:t.sub,marginBottom:12}}>{leaveRequests.filter(lv=>lv.status==='pending').length} {l.under_review}</Text>
+            {leaveLoading&&<ActivityIndicator color={t.sky} style={{marginBottom:8}} />}
+            {leaveRequests.map(lv=>{const st=stCfg(lv.status);const days=lv.start_date&&lv.end_date?Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/86400000)+1:0;return <HRCard key={lv.id} hl={lv.status==='pending'}><View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}><View><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{lv.employees?.first_name} {lv.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{lv.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{flexDirection:'row',gap:8,marginBottom:8}}><View style={{backgroundColor:t.indigoDim,paddingHorizontal:10,paddingVertical:5,borderRadius:8}}><Text style={{color:t.indigo,fontSize:11,fontWeight:'600'}}>{lv.leave_type}</Text></View><View style={{backgroundColor:t.skyDim,paddingHorizontal:10,paddingVertical:5,borderRadius:8}}><Text style={{color:t.sky,fontSize:11,fontWeight:'600'}}>{days} {l.day}</Text></View></View><Text style={{color:t.sub,fontSize:12,marginBottom:4}}>📅 {lv.start_date} → {lv.end_date}</Text>{lv.reason&&<Text style={{color:t.muted,fontSize:11,marginBottom:10}}>💬 {lv.reason}</Text>}{lv.status==='pending'&&<View style={{flexDirection:'row',gap:8}}><TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'approved')} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:t.greenDim,borderWidth:1,borderColor:t.green+'35'}}><Text style={{fontWeight:'700',fontSize:13,color:t.green}}>✓ {l.approve}</Text></TouchableOpacity><TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'rejected')} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:t.redDim,borderWidth:1,borderColor:t.red+'35'}}><Text style={{fontWeight:'700',fontSize:13,color:t.red}}>✗ {l.reject}</Text></TouchableOpacity></View>}</HRCard>;})}
+          </>}
+
+          {tab==='employees'&&<>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:4}}>{l.emp_list_title}</Text>
+            <Text style={{fontSize:12,color:t.sub,marginBottom:12}}>{employees.length} {l.employee_word}</Text>
+            <View style={{flexDirection:'row',alignItems:'center',backgroundColor:t.card,borderRadius:12,borderWidth:1,borderColor:t.border,paddingHorizontal:14,marginBottom:12}}><Text style={{fontSize:15,marginRight:8}}>🔍</Text><TextInput value={empSearch} onChangeText={setEmpSearch} placeholder={l.search_emp} placeholderTextColor={t.muted} style={{flex:1,color:t.text,paddingVertical:12,fontSize:14}} /></View>
+            {filteredEmps.map(e=><HREmpRow key={e.id} e={e} />)}
+          </>}
+
+          {tab==='notifications'&&<>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.send_notif_title}</Text>
+            <HRCard>
+              <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.notif_type}</Text>
+              <View style={{flexDirection:'row',gap:8,marginBottom:16}}>{[{id:'announcement',label:l.announcement,icon:'📢'},{id:'reminder',label:l.reminder,icon:'⏰'},{id:'alert',label:l.alert,icon:'🚨'}].map(nt=>(<TouchableOpacity key={nt.id} onPress={()=>setNotifType(nt.id)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',borderWidth:1,borderColor:notifType===nt.id?t.indigo:t.border,backgroundColor:notifType===nt.id?t.indigoDim:'transparent'}}><Text style={{fontSize:12,color:notifType===nt.id?t.indigo:t.sub,fontWeight:'600'}}>{nt.icon} {nt.label}</Text></TouchableOpacity>))}</View>
+              <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.notif_text}</Text>
+              <TextInput value={notifMsg} onChangeText={setNotifMsg} placeholder={l.write_text} placeholderTextColor={t.muted} multiline style={{backgroundColor:t.bg,borderRadius:12,padding:14,color:t.text,fontSize:14,borderWidth:1,borderColor:t.border,minHeight:100,textAlignVertical:'top',marginBottom:16}} />
+              <TouchableOpacity onPress={sendNotification} disabled={notifSending} style={{backgroundColor:t.indigo,borderRadius:12,padding:14,alignItems:'center',opacity:notifSending?0.5:1}}>{notifSending?<ActivityIndicator color="#fff" />:<Text style={{color:'#fff',fontWeight:'700',fontSize:15}}>📤 {l.send_all}</Text>}</TouchableOpacity>
+            </HRCard>
+            <View style={{marginTop:16,backgroundColor:t.indigoDim,borderRadius:14,padding:16,flexDirection:'row',alignItems:'center',borderWidth:1,borderColor:t.indigo+'25'}}><Text style={{fontSize:28,marginRight:14}}>👥</Text><View><Text style={{color:t.indigo,fontWeight:'600',fontSize:13}}>{l.will_send_to}</Text><Text style={{color:t.text,fontSize:22,fontWeight:'800',marginTop:2}}>{stats.total} {l.employee_word}</Text></View></View>
+          </>}
+
+          {tab==='export'&&<>
+            <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>📤 {l.export_tab}</Text>
+            <HRCard>
+              <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.select_type}</Text>
+              <View style={{flexDirection:'row',gap:8,marginBottom:16}}>{[{id:'attendance',icon:'📍',label:l.attendance_tab},{id:'employees',icon:'👥',label:l.employees_tab},{id:'leaves',icon:'🌴',label:l.leaves_tab}].map(et=>(<TouchableOpacity key={et.id} onPress={()=>setExpType(et.id)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',borderWidth:1,borderColor:expType===et.id?t.sky:t.border,backgroundColor:expType===et.id?t.skyDim:'transparent'}}><Text style={{fontSize:12,color:expType===et.id?t.sky:t.sub,fontWeight:'600'}}>{et.icon} {et.label}</Text></TouchableOpacity>))}</View>
+              {expType!=='employees'&&<><View style={{flexDirection:'row',gap:10,marginBottom:14}}><View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6}}>{l.from_date}</Text><CalendarPicker dark={dark} value={expFrom} onChange={setExpFrom} lang={lang} /></View><View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6}}>{l.to_date}</Text><CalendarPicker dark={dark} value={expTo} onChange={setExpTo} lang={lang} /></View></View></>}
+              <AppBtn dark={dark} label={l.generate_download} icon="📥" color={t.sky} loading={expLoading} onPress={handleExport} />
+              {Platform.OS!=='web'&&<Text style={{color:t.amber,fontSize:11,marginTop:10,textAlign:'center'}}>⚠️ {lang==='ar'?'التصدير متاح على المتصفح فقط':'Export is available on web browser only.'}</Text>}
+            </HRCard>
+          </>}
+          <View style={{height:40}} />
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -800,6 +946,9 @@ export default function App() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    AsyncStorage.getItem('app_lang').then(saved=>{if(saved)setLang(saved);});
+    AsyncStorage.getItem('darkMode').then(saved=>{if(saved)setDark(saved==='true');});
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) fetchEmployee(session.user.id);
@@ -810,15 +959,7 @@ export default function App() {
       if (session) fetchEmployee(session.user.id);
       else { setEmployee(null); setLoading(false); setScreen('home'); }
     });
-    loadSettings();
   }, []);
-
-  const loadSettings = async () => {
-    const d = await AsyncStorage.getItem('darkMode');
-    const l = await AsyncStorage.getItem('lang');
-    if (d !== null) setDark(d === 'true');
-    if (l !== null) setLang(l);
-  };
 
   const fetchEmployee = async (uid) => {
     const { data } = await supabase.from('employees').select('*').eq('auth_id', uid).single();
@@ -855,7 +996,6 @@ export default function App() {
         let loc = await Location.getCurrentPositionAsync({});
         uLat = loc.coords.latitude; uLon = loc.coords.longitude;
       } else {
-        // Simple mock for web if needed, or use browser geolocation
         uLat = office.latitude; uLon = office.longitude;
       }
 
@@ -890,7 +1030,7 @@ export default function App() {
   };
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: dark ? '#0B1120' : '#F0F7FF' }}><ActivityIndicator size="large" color="#38BDF8" /></View>;
-  if (!session) return <SafeAreaProvider><LoginScreen lang={lang} setLang={(l) => { setLang(l); AsyncStorage.setItem('lang', l); }} /></SafeAreaProvider>;
+  if (!session) return <SafeAreaProvider><LoginScreen lang={lang} setLang={(l) => { setLang(l); AsyncStorage.setItem('app_lang', l); }} /></SafeAreaProvider>;
 
   const renderScreen = () => {
     switch (screen) {
@@ -899,6 +1039,8 @@ export default function App() {
       case 'leave': return <LeaveRequestScreenComp dark={dark} employee={employee} goBack={() => setScreen('home')} lang={lang} setLang={setLang} />;
       case 'notifications': return <NotificationsScreenComp dark={dark} employee={employee} goBack={() => setScreen('home')} onRead={() => fetchUnreadCount(employee.id)} lang={lang} setLang={setLang} />;
       case 'profile': return <ProfileScreenComp dark={dark} employee={employee} goBack={() => setScreen('home')} setDarkMode={(v) => { setDark(v); AsyncStorage.setItem('darkMode', String(v)); }} onChangePassword={() => setScreen('change_password')} lang={lang} setLang={setLang} />;
+      case 'change_password': return <ChangePasswordScreenComp dark={dark} goBack={() => setScreen('profile')} lang={lang} setLang={setLang} />;
+      case 'hr_dashboard': return <HRDashboardScreenComp dark={dark} goBack={() => setScreen('home')} lang={lang} setLang={setLang} />;
       default: return <HomeScreen dark={dark} employee={employee} isClockedIn={isClockedIn} checkingIn={checkingIn} checkingOut={checkingOut} unreadCount={unreadCount} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} onNav={setScreen} lang={lang} setLang={setLang} />;
     }
   };
