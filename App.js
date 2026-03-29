@@ -1,7 +1,7 @@
 import {
   Text, View, TextInput, Alert, ActivityIndicator,
   TouchableOpacity, Animated, ScrollView, StyleSheet,
-  KeyboardAvoidingView, Platform, Switch, Image
+  KeyboardAvoidingView, Platform, Switch, Image, Modal
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from './supabase';
@@ -9,9 +9,12 @@ import * as Location from 'expo-location';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-let MapView = null, Marker = null;
+let MapView = null, Marker = null, Circle = null;
 if (Platform.OS !== 'web') {
-  try { const m = require('react-native-maps'); MapView = m.default; Marker = m.Marker; } catch (_) {}
+  try {
+    const m = require('react-native-maps');
+    MapView = m.default; Marker = m.Marker; Circle = m.Circle;
+  } catch (_) {}
 }
 
 const LOGO_IMG = require('./assets/logo.png');
@@ -49,6 +52,8 @@ const L = {
     welcome_back:'Welcome Back', sign_in_sub:'Sign in to your employee account',
     email:'Email Address', password:'Password', sign_in:'Sign In',
     enter_email:'name@company.com', enter_pw:'Enter your password',
+    forgot_pw:'Forgot Password?', reset_title:'Reset Password', reset_sub:'Enter your email to receive a reset link.',
+    reset_sent:'Reset Link Sent', reset_sent_msg:'Check your email for the password reset link.',
     good_morning:'Good Morning', good_afternoon:'Good Afternoon', good_evening:'Good Evening',
     clocked_in:'Currently Clocked In', todays_att:"Today's Attendance",
     check_in:'Check In', check_out:'Check Out', active:'ACTIVE',
@@ -58,8 +63,7 @@ const L = {
     complete:'COMPLETE', in_progress:'IN PROGRESS', missing:'MISSING',
     check_in_label:'Check In', check_out_label:'Check Out',
     no_records:'No Records', no_records_sub:'Your attendance history will appear here after your first check-in.',
-    my_location:'My Location', map_unavailable:'Map Unavailable', map_unavail_sub:'Location data not available on this platform.',
-    office_info:'Office Info', allowed_radius:'Allowed Radius', your_distance:'Your Distance',
+    my_location:'My Location', office_info:'Office Info', allowed_radius:'Allowed Radius', your_distance:'Your Distance',
     loc_denied:'Location Access Denied', loc_denied_sub:'Enable location permissions to see your position.',
     leave_request:'Leave Request', new_request:'New Request', my_leaves:'My Leaves',
     leave_type:'Leave Type', start_date:'Start Date', end_date:'End Date',
@@ -92,15 +96,21 @@ const L = {
     send_all:'Send to All', will_send_to:'Will be sent to', employee_word:'employees',
     select_type:'Select Data Type', from_date:'From Date', to_date:'To Date',
     generate_download:'Generate & Download', loading:'Loading data...',
-    back:'Back', no_status:'No Status', not_available:'Not Available',
+    back:'Back', not_available:'Not Available',
     out_of_range:'Out of Range', already_in:'Already Checked In', not_checked_in:'Not Checked In',
     already_out:'Already Checked Out', checked_in:'Checked In ✓', checked_out:'Checked Out ✓',
     loc_error:'Location Error', enable_gps:'Please enable GPS and try again.',
+    cancel:'Cancel', pick_date:'Pick Date',
+    su:'Su', mo:'Mo', tu:'Tu', we:'We', th:'Th', fr:'Fr', sa:'Sa',
+    jan:'January', feb:'February', mar:'March', apr:'April', may:'May', jun:'June',
+    jul:'July', aug:'August', sep:'September', oct:'October', nov:'November', dec:'December',
   },
   ar: {
     welcome_back:'مرحباً بعودتك', sign_in_sub:'سجّل الدخول إلى حسابك',
     email:'البريد الإلكتروني', password:'كلمة المرور', sign_in:'تسجيل الدخول',
     enter_email:'name@company.com', enter_pw:'أدخل كلمة المرور',
+    forgot_pw:'نسيت كلمة المرور؟', reset_title:'إعادة تعيين كلمة المرور', reset_sub:'أدخل بريدك الإلكتروني لاستلام رابط إعادة التعيين.',
+    reset_sent:'تم إرسال الرابط', reset_sent_msg:'تحقق من بريدك الإلكتروني لرابط إعادة التعيين.',
     good_morning:'صباح الخير', good_afternoon:'مساء الخير', good_evening:'مساء الخير',
     clocked_in:'مسجّل دخول حالياً', todays_att:'حضور اليوم',
     check_in:'تسجيل دخول', check_out:'تسجيل خروج', active:'نشط',
@@ -110,8 +120,7 @@ const L = {
     complete:'مكتمل', in_progress:'قيد العمل', missing:'مفقود',
     check_in_label:'دخول', check_out_label:'خروج',
     no_records:'لا توجد سجلات', no_records_sub:'سيظهر سجل حضورك هنا بعد أول تسجيل دخول.',
-    my_location:'موقعي', map_unavailable:'الخريطة غير متاحة', map_unavail_sub:'بيانات الموقع غير متاحة على هذه المنصة.',
-    office_info:'معلومات المكتب', allowed_radius:'نطاق مسموح', your_distance:'المسافة الحالية',
+    my_location:'موقعي', office_info:'معلومات المكتب', allowed_radius:'نطاق مسموح', your_distance:'المسافة الحالية',
     loc_denied:'تم رفض الوصول للموقع', loc_denied_sub:'فعّل أذونات الموقع لرؤية موقعك.',
     leave_request:'طلب إجازة', new_request:'طلب جديد', my_leaves:'إجازاتي',
     leave_type:'نوع الإجازة', start_date:'تاريخ البداية', end_date:'تاريخ النهاية',
@@ -144,10 +153,14 @@ const L = {
     send_all:'إرسال للجميع', will_send_to:'سيتم الإرسال إلى', employee_word:'موظف',
     select_type:'اختر نوع البيانات', from_date:'من تاريخ', to_date:'إلى تاريخ',
     generate_download:'إنشاء وتحميل', loading:'جاري التحميل...',
-    back:'رجوع', no_status:'بدون حالة', not_available:'غير متاح',
+    back:'رجوع', not_available:'غير متاح',
     out_of_range:'خارج النطاق', already_in:'مسجّل دخول بالفعل', not_checked_in:'لم تسجّل دخول',
     already_out:'مسجّل خروج بالفعل', checked_in:'تم تسجيل الدخول ✓', checked_out:'تم تسجيل الخروج ✓',
     loc_error:'خطأ في الموقع', enable_gps:'يرجى تفعيل GPS والمحاولة مرة أخرى.',
+    cancel:'إلغاء', pick_date:'اختر التاريخ',
+    su:'أح', mo:'إث', tu:'ثل', we:'أر', th:'خم', fr:'جم', sa:'سب',
+    jan:'يناير', feb:'فبراير', mar:'مارس', apr:'أبريل', may:'مايو', jun:'يونيو',
+    jul:'يوليو', aug:'أغسطس', sep:'سبتمبر', oct:'أكتوبر', nov:'نوفمبر', dec:'ديسمبر',
   },
 };
 
@@ -265,26 +278,100 @@ const InfoRow = ({dark,label,value,lang}) => {
     <Text style={{flex:1,fontSize:14,color:t.text,fontWeight:'600',textAlign:lang==='ar'?'right':'left'}}>{value||'—'}</Text></View>;
 };
 
-const DateInput = ({dark,value,onChange,placeholder,lang}) => {
-  const t=useT(dark);
+/* ═══════════════════ CALENDAR PICKER ═══════════════════ */
+const CalendarPicker = ({dark, value, onChange, lang}) => {
+  const t=useT(dark), l=L[lang];
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(new Date(value || nowISO()));
+
+  const yr = month.getFullYear(), mo = month.getMonth();
+  const firstDow = new Date(yr, mo, 1).getDay();
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const days = [];
+  for(let i=0;i<firstDow;i++) days.push(null);
+  for(let i=1;i<=daysInMonth;i++) days.push(i);
+
+  const mNames = [l.jan,l.feb,l.mar,l.apr,l.may,l.jun,l.jul,l.aug,l.sep,l.oct,l.nov,l.dec];
+  const dNames = [l.su,l.mo,l.tu,l.we,l.th,l.fr,l.sa];
+
+  const selDay = (d) => {
+    const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    onChange(ds); setOpen(false);
+  };
+
+  const isSel = (d) => d && value === `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const isToday = (d) => d && `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}` === nowISO();
+
+  if(Platform.OS==='web'){
+    return (
+      <TouchableOpacity onPress={()=>openWebDatePicker(value,onChange)} activeOpacity={0.7}
+        style={{flex:1,height:50,backgroundColor:t.inputBg,borderRadius:12,paddingHorizontal:14,borderWidth:1,borderColor:t.border,
+          flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+        <Text style={{color:value?t.text:'#8BA0B8',fontSize:14,fontWeight:'500'}}>{value||'YYYY-MM-DD'}</Text>
+        <Text style={{fontSize:16}}>📅</Text>
+      </TouchableOpacity>
+    );
+  }
+
   return (
-    <TouchableOpacity onPress={()=>openWebDatePicker(value,onChange)} activeOpacity={0.7}
-      style={{flex:1,height:50,backgroundColor:t.inputBg,borderRadius:12,paddingHorizontal:14,borderWidth:1.5,borderColor:t.border,
-        flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
-      <Text style={{color:value?t.text:'#4A6178',fontSize:14,fontWeight:'500'}}>{value||placeholder}</Text>
-      <Text style={{fontSize:16}}>📅</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity onPress={()=>{setMonth(new Date(value||nowISO()));setOpen(true);}} activeOpacity={0.7}
+        style={{flex:1,height:50,backgroundColor:t.inputBg,borderRadius:12,paddingHorizontal:14,borderWidth:1,borderColor:t.border,
+          flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+        <Text style={{color:value?t.text:'#8BA0B8',fontSize:14,fontWeight:'500'}}>{value||'YYYY-MM-DD'}</Text>
+        <Text style={{fontSize:16}}>📅</Text>
+      </TouchableOpacity>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={()=>setOpen(false)}>
+        <TouchableOpacity activeOpacity={1} onPress={()=>setOpen(false)}
+          style={{flex:1,backgroundColor:'rgba(0,0,0,0.5)',justifyContent:'center',alignItems:'center',padding:20}}>
+          <View style={{backgroundColor:t.card,borderRadius:20,padding:20,width:'100%',maxWidth:360,
+            shadowColor:'#000',shadowOffset:{width:0,height:10},shadowOpacity:0.3,shadowRadius:30,elevation:15}}>
+            {/* Month Nav */}
+            <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <TouchableOpacity onPress={()=>setMonth(new Date(yr,mo-1,1))} hitSlop={10} style={{width:36,height:36,borderRadius:18,backgroundColor:t.surface,alignItems:'center',justifyContent:'center'}}>
+                <Text style={{color:t.text,fontSize:16,fontWeight:'700'}}>‹</Text></TouchableOpacity>
+              <Text style={{color:t.text,fontWeight:'700',fontSize:16}}>{mNames[mo]} {yr}</Text>
+              <TouchableOpacity onPress={()=>setMonth(new Date(yr,mo+1,1))} hitSlop={10} style={{width:36,height:36,borderRadius:18,backgroundColor:t.surface,alignItems:'center',justifyContent:'center'}}>
+                <Text style={{color:t.text,fontSize:16,fontWeight:'700'}}>›</Text></TouchableOpacity>
+            </View>
+            {/* Day Names */}
+            <View style={{flexDirection:'row',marginBottom:8}}>
+              {dNames.map(d=><View key={d} style={{flex:1,alignItems:'center'}}><Text style={{fontSize:12,color:t.muted,fontWeight:'600'}}>{d}</Text></View>)}
+            </View>
+            {/* Days Grid */}
+            <View style={{flexDirection:'row',flexWrap:'wrap'}}>
+              {days.map((d,i)=>{
+                if(d===null) return <View key={`e${i}`} style={{width:'14.28%',height:42}} />;
+                const selected = isSel(d), today = isToday(d);
+                return (
+                  <TouchableOpacity key={d} onPress={()=>selDay(d)}
+                    style={{width:'14.28%',height:42,alignItems:'center',justifyContent:'center',borderRadius:12}}>
+                    <View style={{width:36,height:36,borderRadius:18,alignItems:'center',justifyContent:'center',
+                      backgroundColor:selected?t.sky:today?t.skyDim:'transparent'}}>
+                      <Text style={{fontSize:14,fontWeight:selected?'700':'500',color:selected?'#fff':today?t.sky:t.text}}>{d}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {/* Cancel */}
+            <TouchableOpacity onPress={()=>setOpen(false)} style={{marginTop:16,paddingVertical:12,borderRadius:12,backgroundColor:t.surface,alignItems:'center'}}>
+              <Text style={{color:t.sub,fontWeight:'600',fontSize:14}}>{l.cancel}</Text></TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 };
 
 /* ═══════════════════ LOGIN SCREEN ═══════════════════ */
 const LoginScreen = ({onLogin,lang,setLang}) => {
   const [email,setEmail]=useState(''),[pw,setPw]=useState(''),[showPw,setShowPw]=useState(false),[loading,setLoading]=useState(false);
+  const [resetOpen,setResetOpen]=useState(false),[resetEmail,setResetEmail]=useState(''),[resetLoading,setResetLoading]=useState(false);
   const l=L[lang];
   const logoScale=useRef(new Animated.Value(0.5)).current;
   const logoOp=useRef(new Animated.Value(0)).current;
   const tagOp=useRef(new Animated.Value(0)).current;
-  const cardSlide=useRef(new Animated.Value(40)).current;
   const cardOp=useRef(new Animated.Value(0)).current;
 
   useEffect(()=>{
@@ -294,10 +381,7 @@ const LoginScreen = ({onLogin,lang,setLang}) => {
         Animated.timing(logoOp,{toValue:1,duration:600,useNativeDriver:true}),
       ]),
       Animated.timing(tagOp,{toValue:1,duration:400,useNativeDriver:true}),
-      Animated.parallel([
-        Animated.timing(cardSlide,{toValue:0,duration:500,useNativeDriver:true}),
-        Animated.timing(cardOp,{toValue:1,duration:500,useNativeDriver:true}),
-      ]),
+      Animated.timing(cardOp,{toValue:1,duration:500,useNativeDriver:true}),
     ]).start();
   },[]);
 
@@ -310,71 +394,100 @@ const LoginScreen = ({onLogin,lang,setLang}) => {
     if(error) Alert.alert(lang==='ar'?'فشل تسجيل الدخول':'Login Failed',error.message);
   };
 
+  const handleReset = async () => {
+    if(!resetEmail.trim()) return Alert.alert('',lang==='ar'?'الرجاء إدخال البريد الإلكتروني':'Please enter your email.');
+    setResetLoading(true);
+    const {error} = await supabase.auth.resetPasswordForEmail(resetEmail.trim());
+    setResetLoading(false);
+    if(error){Alert.alert('Error',error.message);return;}
+    Alert.alert(l.reset_sent,l.reset_sent_msg);
+    setResetOpen(false);setResetEmail('');
+  };
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={{flex:1,backgroundColor:'#FFFFFF'}}>
-
-      {/* Decorative light circles */}
-      <View style={{position:'absolute',top:-120,right:-80,width:400,height:400,borderRadius:200,backgroundColor:'rgba(56,189,248,0.06)'}} />
-      <View style={{position:'absolute',bottom:-150,left:-100,width:500,height:500,borderRadius:250,backgroundColor:'rgba(34,197,94,0.04)'}} />
+      {/* Light decorative circles */}
+      <View style={{position:'absolute',top:-100,right:-60,width:350,height:350,borderRadius:175,backgroundColor:'rgba(56,189,248,0.05)'}} />
+      <View style={{position:'absolute',bottom:-120,left:-80,width:400,height:400,borderRadius:200,backgroundColor:'rgba(34,197,94,0.04)'}} />
 
       {/* Language Toggle */}
       <View style={{position:'absolute',top:50,right:20,zIndex:10}}>
-        <TouchableOpacity onPress={()=>setLang(lang==='en'?'ar':'en')} activeOpacity={0.7}
-          style={{backgroundColor:'rgba(56,189,248,0.1)',borderRadius:10,paddingHorizontal:10,paddingVertical:6,borderWidth:1,borderColor:'rgba(56,189,248,0.2)'}}>
-          <Text style={{color:'#0284C7',fontWeight:'700',fontSize:12}}>🌐 {lang==='en'?'عربي':'EN'}</Text>
-        </TouchableOpacity>
+        <LangToggle dark={false} lang={lang} setLang={setLang} />
       </View>
 
-      <ScrollView contentContainerStyle={{flexGrow:1,justifyContent:'center',paddingHorizontal:28,paddingVertical:50}}
-        bounces={false} keyboardShouldPersistTaps="handled">
-
-        {/* Animated Logo */}
-        <View style={{alignItems:'center',marginBottom:40}}>
+      <View style={{flex:1,justifyContent:'center',paddingHorizontal:28}}>
+        {/* Logo */}
+        <View style={{alignItems:'center',marginBottom:32}}>
           <Animated.View style={{opacity:logoOp,transform:[{scale:logoScale}]}}>
             <Image source={LOGO_IMG} style={{width:180,height:115,resizeMode:'contain'}} />
           </Animated.View>
-          <Animated.Text style={{color:'#64748B',fontSize:13,marginTop:8,letterSpacing:2,opacity:tagOp,fontWeight:'500'}}>
+          <Animated.Text style={{color:'#94A3B8',fontSize:13,marginTop:6,letterSpacing:2,opacity:tagOp,fontWeight:'500'}}>
             Your Job Way
           </Animated.Text>
         </View>
 
         {/* Card */}
-        <Animated.View style={{opacity:cardOp,transform:[{translateY:cardSlide}]}}>
-          <View style={{backgroundColor:'#FFFFFF',borderRadius:24,padding:28,width:'100%',
-            borderWidth:1.5,borderColor:'#E2E8F0',
-            shadowColor:'#0284C7',shadowOffset:{width:0,height:20},shadowOpacity:0.08,shadowRadius:40,elevation:8}}>
-            <Text style={{color:'#0B1120',fontSize:22,fontWeight:'700',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.welcome_back}</Text>
-            <Text style={{color:'#64748B',fontSize:14,marginBottom:28,textAlign:lang==='ar'?'right':'left'}}>{l.sign_in_sub}</Text>
+        <Animated.View style={{opacity:cardOp}}>
+          <Text style={{color:'#0B1120',fontSize:22,fontWeight:'700',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.welcome_back}</Text>
+          <Text style={{color:'#64748B',fontSize:14,marginBottom:24,textAlign:lang==='ar'?'right':'left'}}>{l.sign_in_sub}</Text>
 
-            <View style={{marginBottom:18}}>
-              <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.email}</Text>
-              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#F8FAFF',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#E2E8F0'}}>
-                <Text style={{fontSize:16,marginRight:10}}>✉</Text>
-                <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
-                  placeholder={l.enter_email} placeholderTextColor="#94A3B8" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-              </View>
+          {/* Email */}
+          <View style={{marginBottom:14}}>
+            <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6,textAlign:lang==='ar'?'right':'left'}}>{l.email}</Text>
+            <View style={{flexDirection:'row',alignItems:'center',height:52,backgroundColor:'#F8FAFF',borderRadius:12,paddingHorizontal:14}}>
+              <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',padding:0,textAlign:lang==='ar'?'right':'left'}}
+                placeholder={l.enter_email} placeholderTextColor="#94A3B8" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
             </View>
-
-            <View style={{marginBottom:24}}>
-              <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.password}</Text>
-              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#F8FAFF',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#E2E8F0'}}>
-                <Text style={{fontSize:16,marginRight:10}}>🔒</Text>
-                <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
-                  placeholder={l.enter_pw} placeholderTextColor="#94A3B8" value={pw} onChangeText={setPw} secureTextEntry={!showPw} />
-                <TouchableOpacity onPress={()=>setShowPw(!showPw)} hitSlop={8}><Text style={{fontSize:16,color:'#94A3B8'}}>{showPw?'🙈':'👁'}</Text></TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.8}
-              style={{height:56,borderRadius:14,backgroundColor:'#38BDF8',alignItems:'center',justifyContent:'center',
-                shadowColor:'#38BDF8',shadowOffset:{width:0,height:10},shadowOpacity:0.3,shadowRadius:24,elevation:6,opacity:loading?0.6:1}}>
-              {loading ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={{color:'#FFFFFF',fontWeight:'800',fontSize:16,letterSpacing:0.5}}>{l.sign_in}</Text>}
-            </TouchableOpacity>
           </View>
+
+          {/* Password */}
+          <View style={{marginBottom:6}}>
+            <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6,textAlign:lang==='ar'?'right':'left'}}>{l.password}</Text>
+            <View style={{flexDirection:'row',alignItems:'center',height:52,backgroundColor:'#F8FAFF',borderRadius:12,paddingHorizontal:14}}>
+              <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',padding:0,textAlign:lang==='ar'?'right':'left'}}
+                placeholder={l.enter_pw} placeholderTextColor="#94A3B8" value={pw} onChangeText={setPw} secureTextEntry={!showPw} />
+              <TouchableOpacity onPress={()=>setShowPw(!showPw)} hitSlop={10} style={{marginLeft:8}}>
+                <Text style={{fontSize:18,color:'#94A3B8'}}>{showPw?'🙈':'👁'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity onPress={()=>setResetOpen(true)} style={{marginBottom:20,paddingVertical:4}}>
+            <Text style={{color:'#0284C7',fontSize:13,fontWeight:'600',textAlign:lang==='ar'?'right':'left'}}>{l.forgot_pw}</Text>
+          </TouchableOpacity>
+
+          {/* Sign In Button */}
+          <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.8}
+            style={{height:54,borderRadius:14,backgroundColor:'#38BDF8',alignItems:'center',justifyContent:'center',
+              shadowColor:'#38BDF8',shadowOffset:{width:0,height:8},shadowOpacity:0.25,shadowRadius:20,elevation:5,opacity:loading?0.6:1}}>
+            {loading ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={{color:'#FFFFFF',fontWeight:'800',fontSize:16}}>{l.sign_in}</Text>}
+          </TouchableOpacity>
+
           <Text style={{color:'#CBD5E1',fontSize:11,textAlign:'center',marginTop:24}}>Merge HR Portal v2.0</Text>
         </Animated.View>
-      </ScrollView>
+      </View>
+
+      {/* Reset Password Modal */}
+      <Modal visible={resetOpen} transparent animationType="fade" onRequestClose={()=>setResetOpen(false)}>
+        <TouchableOpacity activeOpacity={1} onPress={()=>setResetOpen(false)}
+          style={{flex:1,backgroundColor:'rgba(0,0,0,0.4)',justifyContent:'center',alignItems:'center',padding:28}}>
+          <View style={{backgroundColor:'#FFFFFF',borderRadius:20,padding:24,width:'100%',maxWidth:360,
+            shadowColor:'#000',shadowOffset:{width:0,height:10},shadowOpacity:0.15,shadowRadius:30,elevation:12}}>
+            <Text style={{color:'#0B1120',fontSize:18,fontWeight:'700',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.reset_title}</Text>
+            <Text style={{color:'#64748B',fontSize:13,marginBottom:20,textAlign:lang==='ar'?'right':'left'}}>{l.reset_sub}</Text>
+            <TextInput style={{height:52,backgroundColor:'#F8FAFF',borderRadius:12,paddingHorizontal:14,color:'#0B1120',fontSize:15,fontWeight:'500',marginBottom:16,textAlign:lang==='ar'?'right':'left'}}
+              placeholder={l.enter_email} placeholderTextColor="#94A3B8" value={resetEmail} onChangeText={setResetEmail} autoCapitalize="none" keyboardType="email-address" />
+            <TouchableOpacity onPress={handleReset} disabled={resetLoading}
+              style={{height:50,borderRadius:12,backgroundColor:'#38BDF8',alignItems:'center',justifyContent:'center',opacity:resetLoading?0.6:1}}>
+              {resetLoading?<ActivityIndicator color="#fff" size="small" />:<Text style={{color:'#fff',fontWeight:'700',fontSize:15}}>{l.sign_in}</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>setResetOpen(false)} style={{marginTop:12,paddingVertical:8,alignItems:'center'}}>
+              <Text style={{color:'#94A3B8',fontSize:14,fontWeight:'500'}}>{l.cancel}</Text></TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -385,80 +498,36 @@ const HomeScreen = ({dark,employee,isClockedIn,checkingIn,checkingOut,unreadCoun
   const fadeAnim=useRef(new Animated.Value(0)).current;
   const slideAnim=useRef(new Animated.Value(30)).current;
   const floatAnim=useRef(new Animated.Value(0)).current;
-
-  useEffect(()=>{
-    fadeAnim.setValue(0);slideAnim.setValue(30);
-    Animated.parallel([
-      Animated.timing(fadeAnim,{toValue:1,duration:500,useNativeDriver:true}),
-      Animated.timing(slideAnim,{toValue:0,duration:500,useNativeDriver:true}),
-    ]).start();
-  },[]);
-
-  useEffect(()=>{
-    Animated.loop(Animated.sequence([
-      Animated.timing(floatAnim,{toValue:-2,duration:2000,useNativeDriver:true}),
-      Animated.timing(floatAnim,{toValue:0,duration:2000,useNativeDriver:true}),
-    ])).start();
-  },[]);
-
-  const initials = employee ? (employee.first_name?.[0]||'')+(employee.last_name?.[0]||'') : '??';
-
+  useEffect(()=>{fadeAnim.setValue(0);slideAnim.setValue(30);Animated.parallel([Animated.timing(fadeAnim,{toValue:1,duration:500,useNativeDriver:true}),Animated.timing(slideAnim,{toValue:0,duration:500,useNativeDriver:true})]).start();},[]);
+  useEffect(()=>{Animated.loop(Animated.sequence([Animated.timing(floatAnim,{toValue:-2,duration:2000,useNativeDriver:true}),Animated.timing(floatAnim,{toValue:0,duration:2000,useNativeDriver:true})])).start();},[]);
+  const initials=employee?(employee.first_name?.[0]||'')+(employee.last_name?.[0]||''):'??';
   return (
     <ScrollView style={{flex:1,backgroundColor:t.bg}} contentContainerStyle={{padding:16}} showsVerticalScrollIndicator={false}>
-      {/* Header */}
       <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <Animated.View style={{transform:[{translateY:floatAnim}]}}>
-          <View style={{flexDirection:'row',alignItems:'center'}}>
-            <Image source={LOGO_IMG} style={{width:36,height:24,resizeMode:'contain'}} />
-            <Text style={{color:t.text,fontWeight:'800',fontSize:16,marginLeft:6,letterSpacing:0.5}}>MERGE</Text>
-          </View>
+          <View style={{flexDirection:'row',alignItems:'center'}}><Image source={LOGO_IMG} style={{width:36,height:24,resizeMode:'contain'}} /><Text style={{color:t.text,fontWeight:'800',fontSize:16,marginLeft:6,letterSpacing:0.5}}>MERGE</Text></View>
         </Animated.View>
         <View style={{flexDirection:'row',alignItems:'center',gap:8}}>
           <LangToggle dark={dark} lang={lang} setLang={setLang} />
-          <TouchableOpacity onPress={()=>onNav('notifications')} activeOpacity={0.7}
-            style={{width:44,height:44,borderRadius:22,backgroundColor:t.card,alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:t.border}}>
+          <TouchableOpacity onPress={()=>onNav('notifications')} activeOpacity={0.7} style={{width:44,height:44,borderRadius:22,backgroundColor:t.card,alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:t.border}}>
             <Text style={{fontSize:20}}>🔔</Text>
-            {unreadCount>0&&<View style={{position:'absolute',top:2,right:2,backgroundColor:t.red,borderRadius:10,minWidth:18,height:18,alignItems:'center',justifyContent:'center'}}>
-              <Text style={{color:'#fff',fontSize:9,fontWeight:'800'}}>{unreadCount>9?'9+':unreadCount}</Text></View>}
+            {unreadCount>0&&<View style={{position:'absolute',top:2,right:2,backgroundColor:t.red,borderRadius:10,minWidth:18,height:18,alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff',fontSize:9,fontWeight:'800'}}>{unreadCount>9?'9+':unreadCount}</Text></View>}
           </TouchableOpacity>
         </View>
       </View>
-
       <Animated.View style={{opacity:fadeAnim,transform:[{translateY:slideAnim}]}}>
-        <View style={{marginBottom:16}}>
-          <Text style={{fontSize:14,color:t.sub,fontWeight:'500'}}>{getGreeting(lang)}</Text>
-          <Text style={{fontSize:11,color:t.sub,marginTop:2}}>
-            {new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
-          </Text>
-        </View>
-
-        {employee ? (
-          <TouchableOpacity onPress={()=>onNav('profile')} activeOpacity={0.8}
-            style={{backgroundColor:t.card,borderRadius:20,padding:20,marginBottom:16,flexDirection:'row',alignItems:'center',borderWidth:1.5,borderColor:t.skyBorder}}>
-            <View style={{width:54,height:54,borderRadius:27,backgroundColor:t.sky,alignItems:'center',justifyContent:'center',marginRight:lang==='ar'?0:16,marginLeft:lang==='ar'?16:0,
-              shadowColor:t.sky,shadowOffset:{width:0,height:4},shadowOpacity:0.3,shadowRadius:10,elevation:4}}>
-              <Text style={{color:'#fff',fontWeight:'800',fontSize:20}}>{initials}</Text>
-            </View>
-            <View style={{flex:1}}>
-              <Text style={{color:t.text,fontWeight:'700',fontSize:17,textAlign:lang==='ar'?'right':'left'}}>{employee.first_name} {employee.last_name}</Text>
-              <Text style={{color:t.sub,fontSize:13,marginTop:2,textAlign:lang==='ar'?'right':'left'}}>{employee.job_title||employee.position} · {employee.department}</Text>
-            </View>
-            <View style={{backgroundColor:t.skyDim,paddingHorizontal:12,paddingVertical:6,borderRadius:10}}>
-              <Text style={{color:t.sky,fontSize:12,fontWeight:'700'}}>{l.profile}</Text>
-            </View>
+        <View style={{marginBottom:16}}><Text style={{fontSize:14,color:t.sub,fontWeight:'500'}}>{getGreeting(lang)}</Text><Text style={{fontSize:11,color:t.sub,marginTop:2}}>{new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</Text></View>
+        {employee?(
+          <TouchableOpacity onPress={()=>onNav('profile')} activeOpacity={0.8} style={{backgroundColor:t.card,borderRadius:20,padding:20,marginBottom:16,flexDirection:'row',alignItems:'center',borderWidth:1.5,borderColor:t.skyBorder}}>
+            <View style={{width:54,height:54,borderRadius:27,backgroundColor:t.sky,alignItems:'center',justifyContent:'center',marginRight:lang==='ar'?0:16,marginLeft:lang==='ar'?16:0,shadowColor:t.sky,shadowOffset:{width:0,height:4},shadowOpacity:0.3,shadowRadius:10,elevation:4}}><Text style={{color:'#fff',fontWeight:'800',fontSize:20}}>{initials}</Text></View>
+            <View style={{flex:1}}><Text style={{color:t.text,fontWeight:'700',fontSize:17,textAlign:lang==='ar'?'right':'left'}}>{employee.first_name} {employee.last_name}</Text><Text style={{color:t.sub,fontSize:13,marginTop:2,textAlign:lang==='ar'?'right':'left'}}>{employee.job_title||employee.position} · {employee.department}</Text></View>
+            <View style={{backgroundColor:t.skyDim,paddingHorizontal:12,paddingVertical:6,borderRadius:10}}><Text style={{color:t.sky,fontSize:12,fontWeight:'700'}}>{l.profile}</Text></View>
           </TouchableOpacity>
-        ) : (
-          <View style={{backgroundColor:t.card,borderRadius:20,padding:30,marginBottom:16,alignItems:'center',borderWidth:1,borderColor:t.border}}>
-            <ActivityIndicator color={t.sky} /></View>
-        )}
-
-        {/* Attendance */}
+        ):(<View style={{backgroundColor:t.card,borderRadius:20,padding:30,marginBottom:16,alignItems:'center',borderWidth:1,borderColor:t.border}}><ActivityIndicator color={t.sky} /></View>)}
         <View style={{backgroundColor:t.card,borderRadius:18,padding:18,marginBottom:16,borderWidth:1,borderColor:t.border}}>
           <View style={{flexDirection:'row',alignItems:'center',marginBottom:14}}>
-            <View style={{width:10,height:10,borderRadius:5,backgroundColor:isClockedIn?t.green:t.sub,marginRight:10,
-              shadowColor:isClockedIn?t.green:'transparent',shadowOffset:{width:0,height:0},shadowOpacity:isClockedIn?0.6:0,shadowRadius:isClockedIn?8:0}} />
-            <Text style={{fontSize:13,color:t.sub,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.6}}>
-              {isClockedIn?l.clocked_in:l.todays_att}</Text>
+            <View style={{width:10,height:10,borderRadius:5,backgroundColor:isClockedIn?t.green:t.sub,marginRight:10}} />
+            <Text style={{fontSize:13,color:t.sub,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.6}}>{isClockedIn?l.clocked_in:l.todays_att}</Text>
             {isClockedIn&&<Badge dark={dark} label={l.active} color={t.green} />}
           </View>
           <View style={{flexDirection:'row',gap:10}}>
@@ -466,7 +535,6 @@ const HomeScreen = ({dark,employee,isClockedIn,checkingIn,checkingOut,unreadCoun
             <AppBtn dark={dark} icon="🚪" label={l.check_out} color={t.red} loading={checkingOut} disabled={!isClockedIn} onPress={onCheckOut} style={{flex:1}} />
           </View>
         </View>
-
         <Text style={{fontSize:12,fontWeight:'700',color:t.sub,textTransform:'uppercase',letterSpacing:0.8,marginBottom:12,textAlign:lang==='ar'?'right':'left'}}>{l.quick_actions}</Text>
         <View style={{flexDirection:'row',gap:10,marginBottom:10}}>
           <ActionCard dark={dark} icon="🗺️" label={l.location} color={t.sky} onPress={()=>onNav('map')} />
@@ -478,10 +546,7 @@ const HomeScreen = ({dark,employee,isClockedIn,checkingIn,checkingOut,unreadCoun
           <ActionCard dark={dark} icon="🏢" label={l.hr_panel} color={t.indigo} onPress={()=>onNav('hr_dashboard')} />
           <ActionCard dark={dark} icon="🚪" label={l.logout} color={t.red} onPress={()=>supabase.auth.signOut()} />
         </View>
-
-        <View style={{alignItems:'center',paddingVertical:20,marginTop:10}}>
-          <Text style={{color:t.border,fontSize:10,letterSpacing:1}}>MERGE HR v2.0</Text>
-        </View>
+        <View style={{alignItems:'center',paddingVertical:20,marginTop:10}}><Text style={{color:t.border,fontSize:10,letterSpacing:1}}>MERGE HR v2.0</Text></View>
       </Animated.View>
     </ScrollView>
   );
@@ -492,70 +557,95 @@ const HistoryScreenComp = ({dark,employee,goBack,lang,setLang}) => {
   const t=useT(dark),l=L[lang];
   const [records,setRecords]=useState([]),[loading,setLoading]=useState(true);
   useEffect(()=>{if(!employee?.id)return;(async()=>{const{data}=await supabase.from('attendance_records').select('*').eq('employee_id',employee.id).order('attendance_date',{ascending:false}).limit(60);setRecords(data||[]);setLoading(false);})();},[employee]);
-
   return (
     <ScreenWrap dark={dark}>
-      <ScreenHeader dark={dark} title={l.attendance_history} onBack={goBack} lang={lang} setLang={setLang}
-        right={<Badge dark={dark} label={`${records.length} ${l.records}`} />} />
-      {loading ? <View style={{flex:1,alignItems:'center',justifyContent:'center'}}><ActivityIndicator color={t.sky} /></View>
-        : records.length===0 ? <Empty dark={dark} icon="📋" title={l.no_records} sub={l.no_records_sub} />
-        : <ScrollView style={{flex:1,padding:16}} showsVerticalScrollIndicator={false}>
-            {records.map((r,i)=>{
-              const ok=r.check_in_time&&r.check_out_time, late=r.check_in_time&&r.check_in_time>'09:15:00';
-              return <View key={r.id||i} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:ok?t.green+'25':t.border}}>
-                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-                  <Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{fmtDate(r.attendance_date,lang)}</Text>
-                  {ok?<Badge dark={dark} label={l.complete} color={t.green} />:r.check_in_time?<Badge dark={dark} label={l.in_progress} color={t.amber} />:<Badge dark={dark} label={l.missing} color={t.red} />}
-                </View>
-                <View style={{flexDirection:'row',gap:20}}>
-                  <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600',textTransform:'uppercase',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.check_in_label}</Text><Text style={{color:late?t.red:t.text,fontWeight:'700',fontSize:16}}>{fmtTime(r.check_in_time)}</Text></View>
-                  <View style={{width:1,backgroundColor:t.border}} />
-                  <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600',textTransform:'uppercase',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.check_out_label}</Text><Text style={{color:t.text,fontWeight:'700',fontSize:16}}>{fmtTime(r.check_out_time)}</Text></View>
-                </View></View>;
-            })}
-          </ScrollView>}
+      <ScreenHeader dark={dark} title={l.attendance_history} onBack={goBack} lang={lang} setLang={setLang} right={<Badge dark={dark} label={`${records.length} ${l.records}`} />} />
+      {loading?<View style={{flex:1,alignItems:'center',justifyContent:'center'}}><ActivityIndicator color={t.sky} /></View>
+        :records.length===0?<Empty dark={dark} icon="📋" title={l.no_records} sub={l.no_records_sub} />
+        :<ScrollView style={{flex:1,padding:16}} showsVerticalScrollIndicator={false}>
+          {records.map((r,i)=>{const ok=r.check_in_time&&r.check_out_time,late=r.check_in_time&&r.check_in_time>'09:15:00';
+            return <View key={r.id||i} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:ok?t.green+'25':t.border}}>
+              <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                <Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{fmtDate(r.attendance_date,lang)}</Text>
+                {ok?<Badge dark={dark} label={l.complete} color={t.green} />:r.check_in_time?<Badge dark={dark} label={l.in_progress} color={t.amber} />:<Badge dark={dark} label={l.missing} color={t.red} />}
+              </View>
+              <View style={{flexDirection:'row',gap:20}}>
+                <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600',textTransform:'uppercase',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.check_in_label}</Text><Text style={{color:late?t.red:t.text,fontWeight:'700',fontSize:16}}>{fmtTime(r.check_in_time)}</Text></View>
+                <View style={{width:1,backgroundColor:t.border}} />
+                <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600',textTransform:'uppercase',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.check_out_label}</Text><Text style={{color:t.text,fontWeight:'700',fontSize:16}}>{fmtTime(r.check_out_time)}</Text></View>
+              </View></View>;})}
+        </ScrollView>}
     </ScreenWrap>
   );
 };
 
-/* ═══════════════════ MY LOCATION ═══════════════════ */
+/* ═══════════════════ MY LOCATION (using working code) ═══════════════════ */
 const MyLocationScreenComp = ({dark,goBack,lang,setLang}) => {
-  const t=useT(dark),l=L[lang];
+  const t=useT(dark), l=L[lang];
   const [office,setOffice]=useState(null),[userLoc,setUserLoc]=useState(null),[loading,setLoading]=useState(true),[dist,setDist]=useState(null);
+  const insets = useSafeAreaInsets();
+
   useEffect(()=>{(async()=>{
-    const{data}=await supabase.from('office_location').select('*').eq('is_active',true).single();if(data)setOffice(data);
-    let loc=null;
-    if(Platform.OS==='web'){loc=await new Promise(res=>{navigator.geolocation?.getCurrentPosition(p=>res({latitude:p.coords.latitude,longitude:p.coords.longitude}),()=>res(null),{enableHighAccuracy:true,timeout:8000});});}
-    else{try{const{status}=await Location.requestForegroundPermissionsAsync();if(status==='granted'){const p=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Low});loc={latitude:p.coords.latitude,longitude:p.coords.longitude};}}catch(_){}}
-    setUserLoc(loc);if(data&&loc)setDist(haversine(loc.latitude,loc.longitude,data.latitude,data.longitude));setLoading(false);
+    const{data}=await supabase.from('office_location').select('*').eq('is_active',true).single();
+    if(data) setOffice(data);
+    if(Platform.OS!=='web'){
+      try{
+        let{status}=await Location.requestForegroundPermissionsAsync();
+        if(status!=='granted'){setLoading(false);return;}
+        let loc=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High});
+        setUserLoc({latitude:loc.coords.latitude,longitude:loc.coords.longitude});
+        if(data) setDist(haversine(loc.coords.latitude,loc.coords.longitude,data.latitude,data.longitude));
+      }catch(e){console.log('Location error:',e.message);}
+    }
+    setLoading(false);
   })();},[]);
 
-  const mapUrl=office?`https://www.google.com/maps?q=${office.latitude},${office.longitude}&z=16`:null;
+  if(loading) return (
+    <View style={{flex:1,backgroundColor:t.bg,alignItems:'center',justifyContent:'center',paddingTop:insets.top}}>
+      <ActivityIndicator size="large" color={t.sky} /><Text style={{color:t.sub,marginTop:12}}>{L[lang].loading}</Text>
+    </View>
+  );
+
+  // Web: Google Maps iframe
+  if(Platform.OS==='web'){
+    const mapsUrl=`https://maps.google.com/maps?q=${office?.latitude},${office?.longitude}&z=16&output=embed`;
+    return (
+      <View style={{flex:1,backgroundColor:t.bg,paddingTop:insets.top}}>
+        <ScreenHeader dark={dark} title={l.my_location} onBack={goBack} lang={lang} setLang={setLang} />
+        <View style={{flex:1,margin:16,borderRadius:16,overflow:'hidden'}}>
+          {office?<iframe src={mapsUrl} style={{flex:1,width:'100%',border:'none',borderRadius:16}} allowFullScreen title="Office Map" />
+            :<Empty dark={dark} icon="🗺️" title="Not Available" sub="No office location configured." />}
+        </View>
+      </View>
+    );
+  }
+
+  // Mobile: Native map
   return (
-    <ScreenWrap dark={dark}>
+    <View style={{flex:1,backgroundColor:t.bg,paddingTop:insets.top}}>
       <ScreenHeader dark={dark} title={l.my_location} onBack={goBack} lang={lang} setLang={setLang} />
-      {loading ? <View style={{flex:1,alignItems:'center',justifyContent:'center'}}><ActivityIndicator color={t.sky} /></View>
-        : <ScrollView style={{flex:1,padding:16}} showsVerticalScrollIndicator={false}>
-            <View style={{height:240,borderRadius:16,overflow:'hidden',marginBottom:16,backgroundColor:t.surface}}>
-              {Platform.OS!=='web'&&MapView&&userLoc
-                ? <MapView style={{flex:1}} initialRegion={{latitude:userLoc.latitude,longitude:userLoc.longitude,latitudeDelta:0.005,longitudeDelta:0.005}}>
-                    {userLoc&&<Marker coordinate={userLoc} title="You" />}{office&&<Marker coordinate={{latitude:office.latitude,longitude:office.longitude}} title="Office" />}</MapView>
-                : mapUrl
-                  ? <View style={{flex:1}}><iframe src={mapUrl} width="100%" height="100%" style={{border:0}} loading="lazy" title="Office Map" /></View>
-                  : <Empty dark={dark} icon="🗺️" title={l.map_unavailable} sub={l.map_unavail_sub} />}
-            </View>
-            {office&&<View style={{backgroundColor:t.card,borderRadius:14,padding:16,borderWidth:1,borderColor:t.border,marginBottom:12}}>
-              <Text style={{color:t.text,fontWeight:'700',fontSize:16,marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{office.name}</Text>
-              <Text style={{color:t.sub,fontSize:13,marginBottom:12,textAlign:lang==='ar'?'right':'left'}}>Lat: {office.latitude.toFixed(6)} · Lon: {office.longitude.toFixed(6)}</Text>
-              <View style={{flexDirection:'row',gap:10}}>
-                <StatBox dark={dark} value={`${office.radius_meters}m`} label={l.allowed_radius} color={t.sky} />
-                <StatBox dark={dark} value={dist!==null?`${dist.toFixed(0)}m`:'—'} label={l.your_distance} color={dist!==null&&dist<=office.radius_meters?t.green:t.red} />
-              </View></View>}
-            {!userLoc&&<View style={{backgroundColor:t.card,borderRadius:14,padding:16,borderWidth:1,borderColor:t.border}}>
-              <Text style={{color:t.amber,fontWeight:'600',fontSize:14}}>{l.loc_denied}</Text>
-              <Text style={{color:t.sub,fontSize:13,marginTop:4}}>{l.loc_denied_sub}</Text></View>}
-          </ScrollView>}
-    </ScreenWrap>
+      {MapView&&office?(
+        <View style={{flex:1}}>
+          <MapView style={{flex:1}} initialRegion={{latitude:office.latitude,longitude:office.longitude,latitudeDelta:0.01,longitudeDelta:0.01}}>
+            <Marker coordinate={{latitude:office.latitude,longitude:office.longitude}} title="Office" />
+            {Circle&&<Circle center={{latitude:office.latitude,longitude:office.longitude}} radius={office.radius_meters} strokeColor="rgba(56,189,248,0.5)" fillColor="rgba(56,189,248,0.1)" />}
+            {userLoc&&<Marker coordinate={userLoc} pinColor="green" title="You" />}
+          </MapView>
+          {/* Info bar */}
+          <View style={{backgroundColor:t.card,padding:16,borderTopWidth:1,borderTopColor:t.border,flexDirection:'row',justifyContent:'space-around'}}>
+            <View style={{alignItems:'center'}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600'}}>{l.allowed_radius}</Text><Text style={{color:t.sky,fontSize:18,fontWeight:'800'}}>{office.radius_meters}m</Text></View>
+            <View style={{width:1,backgroundColor:t.border}} />
+            <View style={{alignItems:'center'}}><Text style={{color:t.sub,fontSize:11,fontWeight:'600'}}>{l.your_distance}</Text><Text style={{color:dist!==null?(dist<=office.radius_meters?t.green:t.red):t.sub,fontSize:18,fontWeight:'800'}}>{dist!==null?`${dist.toFixed(0)}m`:'—'}</Text></View>
+          </View>
+        </View>
+      ):!userLoc?(
+        <View style={{flex:1,alignItems:'center',justifyContent:'center',padding:40}}>
+          <Text style={{fontSize:52,marginBottom:16}}>📍</Text><Text style={{color:t.amber,fontWeight:'600',fontSize:16,marginBottom:6}}>{l.loc_denied}</Text><Text style={{color:t.sub,fontSize:14,textAlign:'center'}}>{l.loc_denied_sub}</Text>
+        </View>
+      ):(
+        <Empty dark={dark} icon="🗺️" title="Not Available" sub="Map library not installed." />
+      )}
+    </View>
   );
 };
 
@@ -565,11 +655,8 @@ const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
   const types=['Annual','Sick','Emergency','Personal','Maternity','Unpaid'];
   const [type,setType]=useState('Annual'),[startDate,setStartDate]=useState(''),[endDate,setEndDate]=useState(''),[reason,setReason]=useState('');
   const [submitting,setSubmitting]=useState(false),[myLeaves,setMyLeaves]=useState([]),[tab,setTab]=useState('new');
-
   useEffect(()=>{if(!employee?.id)return;(async()=>{const{data}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(20);setMyLeaves(data||[]);})();},[employee]);
-
   const totalDays=useMemo(()=>{if(!startDate||!endDate)return 0;const s=new Date(startDate),e=new Date(endDate);if(e<s)return 0;return Math.ceil((e-s)/86400000)+1;},[startDate,endDate]);
-
   const handleSubmit=async()=>{
     if(!startDate||!endDate)return Alert.alert('',l.missing_dates);
     if(totalDays<=0)return Alert.alert('',l.invalid_dates);
@@ -580,20 +667,14 @@ const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
     if(error){Alert.alert('Error',error.message);return;}
     Alert.alert(l.submitted,`${l.submitted_msg} ${totalDays} ${totalDays>1?l.days:l.day}.`,async()=>{setStartDate('');setEndDate('');setReason('');const{data}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(20);setMyLeaves(data||[]);setTab('history');});
   };
-
   const sc=s=>s==='approved'?t.green:s==='rejected'?t.red:t.amber;
-
   return (
     <ScreenWrap dark={dark}>
       <ScreenHeader dark={dark} title={l.leave_request} onBack={goBack} lang={lang} setLang={setLang} />
       <View style={{flexDirection:'row',marginHorizontal:16,marginBottom:12,backgroundColor:t.surface,borderRadius:12,padding:4}}>
-        {[['new',l.new_request],['history',l.my_leaves]].map(([k,v])=>(
-          <TouchableOpacity key={k} onPress={()=>setTab(k)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:tab===k?t.card:'transparent',
-            shadowColor:tab===k?'#000':'transparent',shadowOffset:{width:0,height:2},shadowOpacity:0.08,shadowRadius:8,elevation:tab===k?2:0}}>
-            <Text style={{color:tab===k?t.sky:t.sub,fontWeight:'700',fontSize:13}}>{v}</Text></TouchableOpacity>
-        ))}
+        {[['new',l.new_request],['history',l.my_leaves]].map(([k,v])=>(<TouchableOpacity key={k} onPress={()=>setTab(k)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:tab===k?t.card:'transparent',shadowColor:tab===k?'#000':'transparent',shadowOffset:{width:0,height:2},shadowOpacity:0.08,shadowRadius:8,elevation:tab===k?2:0}}>
+          <Text style={{color:tab===k?t.sky:t.sub,fontWeight:'700',fontSize:13}}>{v}</Text></TouchableOpacity>))}
       </View>
-
       {tab==='new'?(
         <ScrollView style={{flex:1,paddingHorizontal:16}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.leave_type}</Text>
@@ -602,27 +683,22 @@ const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
               <Text style={{color:type===lt?'#fff':t.sub,fontWeight:'700',fontSize:13}}>{lt}</Text></TouchableOpacity>))}
           </ScrollView>
           <View style={{flexDirection:'row',gap:10,marginBottom:12}}>
-            <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.start_date}</Text><DateInput dark={dark} value={startDate} onChange={setStartDate} placeholder="YYYY-MM-DD" lang={lang} /></View>
-            <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.end_date}</Text><DateInput dark={dark} value={endDate} onChange={setEndDate} placeholder="YYYY-MM-DD" lang={lang} /></View>
+            <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.start_date}</Text><CalendarPicker dark={dark} value={startDate} onChange={setStartDate} lang={lang} /></View>
+            <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.end_date}</Text><CalendarPicker dark={dark} value={endDate} onChange={setEndDate} lang={lang} /></View>
           </View>
-          {totalDays>0&&<View style={{backgroundColor:t.green+'10',borderWidth:1.5,borderColor:t.green+'25',borderRadius:12,padding:12,marginBottom:12,alignItems:'center'}}>
-            <Text style={{color:t.green,fontWeight:'700',fontSize:15}}>{totalDays} {totalDays>1?l.days:l.day}</Text></View>}
+          {totalDays>0&&<View style={{backgroundColor:t.green+'10',borderWidth:1.5,borderColor:t.green+'25',borderRadius:12,padding:12,marginBottom:12,alignItems:'center'}}><Text style={{color:t.green,fontWeight:'700',fontSize:15}}>{totalDays} {totalDays>1?l.days:l.day}</Text></View>}
           <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.reason}</Text>
           <TextInput style={{height:110,backgroundColor:t.inputBg,borderRadius:12,paddingHorizontal:14,paddingTop:14,color:t.text,fontSize:14,fontWeight:'500',borderWidth:1.5,borderColor:t.border,textAlignVertical:'top',textAlign:lang==='ar'?'right':'left'}}
-            placeholder={l.describe_reason} placeholderTextColor="#4A6178" value={reason} onChangeText={setReason} multiline numberOfLines={4} />
+            placeholder={l.describe_reason} placeholderTextColor="#8BA0B8" value={reason} onChangeText={setReason} multiline numberOfLines={4} />
           <AppBtn dark={dark} label={l.submit_request} icon="📤" color={t.sky} loading={submitting} onPress={handleSubmit} style={{marginTop:20,marginBottom:30}} />
         </ScrollView>
       ):(
         <ScrollView style={{flex:1,paddingHorizontal:16}} showsVerticalScrollIndicator={false}>
           {myLeaves.length===0?<Empty dark={dark} icon="🌴" title={l.no_leaves} sub={l.no_leaves_sub} />
-            :myLeaves.map((lv,i)=>(
-              <View key={lv.id||i} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:t.border}}>
-                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                  <Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{lv.leave_type} {l.leave}</Text>
-                  <Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} /></View>
-                <Text style={{color:t.sub,fontSize:13}}>{fmtDate(lv.start_date,lang)} — {fmtDate(lv.end_date,lang)} · {lv.total_days} {lv.total_days>1?l.days:l.day}</Text>
-                {lv.reason&&<Text style={{color:t.sub,fontSize:12,marginTop:6,fontStyle:'italic',textAlign:lang==='ar'?'right':'left'}}>"{lv.reason}"</Text>}</View>
-            ))}
+            :myLeaves.map((lv,i)=>(<View key={lv.id||i} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:t.border}}>
+              <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:8}}><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{lv.leave_type} {l.leave}</Text><Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} /></View>
+              <Text style={{color:t.sub,fontSize:13}}>{fmtDate(lv.start_date,lang)} — {fmtDate(lv.end_date,lang)} · {lv.total_days} {lv.total_days>1?l.days:l.day}</Text>
+              {lv.reason&&<Text style={{color:t.sub,fontSize:12,marginTop:6,fontStyle:'italic',textAlign:lang==='ar'?'right':'left'}}>"{lv.reason}"</Text>}</View>))}
         </ScrollView>
       )}
     </ScreenWrap>
@@ -636,8 +712,7 @@ const NotificationsScreenComp = ({dark,employee,goBack,onRead,lang,setLang}) => 
   const fetchN=async()=>{if(!employee?.id)return;const{data}=await supabase.from('notifications').select('*').or(`employee_id.eq.${employee.id},employee_id.is.null`).order('created_at',{ascending:false}).limit(50);setNotifs(data||[]);setLoading(false);};
   useEffect(()=>{fetchN();},[employee]);
   const markRead=async id=>{await supabase.from('notifications').update({is_read:true}).eq('id',id);setNotifs(p=>p.map(n=>n.id===id?{...n,is_read:true}:n));onRead?.();};
-  const tc=type=>type==='leave'?t.purple:type==='attendance'?t.green:type==='system'?t.sky:t.sky;
-
+  const tc=type=>type==='leave'?t.purple:type==='attendance'?t.green:t.sky;
   return (
     <ScreenWrap dark={dark}>
       <ScreenHeader dark={dark} title={l.notifications} onBack={goBack} lang={lang} setLang={setLang}
@@ -646,16 +721,13 @@ const NotificationsScreenComp = ({dark,employee,goBack,onRead,lang,setLang}) => 
       {loading?<View style={{flex:1,alignItems:'center',justifyContent:'center'}}><ActivityIndicator color={t.sky} /></View>
         :notifs.length===0?<Empty dark={dark} icon="🔕" title={l.no_notifs} sub={l.no_notifs_sub} />
         :<ScrollView style={{flex:1,padding:16}} showsVerticalScrollIndicator={false}>
-            {notifs.map((n,i)=>(<TouchableOpacity key={n.id||i} onPress={()=>!n.is_read&&markRead(n.id)} activeOpacity={0.7}
-              style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:n.is_read?t.border:t.skyBorder,flexDirection:'row'}}>
-              {!n.is_read&&<View style={{width:8,height:8,borderRadius:4,backgroundColor:t.sky,marginRight:12,marginTop:6}} />}
-              <View style={{flex:1}}>
-                <View style={{flexDirection:'row',alignItems:'center',marginBottom:6,gap:8}}>
-                  <Badge dark={dark} label={n.type||'INFO'} color={tc(n.type)} />
-                  <Text style={{color:t.sub,fontSize:11}}>{n.created_at?new Date(n.created_at).toLocaleDateString():''}</Text></View>
-                <Text style={{color:t.text,fontSize:14,fontWeight:'600',lineHeight:20,textAlign:lang==='ar'?'right':'left'}}>{n.title||n.message||'Notification'}</Text>
-                {n.message&&n.title&&<Text style={{color:t.sub,fontSize:13,marginTop:4,lineHeight:18,textAlign:lang==='ar'?'right':'left'}}>{n.message}</Text>}</View></TouchableOpacity>))}
-          </ScrollView>}
+          {notifs.map((n,i)=>(<TouchableOpacity key={n.id||i} onPress={()=>!n.is_read&&markRead(n.id)} activeOpacity={0.7} style={{backgroundColor:t.card,borderRadius:14,padding:16,marginBottom:10,borderWidth:1,borderColor:n.is_read?t.border:t.skyBorder,flexDirection:'row'}}>
+            {!n.is_read&&<View style={{width:8,height:8,borderRadius:4,backgroundColor:t.sky,marginRight:12,marginTop:6}} />}
+            <View style={{flex:1}}>
+              <View style={{flexDirection:'row',alignItems:'center',marginBottom:6,gap:8}}><Badge dark={dark} label={n.type||'INFO'} color={tc(n.type)} /><Text style={{color:t.sub,fontSize:11}}>{n.created_at?new Date(n.created_at).toLocaleDateString():''}</Text></View>
+              <Text style={{color:t.text,fontSize:14,fontWeight:'600',lineHeight:20,textAlign:lang==='ar'?'right':'left'}}>{n.title||n.message||'Notification'}</Text>
+              {n.message&&n.title&&<Text style={{color:t.sub,fontSize:13,marginTop:4,lineHeight:18,textAlign:lang==='ar'?'right':'left'}}>{n.message}</Text>}</View></TouchableOpacity>))}
+        </ScrollView>}
     </ScreenWrap>
   );
 };
@@ -667,50 +739,37 @@ const ProfileScreenComp = ({dark,employee,goBack,setDarkMode,onChangePassword,la
   const [stats,setStats]=useState({days:0,month:0,onTime:0}),[leaves,setLeaves]=useState([]);
   useEffect(()=>{if(!employee?.id)return;(async()=>{
     const{data:recs}=await supabase.from('attendance_records').select('*').eq('employee_id',employee.id);
-    const done=(recs||[]).filter(r=>r.check_in_time&&r.check_out_time);
-    const ot=done.filter(r=>r.check_in_time<='09:15:00');
+    const done=(recs||[]).filter(r=>r.check_in_time&&r.check_out_time);const ot=done.filter(r=>r.check_in_time<='09:15:00');
     const mo=done.filter(r=>{const d=new Date(r.attendance_date),n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();});
     setStats({days:done.length,month:mo.length,onTime:ot.length});
-    const{data:lv}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(10);
-    setLeaves(lv||[]);
+    const{data:lv}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(10);setLeaves(lv||[]);
   })();},[employee]);
   const sc=s=>s==='approved'?t.green:s==='rejected'?t.red:t.amber;
-
   return (
     <ScreenWrap dark={dark}>
       <ScreenHeader dark={dark} title={l.my_profile} onBack={goBack} lang={lang} setLang={setLang} />
       <ScrollView style={{flex:1}} showsVerticalScrollIndicator={false}>
         <View style={{alignItems:'center',paddingVertical:24,paddingHorizontal:16}}>
-          <View style={{width:96,height:96,borderRadius:48,backgroundColor:t.sky,alignItems:'center',justifyContent:'center',
-            shadowColor:t.sky,shadowOffset:{width:0,height:8},shadowOpacity:0.35,shadowRadius:20,elevation:6}}>
-            <Text style={{color:'#fff',fontWeight:'900',fontSize:36}}>{initials}</Text></View>
+          <View style={{width:96,height:96,borderRadius:48,backgroundColor:t.sky,alignItems:'center',justifyContent:'center',shadowColor:t.sky,shadowOffset:{width:0,height:8},shadowOpacity:0.35,shadowRadius:20,elevation:6}}><Text style={{color:'#fff',fontWeight:'900',fontSize:36}}>{initials}</Text></View>
           <Text style={{color:t.text,fontWeight:'800',fontSize:22,marginTop:14}}>{employee?.first_name} {employee?.last_name}</Text>
           <Text style={{color:t.sub,fontSize:14,marginTop:4}}>{employee?.job_title||employee?.position}</Text>
-          <View style={{marginTop:10,paddingHorizontal:14,paddingVertical:6,borderRadius:10,backgroundColor:t.skyDim,borderWidth:1,borderColor:t.skyBorder}}>
-            <Text style={{color:t.sky,fontWeight:'700',fontSize:12}}>{employee?.department}</Text></View>
+          <View style={{marginTop:10,paddingHorizontal:14,paddingVertical:6,borderRadius:10,backgroundColor:t.skyDim,borderWidth:1,borderColor:t.skyBorder}}><Text style={{color:t.sky,fontWeight:'700',fontSize:12}}>{employee?.department}</Text></View>
         </View>
         <View style={{flexDirection:'row',gap:10,paddingHorizontal:16,marginBottom:20}}>
           <StatBox dark={dark} value={stats.days} label={l.total_days} color={t.sky} />
           <StatBox dark={dark} value={stats.month} label={l.this_month} color={t.green} />
           <StatBox dark={dark} value={`${stats.days>0?Math.round(stats.onTime/stats.days*100):0}%`} label={l.on_time} color={t.amber} /></View>
         <View style={{backgroundColor:t.card,borderRadius:16,padding:4,marginHorizontal:16,marginBottom:16,borderWidth:1,borderColor:t.border}}>
-          <InfoRow dark={dark} label={l.email} value={employee?.email} lang={lang} />
-          <InfoRow dark={dark} label={l.phone} value={employee?.phone} lang={lang} />
-          <InfoRow dark={dark} label={l.position} value={employee?.position} lang={lang} />
-          <InfoRow dark={dark} label={l.department} value={employee?.department} lang={lang} />
-          <InfoRow dark={dark} label={l.joined} value={employee?.hire_date?fmtDate(employee.hire_date,lang):'—'} lang={lang} /></View>
+          <InfoRow dark={dark} label={l.email} value={employee?.email} lang={lang} /><InfoRow dark={dark} label={l.phone} value={employee?.phone} lang={lang} /><InfoRow dark={dark} label={l.position} value={employee?.position} lang={lang} /><InfoRow dark={dark} label={l.department} value={employee?.department} lang={lang} /><InfoRow dark={dark} label={l.joined} value={employee?.hire_date?fmtDate(employee.hire_date,lang):'—'} lang={lang} /></View>
         <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:t.card,borderRadius:14,padding:16,marginHorizontal:16,marginBottom:16,borderWidth:1,borderColor:t.border}}>
           <View style={{flexDirection:'row',alignItems:'center'}}><Text style={{fontSize:20,marginRight:12}}>{dark?'🌙':'☀️'}</Text><Text style={{color:t.text,fontWeight:'600',fontSize:15}}>{dark?l.dark_mode:l.light_mode}</Text></View>
           <Switch value={dark} onValueChange={setDarkMode} trackColor={{false:t.border,true:t.sky}} thumbColor={dark?'#7DD3FC':'#fff'} /></View>
-        <TouchableOpacity onPress={onChangePassword} activeOpacity={0.7}
-          style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:t.card,borderRadius:14,padding:16,marginHorizontal:16,marginBottom:24,borderWidth:1,borderColor:t.border}}>
-          <View style={{flexDirection:'row',alignItems:'center'}}><Text style={{fontSize:20,marginRight:12}}>🔐</Text><Text style={{color:t.text,fontWeight:'600',fontSize:15}}>{l.change_password}</Text></View>
-          <Text style={{color:t.sub,fontSize:18}}>›</Text></TouchableOpacity>
+        <TouchableOpacity onPress={onChangePassword} activeOpacity={0.7} style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:t.card,borderRadius:14,padding:16,marginHorizontal:16,marginBottom:24,borderWidth:1,borderColor:t.border}}>
+          <View style={{flexDirection:'row',alignItems:'center'}}><Text style={{fontSize:20,marginRight:12}}>🔐</Text><Text style={{color:t.text,fontWeight:'600',fontSize:15}}>{l.change_password}</Text></View><Text style={{color:t.sub,fontSize:18}}>›</Text></TouchableOpacity>
         {leaves.length>0&&<><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,paddingHorizontal:16,marginBottom:10,textAlign:lang==='ar'?'right':'left'}}>{l.recent_leaves}</Text>
           <View style={{backgroundColor:t.card,borderRadius:16,padding:4,marginHorizontal:16,marginBottom:30,borderWidth:1,borderColor:t.border}}>
             {leaves.slice(0,5).map((lv,i)=>(<View key={lv.id||i} style={{flexDirection:'row',alignItems:'center',paddingVertical:12,paddingHorizontal:14,borderBottomWidth:i<4?1:0,borderBottomColor:t.border}}>
-              <View style={{flex:1}}><Text style={{color:t.text,fontWeight:'600',fontSize:14}}>{lv.leave_type} · {lv.total_days}d</Text><Text style={{color:t.sub,fontSize:12}}>{fmtDate(lv.start_date,lang)} — {fmtDate(lv.end_date,lang)}</Text></View>
-              <Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} /></View>))}
+              <View style={{flex:1}}><Text style={{color:t.text,fontWeight:'600',fontSize:14}}>{lv.leave_type} · {lv.total_days}d</Text><Text style={{color:t.sub,fontSize:12}}>{fmtDate(lv.start_date,lang)} — {fmtDate(lv.end_date,lang)}</Text></View><Badge dark={dark} label={lv.status?.toUpperCase()} color={sc(lv.status)} /></View>))}
           </View></>}
       </ScrollView>
     </ScreenWrap>
@@ -721,17 +780,11 @@ const ProfileScreenComp = ({dark,employee,goBack,setDarkMode,onChangePassword,la
 const ChangePasswordScreenComp = ({dark,goBack,lang,setLang}) => {
   const t=useT(dark),l=L[lang];
   const [cur,setCur]=useState(''),[nw,setNw]=useState(''),[cnf,setCnf]=useState(''),[showCur,setShowCur]=useState(false),[showNw,setShowNw]=useState(false),[loading,setLoading]=useState(false);
-  const handle=async()=>{
-    if(!cur.trim()||!nw.trim()||!cnf.trim())return;
-    if(nw.length<6)return Alert.alert('',l.weak_pw);
-    if(nw!==cnf)return Alert.alert('',l.mismatch);
-    setLoading(true);const{error}=await supabase.auth.updateUser({password:nw});setLoading(false);
-    if(error){Alert.alert('Error',error.message);return;}Alert.alert(l.pw_success,'',goBack);
-  };
+  const handle=async()=>{if(!cur.trim()||!nw.trim()||!cnf.trim())return;if(nw.length<6)return Alert.alert('',l.weak_pw);if(nw!==cnf)return Alert.alert('',l.mismatch);setLoading(true);const{error}=await supabase.auth.updateUser({password:nw});setLoading(false);if(error){Alert.alert('Error',error.message);return;}Alert.alert(l.pw_success,'',goBack);};
   const PwF=({label,value,setValue,show,setShow})=>(<View style={{marginBottom:16}}>
     <Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{label}</Text>
     <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:t.inputBg,borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:t.border}}>
-      <TextInput style={{flex:1,color:t.text,fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}} placeholder="••••••••" placeholderTextColor="#4A6178" value={value} onChangeText={setValue} secureTextEntry={!show} />
+      <TextInput style={{flex:1,color:t.text,fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}} placeholder="••••••••" placeholderTextColor="#8BA0B8" value={value} onChangeText={setValue} secureTextEntry={!show} />
       <TouchableOpacity onPress={()=>setShow(!show)} hitSlop={8}><Text style={{fontSize:16,color:t.sub}}>{show?'🙈':'👁'}</Text></TouchableOpacity></View></View>);
   return (
     <ScreenWrap dark={dark}>
@@ -752,214 +805,120 @@ const HRDashboardScreenComp = ({dark,goBack,lang}) => {
   const t=useT(dark), l=L[lang];
   const [tab,setTab]=useState('overview'),[loading,setLoading]=useState(true);
   const [stats,setStats]=useState({present:0,absent:0,total:0,pendingLeaves:0});
-  const [attendance,setAttendance]=useState([]);
-  const [leaveRequests,setLeaveRequests]=useState([]),[leaveLoading,setLeaveLoading]=useState(false);
+  const [attendance,setAttendance]=useState([]),[leaveRequests,setLeaveRequests]=useState([]),[leaveLoading,setLeaveLoading]=useState(false);
   const [employees,setEmployees]=useState([]),[empSearch,setEmpSearch]=useState('');
   const [notifMsg,setNotifMsg]=useState(''),[notifType,setNotifType]=useState('announcement'),[notifSending,setNotifSending]=useState(false);
   const [expType,setExpType]=useState('attendance'),[expFrom,setExpFrom]=useState(''),[expTo,setExpTo]=useState(''),[expLoading,setExpLoading]=useState(false);
+  const insets=useSafeAreaInsets();
 
   useEffect(()=>{loadAll();},[]);
   const loadAll=async()=>{setLoading(true);await Promise.all([loadStats(),loadAttendance(),loadLeaves(),loadEmployees()]);setLoading(false);};
-  const loadStats=async()=>{
-    const today=nowISO();
-    const{data:empD}=await supabase.from('employees').select('id').eq('status','active');
-    const{data:attD}=await supabase.from('attendance_records').select('employee_id').eq('attendance_date',today);
-    const{data:lvD}=await supabase.from('leave_requests').select('id').eq('status','pending');
-    const total=empD?.length||0,present=attD?.length||0;
-    setStats({total,present,absent:total-present,pendingLeaves:lvD?.length||0});
-  };
-  const loadAttendance=async()=>{
-    const{data}=await supabase.from('attendance_records').select('*,employees(first_name,last_name,employee_code,department)').eq('attendance_date',nowISO()).order('check_in_time',{ascending:false});
-    setAttendance(data||[]);
-  };
-  const loadLeaves=async()=>{
-    const{data}=await supabase.from('leave_requests').select('*,employees(first_name,last_name,employee_code,department)').order('created_at',{ascending:false});
-    setLeaveRequests(data||[]);
-  };
-  const loadEmployees=async()=>{
-    const{data}=await supabase.from('employees').select('id,employee_code,first_name,last_name,department,job_title,status,email').order('employee_code');
-    setEmployees(data||[]);
-  };
+  const loadStats=async()=>{const today=nowISO();const{data:empD}=await supabase.from('employees').select('id').eq('status','active');const{data:attD}=await supabase.from('attendance_records').select('employee_id').eq('attendance_date',today);const{data:lvD}=await supabase.from('leave_requests').select('id').eq('status','pending');const total=empD?.length||0,present=attD?.length||0;setStats({total,present,absent:total-present,pendingLeaves:lvD?.length||0});};
+  const loadAttendance=async()=>{const{data}=await supabase.from('attendance_records').select('*,employees(first_name,last_name,employee_code,department)').eq('attendance_date',nowISO()).order('check_in_time',{ascending:false});setAttendance(data||[]);};
+  const loadLeaves=async()=>{const{data}=await supabase.from('leave_requests').select('*,employees(first_name,last_name,employee_code,department)').order('created_at',{ascending:false});setLeaveRequests(data||[]);};
+  const loadEmployees=async()=>{const{data}=await supabase.from('employees').select('id,employee_code,first_name,last_name,department,job_title,status,email').order('employee_code');setEmployees(data||[]);};
   const handleLeaveAction=async(id,action)=>{setLeaveLoading(true);await supabase.from('leave_requests').update({status:action}).eq('id',id);await loadLeaves();await loadStats();setLeaveLoading(false);};
-  const sendNotification=async()=>{
-    if(!notifMsg.trim())return Alert.alert('',lang==='ar'?'الرجاء كتابة نص الإشعار':'Please write notification text.');
-    setNotifSending(true);
-    try{const{data:emps}=await supabase.from('employees').select('id').eq('status','active');
-      const inserts=emps.map(e=>({employee_id:e.id,type:notifType,message:notifMsg,is_read:false}));
-      await supabase.from('notifications').insert(inserts);setNotifMsg('');Alert.alert(lang==='ar'?'تم':'Done',lang==='ar'?'تم إرسال الإشعار بنجاح':'Notification sent successfully.');}
-    catch(_){Alert.alert('Error','Failed to send.');}finally{setNotifSending(false);}
-  };
+  const sendNotification=async()=>{if(!notifMsg.trim())return Alert.alert('',lang==='ar'?'الرجاء كتابة نص الإشعار':'Please write notification text.');setNotifSending(true);try{const{data:emps}=await supabase.from('employees').select('id').eq('status','active');const inserts=emps.map(e=>({employee_id:e.id,type:notifType,message:notifMsg,is_read:false}));await supabase.from('notifications').insert(inserts);setNotifMsg('');Alert.alert(lang==='ar'?'تم':'Done',lang==='ar'?'تم إرسال الإشعار بنجاح':'Notification sent successfully.');}catch(_){Alert.alert('Error','Failed.');}finally{setNotifSending(false);}};
 
   const handleExport=async()=>{
     if(Platform.OS!=='web')return Alert.alert(l.not_available,lang==='ar'?'التصدير متاح على المتصفح فقط':'Export is available on web browser only.');
     setExpLoading(true);
-    try{
-      const XLSX=await import('xlsx');
-      let rows=[],sheetName='Data',fileName='merge_export.xlsx';
-      if(expType==='attendance'){
-        let q=supabase.from('attendance_records').select('attendance_date,check_in_time,check_out_time,employees!inner(first_name,last_name,employee_code,department)');
-        if(expFrom)q=q.gte('attendance_date',expFrom);if(expTo)q=q.lte('attendance_date',expTo);
-        const{data}=await q.order('attendance_date',{ascending:false});
-        rows=(data||[]).map(r=>({'Date':r.attendance_date,'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Code':r.employees.employee_code,'Department':r.employees.department,'Check In':r.check_in_time?.slice(0,5)||'','Check Out':r.check_out_time?.slice(0,5)||''}));
-        sheetName='Attendance';fileName=`attendance_${nowISO()}.xlsx`;
-      }else if(expType==='employees'){
-        const{data}=await supabase.from('employees').select('employee_code,first_name,last_name,email,department,job_title,status').order('employee_code');
-        rows=(data||[]).map(r=>({'Code':r.employee_code,'Name':`${r.first_name} ${r.last_name}`,'Email':r.email,'Department':r.department,'Position':r.job_title,'Status':r.status}));
-        sheetName='Employees';fileName=`employees_${nowISO()}.xlsx`;
-      }else{
-        let q=supabase.from('leave_requests').select('leave_type,start_date,end_date,total_days,reason,status,created_at,employees!inner(first_name,last_name,department)');
-        if(expFrom)q=q.gte('start_date',expFrom);if(expTo)q=q.lte('start_date',expTo);
-        const{data}=await q.order('created_at',{ascending:false});
-        rows=(data||[]).map(r=>({'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Type':r.leave_type,'Start':r.start_date,'End':r.end_date,'Days':r.total_days,'Reason':r.reason,'Status':r.status}));
-        sheetName='Leaves';fileName=`leaves_${nowISO()}.xlsx`;
-      }
+    try{const XLSX=await import('xlsx');let rows=[],sheetName='Data',fileName='merge_export.xlsx';
+      if(expType==='attendance'){let q=supabase.from('attendance_records').select('attendance_date,check_in_time,check_out_time,employees!inner(first_name,last_name,employee_code,department)');if(expFrom)q=q.gte('attendance_date',expFrom);if(expTo)q=q.lte('attendance_date',expTo);const{data}=await q.order('attendance_date',{ascending:false});rows=(data||[]).map(r=>({'Date':r.attendance_date,'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Code':r.employees.employee_code,'Department':r.employees.department,'Check In':r.check_in_time?.slice(0,5)||'','Check Out':r.check_out_time?.slice(0,5)||''}));sheetName='Attendance';fileName=`attendance_${nowISO()}.xlsx`;}
+      else if(expType==='employees'){const{data}=await supabase.from('employees').select('employee_code,first_name,last_name,email,department,job_title,status').order('employee_code');rows=(data||[]).map(r=>({'Code':r.employee_code,'Name':`${r.first_name} ${r.last_name}`,'Email':r.email,'Department':r.department,'Position':r.job_title,'Status':r.status}));sheetName='Employees';fileName=`employees_${nowISO()}.xlsx`;}
+      else{let q=supabase.from('leave_requests').select('leave_type,start_date,end_date,total_days,reason,status,created_at,employees!inner(first_name,last_name,department)');if(expFrom)q=q.gte('start_date',expFrom);if(expTo)q=q.lte('start_date',expTo);const{data}=await q.order('created_at',{ascending:false});rows=(data||[]).map(r=>({'Employee':`${r.employees.first_name} ${r.employees.last_name}`,'Type':r.leave_type,'Start':r.start_date,'End':r.end_date,'Days':r.total_days,'Reason':r.reason,'Status':r.status}));sheetName='Leaves';fileName=`leaves_${nowISO()}.xlsx`;}
       if(rows.length===0){setExpLoading(false);return Alert.alert('',lang==='ar'?'لا توجد بيانات':'No data found.');}
       const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);XLSX.writeFile(wb,fileName);
-    }catch(e){Alert.alert('Error',e.message);}
-    setExpLoading(false);
+    }catch(e){Alert.alert('Error',e.message);}setExpLoading(false);
   };
 
-  const stCfg=s=>({approved:{color:t.green,bg:t.greenDim,label:lang==='ar'?'موافق':'Approved'},present:{color:t.green,bg:t.greenDim,label:lang==='ar'?'حاضر':'Present'},rejected:{color:t.red,bg:t.redDim,label:lang==='ar'?'مرفوض':'Rejected'},pending:{color:t.amber,bg:t.amberDim,label:lang==='ar'?'قيد المراجعة':'Pending'}}[s]||{color:t.sub,bg:t.border,label:s});
-
+  const stCfg=s=>({approved:{color:t.green,bg:t.greenDim,label:lang==='ar'?'Approved':'Approved'},present:{color:t.green,bg:t.greenDim,label:lang==='ar'?'Present':'Present'},rejected:{color:t.red,bg:t.redDim,label:lang==='ar'?'Rejected':'Rejected'},pending:{color:t.amber,bg:t.amberDim,label:lang==='ar'?'Pending':'Pending'}}[s]||{color:t.sub,bg:t.border,label:s});
   const filteredEmps=employees.filter(e=>empSearch===''||`${e.first_name} ${e.last_name}`.toLowerCase().includes(empSearch.toLowerCase())||e.employee_code?.toLowerCase().includes(empSearch.toLowerCase())||e.department?.toLowerCase().includes(empSearch.toLowerCase()));
-
   const tabs=[{id:'overview',label:l.overview,icon:'📊'},{id:'attendance',label:l.attendance_tab,icon:'📍'},{id:'leaves',label:l.leaves_tab,icon:'🌴'},{id:'employees',label:l.employees_tab,icon:'👥'},{id:'notifications',label:l.notifs_tab,icon:'🔔'},{id:'export',label:l.export_tab,icon:'📤'}];
 
-  if(loading)return <View style={{flex:1,backgroundColor:t.bg,alignItems:'center',justifyContent:'center'}}><ActivityIndicator size="large" color={t.sky} /><Text style={{color:t.sub,marginTop:12}}>{l.loading}</Text></View>;
+  if(loading) return <View style={{flex:1,backgroundColor:t.bg,alignItems:'center',justifyContent:'center,paddingTop:insets.top'}}><ActivityIndicator size="large" color={t.sky} /><Text style={{color:t.sub,marginTop:12}}>{l.loading}</Text></View>;
 
-  const HRCard=({children,highlight})=>(<View style={{backgroundColor:t.card,borderRadius:16,padding:18,marginBottom:12,borderWidth:1,borderColor:highlight?t.amber+'60':t.border}}>{children}</View>);
-  const HRBadge=({label,color,bg})=>(<View style={{paddingHorizontal:12,paddingVertical:6,borderRadius:8,backgroundColor:bg}}><Text style={{fontSize:12,fontWeight:'700',color}}>{label}</Text></View>);
-  const HRStat=({icon,label,value,color,bg})=>(<View style={{flex:1,backgroundColor:t.card,borderRadius:16,padding:16,borderWidth:1,borderColor:t.border}}>
-    <View style={{width:44,height:44,borderRadius:12,backgroundColor:bg,alignItems:'center',justifyContent:'center',marginBottom:12}}><Text style={{fontSize:20}}>{icon}</Text></View>
-    <Text style={{fontSize:24,fontWeight:'800',color,marginBottom:4}}>{value}</Text><Text style={{fontSize:13,color:t.sub}}>{label}</Text></View>);
-  const HRAction=({label,goTab,icon,color,bg})=>(<TouchableOpacity onPress={()=>setTab(goTab)} style={{width:(160),borderRadius:16,padding:20,borderWidth:1,alignItems:'center',justifyContent:'center',backgroundColor:bg,borderColor:color+'30'}}>
-    <Text style={{fontSize:24,marginBottom:8,color}}>{icon}</Text><Text style={{fontSize:14,fontWeight:'700',textAlign:'center',color}}>{label}</Text></TouchableOpacity>);
-  const HREmpRow=({e})=>(<View style={{backgroundColor:t.card,borderRadius:16,padding:16,marginBottom:10,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}>
-    <View style={{width:48,height:48,borderRadius:24,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center'}}><Text style={{color:t.sky,fontWeight:'700',fontSize:16}}>{e.first_name?.[0]}{e.last_name?.[0]}</Text></View>
-    <View style={{flex:1,marginLeft:14}}><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{e.first_name} {e.last_name}</Text><Text style={{color:t.sub,fontSize:12,marginTop:3}}>{e.job_title} · {e.department}</Text></View>
-    <HRBadge label={e.status==='active'?l.active_st:l.inactive_st} color={e.status==='active'?t.green:t.red} bg={e.status==='active'?t.greenDim:t.redDim} /></View>);
+  const HRStat=({icon,label,value,color,bg})=>(<View style={{flex:1,backgroundColor:t.card,borderRadius:16,padding:16,borderWidth:1,borderColor:t.border}}><View style={{width:40,height:40,borderRadius:12,backgroundColor:bg,alignItems:'center',justifyContent:'center',marginBottom:10}}><Text style={{fontSize:18}}>{icon}</Text></View><Text style={{fontSize:22,fontWeight:'800',color,marginBottom:2}}>{value}</Text><Text style={{fontSize:12,color:t.sub}}>{label}</Text></View>);
+  const HRBadge=({label,color,bg})=>(<View style={{paddingHorizontal:10,paddingVertical:5,borderRadius:8,backgroundColor:bg}}><Text style={{fontSize:11,fontWeight:'700',color}}>{label}</Text></View>);
+  const HRCard=({children,hl})=>(<View style={{backgroundColor:t.card,borderRadius:16,padding:16,marginBottom:10,borderWidth:1,borderColor:hl?t.amber+'50':t.border}}>{children}</View>);
+  const HREmpRow=({e})=>(<View style={{backgroundColor:t.card,borderRadius:14,padding:14,marginBottom:8,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}><View style={{width:44,height:44,borderRadius:22,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center'}}><Text style={{color:t.sky,fontWeight:'700',fontSize:15}}>{e.first_name?.[0]}{e.last_name?.[0]}</Text></View><View style={{flex:1,marginLeft:12}}><Text style={{color:t.text,fontWeight:'700',fontSize:14}}>{e.first_name} {e.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{e.job_title} · {e.department}</Text></View><HRBadge label={e.status==='active'?l.active_st:l.inactive_st} color={e.status==='active'?t.green:t.red} bg={e.status==='active'?t.greenDim:t.redDim} /></View>);
 
   return (
-    <ScreenWrap dark={dark}>
-      <View style={{paddingTop:Platform.OS==='ios'?50:40,paddingHorizontal:20,paddingBottom:20,backgroundColor:t.card,borderBottomWidth:1,borderBottomColor:t.border,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
-        <View><Text style={{fontSize:22,fontWeight:'800',color:t.text}}>{l.hr_dashboard}</Text>
-          <Text style={{fontSize:13,color:t.sub,marginTop:4}}>{new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</Text></View>
-        <TouchableOpacity onPress={goBack} style={{backgroundColor:t.skyDim,paddingHorizontal:16,paddingVertical:10,borderRadius:12}}>
-          <Text style={{color:t.sky,fontWeight:'700',fontSize:14}}>‹ {l.back}</Text></TouchableOpacity>
+    <View style={{flex:1,backgroundColor:t.bg,paddingTop:insets.top,paddingBottom:insets.bottom}}>
+      <View style={{paddingHorizontal:16,paddingTop:10,paddingBottom:14,backgroundColor:t.card,borderBottomWidth:1,borderBottomColor:t.border,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+        <View><Text style={{fontSize:20,fontWeight:'800',color:t.text}}>{l.hr_dashboard}</Text><Text style={{fontSize:12,color:t.sub,marginTop:2}}>{new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'short',month:'short',day:'numeric'})}</Text></View>
+        <TouchableOpacity onPress={goBack} style={{backgroundColor:t.skyDim,paddingHorizontal:14,paddingVertical:8,borderRadius:10}}><Text style={{color:t.sky,fontWeight:'700',fontSize:13}}>‹ {l.back}</Text></TouchableOpacity>
       </View>
       <View style={{backgroundColor:t.card,borderBottomWidth:1,borderBottomColor:t.border}}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal:16,paddingVertical:12}}>
-          {tabs.map(tb=>(<TouchableOpacity key={tb.id} onPress={()=>setTab(tb.id)}
-            style={{paddingHorizontal:18,paddingVertical:10,borderRadius:12,marginRight:10,backgroundColor:tab===tb.id?t.sky:'transparent'}}>
-            <Text style={{fontSize:14,fontWeight:'600',color:tab===tb.id?'#fff':t.sub}}>{tb.icon} {tb.label}</Text></TouchableOpacity>))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal:12,paddingVertical:10}}>
+          {tabs.map(tb=>(<TouchableOpacity key={tb.id} onPress={()=>setTab(tb.id)} style={{paddingHorizontal:14,paddingVertical:8,borderRadius:10,marginRight:8,backgroundColor:tab===tb.id?t.sky:'transparent'}}><Text style={{fontSize:13,fontWeight:'600',color:tab===tb.id?'#fff':t.sub}}>{tb.icon} {tb.label}</Text></TouchableOpacity>))}
         </ScrollView></View>
-
-      <ScrollView style={{flex:1}} contentContainerStyle={{padding:20}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{flex:1}} contentContainerStyle={{padding:16}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         {tab==='overview'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:16}}>{lang==='ar'?'إحصائيات اليوم':"Today's Statistics"}</Text>
-          <View style={{flexDirection:'row',marginBottom:12,gap:12}}><HRStat icon="👥" label={l.total_employees} value={stats.total} color={t.sky} bg={t.skyDim} /><HRStat icon="✅" label={l.present} value={stats.present} color={t.green} bg={t.greenDim} /></View>
-          <View style={{flexDirection:'row',marginBottom:16,gap:12}}><HRStat icon="❌" label={l.absent} value={stats.absent} color={t.red} bg={t.redDim} /><HRStat icon="🌴" label={l.pending_leaves} value={stats.pendingLeaves} color={t.amber} bg={t.amberDim} /></View>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:16}}>{l.quick_actions_hr}</Text>
-          <View style={{flexDirection:'row',flexWrap:'wrap',gap:12,marginBottom:16}}>
-            <HRAction label={l.review_att} goTab="attendance" icon="📍" color={t.sky} bg={t.skyDim} />
-            <HRAction label={l.leave_req} goTab="leaves" icon="🌴" color={t.amber} bg={t.amberDim} />
-            <HRAction label={l.emp_list} goTab="employees" icon="👥" color={t.green} bg={t.greenDim} />
-            <HRAction label={l.send_notif} goTab="notifications" icon="🔔" color={t.indigo} bg={t.indigoDim} /></View>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:16}}>{l.latest_att}</Text>
-          {attendance.slice(0,4).map(a=>(<View key={a.id} style={{backgroundColor:t.card,borderRadius:16,padding:16,marginBottom:10,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}>
-            <View style={{width:48,height:48,borderRadius:24,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center',marginRight:14}}><Text style={{color:t.sky,fontWeight:'700',fontSize:16}}>{a.employees?.first_name?.[0]}{a.employees?.last_name?.[0]}</Text></View>
-            <View style={{flex:1}}><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:12,marginTop:3}}>{a.employees?.department}</Text></View>
-            <View style={{alignItems:'flex-end'}}><Text style={{color:t.green,fontSize:15,fontWeight:'700'}}>{a.check_in_time?.slice(0,5)||'--:--'}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{l.entry}</Text></View></View>))}
-          {attendance.length===0&&<View style={{alignItems:'center',padding:40,backgroundColor:t.card,borderRadius:16}}><Text style={{fontSize:50,marginBottom:10}}>📭</Text><Text style={{color:t.sub,fontSize:15}}>{l.no_att_today}</Text></View>}
+          <View style={{flexDirection:'row',marginBottom:10,gap:10}}><HRStat icon="👥" label={l.total_employees} value={stats.total} color={t.sky} bg={t.skyDim} /><HRStat icon="✅" label={l.present} value={stats.present} color={t.green} bg={t.greenDim} /></View>
+          <View style={{flexDirection:'row',marginBottom:16,gap:10}}><HRStat icon="❌" label={l.absent} value={stats.absent} color={t.red} bg={t.redDim} /><HRStat icon="🌴" label={l.pending_leaves} value={stats.pendingLeaves} color={t.amber} bg={t.amberDim} /></View>
+          <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,marginBottom:16}}>
+            {[{label:l.review_att,g:'attendance',icon:'📍',c:t.sky,bg:t.skyDim},{label:l.leave_req,g:'leaves',icon:'🌴',c:t.amber,bg:t.amberDim},{label:l.emp_list,g:'employees',icon:'👥',c:t.green,bg:t.greenDim},{label:l.send_notif,g:'notifications',icon:'🔔',c:t.indigo,bg:t.indigoDim}].map(a=>(<TouchableOpacity key={a.g} onPress={()=>setTab(a.g)} style={{width:'48%',borderRadius:14,padding:16,borderWidth:1,alignItems:'center',justifyContent:'center',backgroundColor:a.bg,borderColor:a.c+'25'}}><Text style={{fontSize:22,marginBottom:6,color:a.c}}>{a.icon}</Text><Text style={{fontSize:13,fontWeight:'700',textAlign:'center',color:a.c}}>{a.label}</Text></TouchableOpacity>))}
+          </View>
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.latest_att}</Text>
+          {attendance.slice(0,4).map(a=>(<View key={a.id} style={{backgroundColor:t.card,borderRadius:14,padding:14,marginBottom:8,borderWidth:1,borderColor:t.border,flexDirection:'row',alignItems:'center'}}><View style={{width:44,height:44,borderRadius:22,backgroundColor:t.skyDim,alignItems:'center',justifyContent:'center',marginRight:12}}><Text style={{color:t.sky,fontWeight:'700',fontSize:15}}>{a.employees?.first_name?.[0]}{a.employees?.last_name?.[0]}</Text></View><View style={{flex:1}}><Text style={{color:t.text,fontWeight:'700',fontSize:14}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{a.employees?.department}</Text></View><View style={{alignItems:'flex-end'}}><Text style={{color:t.green,fontSize:14,fontWeight:'700'}}>{a.check_in_time?.slice(0,5)||'--:--'}</Text><Text style={{color:t.sub,fontSize:10,marginTop:2}}>{l.entry}</Text></View></View>))}
+          {attendance.length===0&&<View style={{alignItems:'center',padding:30,backgroundColor:t.card,borderRadius:14}}><Text style={{fontSize:40,marginBottom:8}}>📭</Text><Text style={{color:t.sub,fontSize:14}}>{l.no_att_today}</Text></View>}
         </>}
 
         {tab==='attendance'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:4}}>{l.att_records}</Text>
-          <Text style={{fontSize:13,color:t.sub,marginBottom:16}}>{attendance.length} {l.records}</Text>
-          {attendance.map(a=>{const st=stCfg(a.status);return <HRCard key={a.id}><View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
-            <View><Text style={{color:t.text,fontWeight:'700',fontSize:16}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:12,marginTop:3}}>{a.employees?.employee_code} · {a.employees?.department}</Text></View>
-            <HRBadge label={st.label} color={st.color} bg={st.bg} /></View>
-            <View style={{flexDirection:'row',gap:12}}>
-              <View style={{flex:1,padding:12,borderRadius:12,alignItems:'center',backgroundColor:t.greenDim}}><Text style={{fontSize:11,fontWeight:'600',color:t.green}}>{l.entry}</Text><Text style={{fontWeight:'700',fontSize:18,color:t.green,marginTop:4}}>{a.check_in_time?.slice(0,5)||'---'}</Text></View>
-              <View style={{flex:1,padding:12,borderRadius:12,alignItems:'center',backgroundColor:t.redDim}}><Text style={{fontSize:11,fontWeight:'600',color:t.red}}>{l.exit}</Text><Text style={{fontWeight:'700',fontSize:18,color:a.check_out_time?t.red:t.muted,marginTop:4}}>{a.check_out_time?.slice(0,5)||'---'}</Text></View></View></HRCard>;})}
-          {attendance.length===0&&<View style={{alignItems:'center',padding:40,backgroundColor:t.card,borderRadius:16}}><Text style={{fontSize:50,marginBottom:10}}>📭</Text><Text style={{color:t.sub}}>{l.no_records}</Text></View>}
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.att_records} ({attendance.length})</Text>
+          {attendance.map(a=>{const st=stCfg(a.status);return <HRCard key={a.id}><View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}><View><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{a.employees?.first_name} {a.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{a.employees?.employee_code} · {a.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{flexDirection:'row',gap:10}}><View style={{flex:1,padding:10,borderRadius:10,alignItems:'center',backgroundColor:t.greenDim}}><Text style={{fontSize:10,fontWeight:'600',color:t.green}}>{l.entry}</Text><Text style={{fontWeight:'700',fontSize:16,color:t.green,marginTop:2}}>{a.check_in_time?.slice(0,5)||'---'}</Text></View><View style={{flex:1,padding:10,borderRadius:10,alignItems:'center',backgroundColor:t.redDim}}><Text style={{fontSize:10,fontWeight:'600',color:t.red}}>{l.exit}</Text><Text style={{fontWeight:'700',fontSize:16,color:a.check_out_time?t.red:t.muted,marginTop:2}}>{a.check_out_time?.slice(0,5)||'---'}</Text></View></View></HRCard>;})}
+          {attendance.length===0&&<View style={{alignItems:'center',padding:30,backgroundColor:t.card,borderRadius:14}}><Text style={{fontSize:40,marginBottom:8}}>📭</Text><Text style={{color:t.sub}}>{l.no_records}</Text></View>}
         </>}
 
         {tab==='leaves'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:4}}>{l.leave_reqs}</Text>
-          <Text style={{fontSize:13,color:t.sub,marginBottom:16}}>{leaveRequests.filter(lv=>lv.status==='pending').length} {l.under_review}</Text>
-          {leaveLoading&&<ActivityIndicator color={t.sky} style={{marginBottom:10}} />}
-          {leaveRequests.map(lv=>{const st=stCfg(lv.status);const days=lv.start_date&&lv.end_date?Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/86400000)+1:0;return <HRCard key={lv.id} highlight={lv.status==='pending'}>
-            <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
-              <View><Text style={{color:t.text,fontWeight:'700',fontSize:16}}>{lv.employees?.first_name} {lv.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:12,marginTop:3}}>{lv.employees?.department}</Text></View>
-              <HRBadge label={st.label} color={st.color} bg={st.bg} /></View>
-            <View style={{flexDirection:'row',gap:8,marginBottom:10}}>
-              <View style={{backgroundColor:t.indigoDim,paddingHorizontal:12,paddingVertical:6,borderRadius:8}}><Text style={{color:t.indigo,fontSize:12,fontWeight:'600'}}>{lv.leave_type}</Text></View>
-              <View style={{backgroundColor:t.skyDim,paddingHorizontal:12,paddingVertical:6,borderRadius:8}}><Text style={{color:t.sky,fontSize:12,fontWeight:'600'}}>{days} {l.day}</Text></View></View>
-            <Text style={{color:t.sub,fontSize:13,marginBottom:6}}>📅 {lv.start_date} → {lv.end_date}</Text>
-            {lv.reason&&<Text style={{color:t.muted,fontSize:12,marginBottom:12}}>💬 {lv.reason}</Text>}
-            {lv.status==='pending'&&<View style={{flexDirection:'row',gap:10,marginTop:6}}>
-              <TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'approved')} style={{flex:1,paddingVertical:12,borderRadius:12,alignItems:'center',backgroundColor:t.greenDim,borderWidth:1,borderColor:t.green+'40'}}>
-                <Text style={{fontWeight:'700',fontSize:14,color:t.green}}>✓ {l.approve}</Text></TouchableOpacity>
-              <TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'rejected')} style={{flex:1,paddingVertical:12,borderRadius:12,alignItems:'center',backgroundColor:t.redDim,borderWidth:1,borderColor:t.red+'40'}}>
-                <Text style={{fontWeight:'700',fontSize:14,color:t.red}}>✗ {l.reject}</Text></TouchableOpacity></View>}</HRCard>;})}
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:4}}>{l.leave_reqs}</Text>
+          <Text style={{fontSize:12,color:t.sub,marginBottom:12}}>{leaveRequests.filter(lv=>lv.status==='pending').length} {l.under_review}</Text>
+          {leaveLoading&&<ActivityIndicator color={t.sky} style={{marginBottom:8}} />}
+          {leaveRequests.map(lv=>{const st=stCfg(lv.status);const days=lv.start_date&&lv.end_date?Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/86400000)+1:0;return <HRCard key={lv.id} hl={lv.status==='pending'}><View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}><View><Text style={{color:t.text,fontWeight:'700',fontSize:15}}>{lv.employees?.first_name} {lv.employees?.last_name}</Text><Text style={{color:t.sub,fontSize:11,marginTop:2}}>{lv.employees?.department}</Text></View><HRBadge label={st.label} color={st.color} bg={st.bg} /></View><View style={{flexDirection:'row',gap:8,marginBottom:8}}><View style={{backgroundColor:t.indigoDim,paddingHorizontal:10,paddingVertical:5,borderRadius:8}}><Text style={{color:t.indigo,fontSize:11,fontWeight:'600'}}>{lv.leave_type}</Text></View><View style={{backgroundColor:t.skyDim,paddingHorizontal:10,paddingVertical:5,borderRadius:8}}><Text style={{color:t.sky,fontSize:11,fontWeight:'600'}}>{days} {l.day}</Text></View></View><Text style={{color:t.sub,fontSize:12,marginBottom:4}}>📅 {lv.start_date} → {lv.end_date}</Text>{lv.reason&&<Text style={{color:t.muted,fontSize:11,marginBottom:10}}>💬 {lv.reason}</Text>}{lv.status==='pending'&&<View style={{flexDirection:'row',gap:8}}><TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'approved')} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:t.greenDim,borderWidth:1,borderColor:t.green+'35'}}><Text style={{fontWeight:'700',fontSize:13,color:t.green}}>✓ {l.approve}</Text></TouchableOpacity><TouchableOpacity onPress={()=>handleLeaveAction(lv.id,'rejected')} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',backgroundColor:t.redDim,borderWidth:1,borderColor:t.red+'35'}}><Text style={{fontWeight:'700',fontSize:13,color:t.red}}>✗ {l.reject}</Text></TouchableOpacity></View>}</HRCard>;})}
         </>}
 
         {tab==='employees'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:4}}>{l.emp_list_title}</Text>
-          <Text style={{fontSize:13,color:t.sub,marginBottom:16}}>{employees.length} {l.employee_word}</Text>
-          <View style={{flexDirection:'row',alignItems:'center',backgroundColor:t.card,borderRadius:14,borderWidth:1,borderColor:t.border,paddingHorizontal:16,marginBottom:16}}>
-            <Text style={{fontSize:16,marginRight:10}}>🔍</Text>
-            <TextInput value={empSearch} onChangeText={setEmpSearch} placeholder={l.search_emp} placeholderTextColor={t.muted} style={{flex:1,color:t.text,paddingVertical:14,fontSize:15}} /></View>
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:4}}>{l.emp_list_title}</Text>
+          <Text style={{fontSize:12,color:t.sub,marginBottom:12}}>{employees.length} {l.employee_word}</Text>
+          <View style={{flexDirection:'row',alignItems:'center',backgroundColor:t.card,borderRadius:12,borderWidth:1,borderColor:t.border,paddingHorizontal:14,marginBottom:12}}><Text style={{fontSize:15,marginRight:8}}>🔍</Text><TextInput value={empSearch} onChangeText={setEmpSearch} placeholder={l.search_emp} placeholderTextColor={t.muted} style={{flex:1,color:t.text,paddingVertical:12,fontSize:14}} /></View>
           {filteredEmps.map(e=><HREmpRow key={e.id} e={e} />)}
         </>}
 
         {tab==='notifications'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:16}}>{l.send_notif_title}</Text>
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>{l.send_notif_title}</Text>
           <HRCard>
-            <Text style={{color:t.sub,fontSize:14,fontWeight:'600',marginBottom:10}}>{l.notif_type}</Text>
-            <View style={{flexDirection:'row',gap:10,marginBottom:20}}>
-              {[{id:'announcement',label:l.announcement,icon:'📢'},{id:'reminder',label:l.reminder,icon:'⏰'},{id:'alert',label:l.alert,icon:'🚨'}].map(nt=>(
-                <TouchableOpacity key={nt.id} onPress={()=>setNotifType(nt.id)} style={{flex:1,paddingVertical:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:notifType===nt.id?t.indigo:t.border,backgroundColor:notifType===nt.id?t.indigoDim:'transparent'}}>
-                  <Text style={{fontSize:13,color:notifType===nt.id?t.indigo:t.sub,fontWeight:'600'}}>{nt.icon} {nt.label}</Text></TouchableOpacity>))}
-            </View>
-            <Text style={{color:t.sub,fontSize:14,fontWeight:'600',marginBottom:10}}>{l.notif_text}</Text>
-            <TextInput value={notifMsg} onChangeText={setNotifMsg} placeholder={l.write_text} placeholderTextColor={t.muted} multiline style={{backgroundColor:t.bg,borderRadius:14,padding:16,color:t.text,fontSize:15,borderWidth:1,borderColor:t.border,minHeight:120,textAlignVertical:'top',marginBottom:20}} />
-            <TouchableOpacity onPress={sendNotification} disabled={notifSending} style={{backgroundColor:t.indigo,borderRadius:14,padding:16,alignItems:'center',opacity:notifSending?0.5:1}}>
-              {notifSending?<ActivityIndicator color="#fff" />:<Text style={{color:'#fff',fontWeight:'700',fontSize:16}}>📤 {l.send_all}</Text>}</TouchableOpacity>
+            <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.notif_type}</Text>
+            <View style={{flexDirection:'row',gap:8,marginBottom:16}}>{[{id:'announcement',label:l.announcement,icon:'📢'},{id:'reminder',label:l.reminder,icon:'⏰'},{id:'alert',label:l.alert,icon:'🚨'}].map(nt=>(<TouchableOpacity key={nt.id} onPress={()=>setNotifType(nt.id)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',borderWidth:1,borderColor:notifType===nt.id?t.indigo:t.border,backgroundColor:notifType===nt.id?t.indigoDim:'transparent'}}><Text style={{fontSize:12,color:notifType===nt.id?t.indigo:t.sub,fontWeight:'600'}}>{nt.icon} {nt.label}</Text></TouchableOpacity>))}</View>
+            <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.notif_text}</Text>
+            <TextInput value={notifMsg} onChangeText={setNotifMsg} placeholder={l.write_text} placeholderTextColor={t.muted} multiline style={{backgroundColor:t.bg,borderRadius:12,padding:14,color:t.text,fontSize:14,borderWidth:1,borderColor:t.border,minHeight:100,textAlignVertical:'top',marginBottom:16}} />
+            <TouchableOpacity onPress={sendNotification} disabled={notifSending} style={{backgroundColor:t.indigo,borderRadius:12,padding:14,alignItems:'center',opacity:notifSending?0.5:1}}>{notifSending?<ActivityIndicator color="#fff" />:<Text style={{color:'#fff',fontWeight:'700',fontSize:15}}>📤 {l.send_all}</Text>}</TouchableOpacity>
           </HRCard>
-          <View style={{marginTop:20,backgroundColor:t.indigoDim,borderRadius:16,padding:20,flexDirection:'row',alignItems:'center',borderWidth:1,borderColor:t.indigo+'30'}}>
-            <Text style={{fontSize:32,marginRight:16}}>👥</Text><View><Text style={{color:t.indigo,fontWeight:'600',fontSize:14}}>{l.will_send_to}</Text><Text style={{color:t.text,fontSize:24,fontWeight:'800',marginTop:4}}>{stats.total} {l.employee_word}</Text></View></View>
+          <View style={{marginTop:16,backgroundColor:t.indigoDim,borderRadius:14,padding:16,flexDirection:'row',alignItems:'center',borderWidth:1,borderColor:t.indigo+'25'}}><Text style={{fontSize:28,marginRight:14}}>👥</Text><View><Text style={{color:t.indigo,fontWeight:'600',fontSize:13}}>{l.will_send_to}</Text><Text style={{color:t.text,fontSize:22,fontWeight:'800',marginTop:2}}>{stats.total} {l.employee_word}</Text></View></View>
         </>}
 
         {tab==='export'&&<>
-          <Text style={{fontSize:18,fontWeight:'700',color:t.text,marginBottom:16}}>📤 {l.export_tab}</Text>
+          <Text style={{fontSize:16,fontWeight:'700',color:t.text,marginBottom:12}}>📤 {l.export_tab}</Text>
           <HRCard>
-            <Text style={{color:t.sub,fontSize:14,fontWeight:'600',marginBottom:10}}>{l.select_type}</Text>
-            <View style={{flexDirection:'row',gap:10,marginBottom:20}}>
-              {[{id:'attendance',icon:'📍',label:l.attendance_tab},{id:'employees',icon:'👥',label:l.employees_tab},{id:'leaves',icon:'🌴',label:l.leaves_tab}].map(et=>(
-                <TouchableOpacity key={et.id} onPress={()=>setExpType(et.id)} style={{flex:1,paddingVertical:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:expType===et.id?t.sky:t.border,backgroundColor:expType===et.id?t.skyDim:'transparent'}}>
-                  <Text style={{fontSize:13,color:expType===et.id?t.sky:t.sub,fontWeight:'600'}}>{et.icon} {et.label}</Text></TouchableOpacity>))}
-            </View>
-            {expType!=='employees'&&<><View style={{flexDirection:'row',gap:10,marginBottom:16}}>
-              <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8}}>{l.from_date}</Text><DateInput dark={dark} value={expFrom} onChange={setExpFrom} placeholder="YYYY-MM-DD" lang={lang} /></View>
-              <View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8}}>{l.to_date}</Text><DateInput dark={dark} value={expTo} onChange={setExpTo} placeholder="YYYY-MM-DD" lang={lang} /></View></View></>}
+            <Text style={{color:t.sub,fontSize:13,fontWeight:'600',marginBottom:8}}>{l.select_type}</Text>
+            <View style={{flexDirection:'row',gap:8,marginBottom:16}}>{[{id:'attendance',icon:'📍',label:l.attendance_tab},{id:'employees',icon:'👥',label:l.employees_tab},{id:'leaves',icon:'🌴',label:l.leaves_tab}].map(et=>(<TouchableOpacity key={et.id} onPress={()=>setExpType(et.id)} style={{flex:1,paddingVertical:10,borderRadius:10,alignItems:'center',borderWidth:1,borderColor:expType===et.id?t.sky:t.border,backgroundColor:expType===et.id?t.skyDim:'transparent'}}><Text style={{fontSize:12,color:expType===et.id?t.sky:t.sub,fontWeight:'600'}}>{et.icon} {et.label}</Text></TouchableOpacity>))}</View>
+            {expType!=='employees'&&<><View style={{flexDirection:'row',gap:10,marginBottom:14}}><View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6}}>{l.from_date}</Text><CalendarPicker dark={dark} value={expFrom} onChange={setExpFrom} lang={lang} /></View><View style={{flex:1}}><Text style={{color:t.sub,fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:6}}>{l.to_date}</Text><CalendarPicker dark={dark} value={expTo} onChange={setExpTo} lang={lang} /></View></View></>}
             <AppBtn dark={dark} label={l.generate_download} icon="📥" color={t.sky} loading={expLoading} onPress={handleExport} />
-            {Platform.OS!=='web'&&<Text style={{color:t.amber,fontSize:12,marginTop:12,textAlign:'center'}}>⚠️ {lang==='ar'?'التصدير متاح على المتصفح فقط':'Export is available on web browser only.'}</Text>}
+            {Platform.OS!=='web'&&<Text style={{color:t.amber,fontSize:11,marginTop:10,textAlign:'center'}}>⚠️ {lang==='ar'?'التصدير متاح على المتصفح فقط':'Export is available on web browser only.'}</Text>}
           </HRCard>
         </>}
 
-        <View style={{height:60}} />
+        <View style={{height:40}} />
       </ScrollView>
-    </ScreenWrap>
+    </View>
   );
 };
 
 /* ═══════════════════ MAIN APP ═══════════════════ */
 export default function App() {
   const [screen,setScreen]=useState('login');
-  const [darkMode,setDarkMode]=useState(true);
+  const [darkMode,setDarkMode]=useState(false);
   const [lang,setLang]=useState('en');
   const [session,setSession]=useState(null);
   const [employee,setEmployee]=useState(null);
@@ -976,23 +935,19 @@ export default function App() {
     return()=>sub.unsubscribe();
   },[]);
 
-  const handleSetLang=useCallback((newLang)=>{
-    setLang(newLang);AsyncStorage.setItem('app_lang',newLang);
-  },[]);
-
+  const handleSetLang=useCallback((newLang)=>{setLang(newLang);AsyncStorage.setItem('app_lang',newLang);},[]);
   useEffect(()=>{if(!session?.user)return;(async()=>{const{data}=await supabase.from('employees').select('*').eq('email',session.user.email);if(data?.length>0)setEmployee(data[0]);})();},[session]);
-  useEffect(()=>{if(!employee?.id)return;(async()=>{
-    if(employee.role_id){const{data}=await supabase.from('roles').select('name').eq('id',employee.role_id).single();if(data)setEmployeeRole(data.name);}
-    fetchUnread();checkTodayStatus();
-  })();},[employee]);
-
+  useEffect(()=>{if(!employee?.id)return;(async()=>{if(employee.role_id){const{data}=await supabase.from('roles').select('name').eq('id',employee.role_id).single();if(data)setEmployeeRole(data.name);}fetchUnread();checkTodayStatus();})();},[employee]);
   const fetchUnread=async()=>{if(!employee?.id)return;const{count}=await supabase.from('notifications').select('*',{count:'exact',head:true}).or(`employee_id.eq.${employee.id},employee_id.is.null`).eq('is_read',false);setUnreadCount(count||0);};
   const checkTodayStatus=async()=>{if(!employee?.id)return;const{data}=await supabase.from('attendance_records').select('*').eq('employee_id',employee.id).eq('attendance_date',nowISO()).maybeSingle();setIsClockedIn(!!(data&&data.check_in_time&&!data.check_out_time));};
 
   const getOffice=async()=>{const{data}=await supabase.from('office_location').select('*').eq('is_active',true).single();return data;};
   const getUserLoc=async()=>{
-    if(Platform.OS==='web')return new Promise(res=>{navigator.geolocation?.getCurrentPosition(p=>res({latitude:p.coords.latitude,longitude:p.coords.longitude}),()=>res(null),{enableHighAccuracy:true,timeout:8000});});
-    try{const{status}=await Location.requestForegroundPermissionsAsync();if(status!=='granted')return null;const loc=await Promise.race([Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Low}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000))]);return{latitude:loc.coords.latitude,longitude:loc.coords.longitude};}catch(_){return null;}
+    if(Platform.OS==='web')return new Promise(res=>{navigator.geolocation?.getCurrentPosition(p=>res({latitude:p.coords.latitude,longitude:p.coords.longitude}),()=>res(null),{enableHighAccuracy:true,timeout:10000});});
+    try{const{status}=await Location.requestForegroundPermissionsAsync();if(status!=='granted')return null;
+      let loc=await Promise.race([Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000))]);
+      return{latitude:loc.coords.latitude,longitude:loc.coords.longitude};
+    }catch(e){try{let loc2=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Low});return{latitude:loc2.coords.latitude,longitude:loc2.coords.longitude};}catch(_){return null;}}
   };
 
   const handleCheckIn=async()=>{
