@@ -2571,6 +2571,7 @@ const HRDashboardScreenComp = ({ dark, goBack, lang, isConnected }) => {
 
 /* ═══════════════════ MAIN APP ═══════════════════ */
 export default function App() {
+  console.log('=== APP START ===');
   const [screen, setScreen] = useState('login');
   const [darkMode, setDarkMode] = useState(false);
   const [lang, setLang] = useState('en');
