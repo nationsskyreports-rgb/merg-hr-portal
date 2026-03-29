@@ -22,18 +22,176 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const IS_SMALL = SCREEN_W < 380;
 
 /* ══════════════════════════════════════════════════════
-   CROSS-PLATFORM ALERT
-   crossAlert لا يعمل على الويب — هذه الدالة تحل المشكلة
+   TOAST SYSTEM — works on web + mobile, no extra library
+   Usage anywhere in the app:
+     toast.success('Checked in!', 'Title')
+     toast.error('Something failed')
+     toast.info('FYI message')
+     toast.warn('Warning message')
 ══════════════════════════════════════════════════════ */
+let _toastRef = null;
+const toast = {
+  _show: (type, message, title) => {
+    _toastRef?.show({ type, message, title });
+  },
+  success: (message, title) => toast._show('success', message, title),
+  error:   (message, title) => toast._show('error',   message, title),
+  info:    (message, title) => toast._show('info',    message, title),
+  warn:    (message, title) => toast._show('warn',    message, title),
+};
+
+const TOAST_CFG = {
+  success: { bg: '#16A34A', icon: '✅', border: 'rgba(22,163,74,0.3)'  },
+  error:   { bg: '#DC2626', icon: '❌', border: 'rgba(220,38,38,0.3)'  },
+  info:    { bg: '#0284C7', icon: 'ℹ️', border: 'rgba(2,132,199,0.3)'  },
+  warn:    { bg: '#D97706', icon: '⚠️', border: 'rgba(217,119,6,0.3)'  },
+};
+
+const ToastContainer = React.forwardRef((_, ref) => {
+  const [toasts, setToasts] = useState([]);
+  const timers = useRef({});
+
+  React.useImperativeHandle(ref, () => ({
+    show: ({ type = 'info', message, title }) => {
+      const id = Date.now().toString();
+      const anim = new Animated.Value(0);
+      setToasts(p => [...p, { id, type, message, title, anim }]);
+      Animated.spring(anim, { toValue: 1, friction: 7, tension: 60, useNativeDriver: true }).start();
+      timers.current[id] = setTimeout(() => dismiss(id, anim), 3500);
+    },
+  }));
+
+  const dismiss = (id, anim) => {
+    clearTimeout(timers.current[id]);
+    Animated.timing(anim, { toValue: 0, duration: 250, useNativeDriver: true }).start(() => {
+      setToasts(p => p.filter(t => t.id !== id));
+    });
+  };
+
+  const ins = useSafeAreaInsets();
+
+  return (
+    <View pointerEvents="box-none" style={{
+      position: 'absolute', top: ins.top + 10, left: 16, right: 16, zIndex: 99999,
+    }}>
+      {toasts.map(t => {
+        const cfg = TOAST_CFG[t.type] || TOAST_CFG.info;
+        return (
+          <Animated.View key={t.id}
+            style={{
+              opacity: t.anim,
+              transform: [{ translateY: t.anim.interpolate({ inputRange: [0,1], outputRange: [-30, 0] }) },
+                          { scale:     t.anim.interpolate({ inputRange: [0,1], outputRange: [0.92, 1] }) }],
+              marginBottom: 10,
+            }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => dismiss(t.id, t.anim)}
+              style={{
+                flexDirection: 'row', alignItems: 'center',
+                backgroundColor: '#1a1a2e',
+                borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
+                borderWidth: 1.5, borderColor: cfg.border,
+                shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.35, shadowRadius: 20, elevation: 12,
+              }}
+            >
+              {/* Color bar */}
+              <View style={{ width: 4, height: '100%', position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: cfg.bg, borderTopLeftRadius: 16, borderBottomLeftRadius: 16 }} />
+              {/* Icon */}
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: `${cfg.bg}22`, alignItems: 'center', justifyContent: 'center', marginRight: 12, marginLeft: 8 }}>
+                <Text style={{ fontSize: 17 }}>{cfg.icon}</Text>
+              </View>
+              {/* Text */}
+              <View style={{ flex: 1 }}>
+                {t.title ? <Text style={{ color: '#F0F6FF', fontWeight: '700', fontSize: 14, marginBottom: 2 }}>{t.title}</Text> : null}
+                <Text style={{ color: t.title ? '#8BA0B8' : '#F0F6FF', fontSize: t.title ? 12 : 14, lineHeight: 18, fontWeight: t.title ? '400' : '500' }}>{t.message}</Text>
+              </View>
+              {/* Dismiss X */}
+              <Text style={{ color: '#4A6178', fontSize: 16, marginLeft: 10, fontWeight: '600' }}>✕</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      })}
+    </View>
+  );
+});
+
+/* ── Confirm Modal — replaces window.confirm + Alert confirm ── */
+let _confirmRef = null;
+const confirm = (title, message, onConfirm, onCancel, lang = 'en') => {
+  _confirmRef?.show({ title, message, onConfirm, onCancel, lang });
+};
+
+const ConfirmModal = React.forwardRef((_, ref) => {
+  const [visible, setVisible] = useState(false);
+  const [cfg, setCfg] = useState({});
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
+  const opAnim    = useRef(new Animated.Value(0)).current;
+
+  React.useImperativeHandle(ref, () => ({
+    show: (config) => {
+      setCfg(config);
+      setVisible(true);
+      Animated.parallel([
+        Animated.spring(scaleAnim, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true }),
+        Animated.timing(opAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    },
+  }));
+
+  const hide = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, { toValue: 0.85, friction: 7, useNativeDriver: true }),
+      Animated.timing(opAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+    ]).start(() => setVisible(false));
+  };
+
+  const handleConfirm = () => { hide(); setTimeout(() => cfg.onConfirm?.(), 200); };
+  const handleCancel  = () => { hide(); cfg.onCancel?.(); };
+  const l = L[cfg.lang || 'en'];
+
+  if (!visible) return null;
+  return (
+    <Modal visible transparent animationType="none" onRequestClose={handleCancel}>
+      <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24, opacity: opAnim }}>
+        <TouchableOpacity activeOpacity={1} onPress={handleCancel} style={{ position: 'absolute', inset: 0 }} />
+        <Animated.View style={{
+          width: '100%', maxWidth: 360,
+          backgroundColor: '#0F1A2E', borderRadius: 22,
+          padding: 28, transform: [{ scale: scaleAnim }],
+          borderWidth: 1, borderColor: '#1C2E47',
+          shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.5, shadowRadius: 40, elevation: 20,
+        }}>
+          <Text style={{ color: '#F0F6FF', fontSize: 20, fontWeight: '800', marginBottom: 10, textAlign: 'center' }}>{cfg.title}</Text>
+          {cfg.message ? <Text style={{ color: '#6E8CAD', fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 }}>{cfg.message}</Text> : <View style={{ height: 20 }} />}
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity onPress={handleCancel} activeOpacity={0.8}
+              style={{ flex: 1, height: 50, borderRadius: 13, backgroundColor: '#14213D', borderWidth: 1, borderColor: '#1C2E47', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#6E8CAD', fontWeight: '600', fontSize: 15 }}>{l?.cancel || 'Cancel'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleConfirm} activeOpacity={0.8}
+              style={{ flex: 1, height: 50, borderRadius: 13, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', shadowColor: '#DC2626', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 6 }}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{l?.sign_out || 'Sign Out'}</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+});
+
+/* ── Cross-platform alert: FIXED (was calling itself recursively) ── */
 const crossAlert = (title, message, buttons) => {
   if (Platform.OS !== 'web') {
-    crossAlert(title, message, buttons);
+    Alert.alert(title, message, buttons); // ✅ Fixed: was crossAlert() before
     return;
   }
-  // Web: use window.confirm or window.alert
+  // Web fallback — only for edge cases not covered by toast/confirm
   const confirmBtn = buttons?.find(b => b.style !== 'cancel' && b.onPress);
   const cancelBtn  = buttons?.find(b => b.style === 'cancel');
-  const text = message ? `${title}\n\n${message}` : title;
+  const text = [title, message].filter(Boolean).join('\n\n');
   if (confirmBtn) {
     if (window.confirm(text)) confirmBtn.onPress?.();
     else cancelBtn?.onPress?.();
@@ -577,21 +735,21 @@ const LoginScreen = ({ lang, setLang }) => {
   }, []);
 
   const handleLogin = async () => {
-    if (!email.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
-    if (!pw.trim())    return crossAlert('', lang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password.');
+    if (!email.trim()) { toast.warn(lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.'); return; }
+    if (!pw.trim()) { toast.warn(lang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password.'); return; }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw });
     setLoading(false);
-    if (error) crossAlert(lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed', error.message);
+    if (error) { toast.error(error.message, lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed'); }
   };
 
   const handleReset = async () => {
-    if (!resetEmail.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
+    if (!resetEmail.trim()) { toast.warn(lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.'); return; }
     setResetLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim());
     setResetLoading(false);
-    if (error) { crossAlert('Error', error.message); return; }
-    crossAlert(l.reset_sent, l.reset_sent_msg);
+    if (error) { toast.error(error.message, 'Error'); return; }
+    toast.success(l.reset_sent_msg, l.reset_sent);
     setResetOpen(false); setResetEmail('');
   };
 
@@ -686,10 +844,19 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
   };
 
   const handleLogout = () => {
-    crossAlert(l.logout_confirm, l.logout_msg, [
-      { text: l.cancel, style: 'cancel' },
-      { text: l.sign_out, style: 'destructive', onPress: () => supabase.auth.signOut() },
-    ]);
+    confirm(
+      l.logout_confirm,
+      l.logout_msg,
+      async () => {
+        try { await supabase.auth.signOut(); } catch (_) {}
+        finally {
+          setScreen('login'); setEmployee(null);
+          setIsClockedIn(false); setUnreadCount(0);
+        }
+      },
+      null,
+      lang,
+    );
   };
 
   const initials = employee ? (employee.first_name?.[0] || '') + (employee.last_name?.[0] || '') : '??';
@@ -946,15 +1113,15 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang }) => {
   }, [startDate, endDate]);
 
   const handleSubmit = async () => {
-    if (!startDate || !endDate) return crossAlert('', l.missing_dates);
-    if (startDate < today)       return crossAlert('', l.past_date);
-    if (totalDays <= 0)          return crossAlert('', l.invalid_dates);
-    if (!reason.trim())          return crossAlert('', l.missing_reason);
+    if (!startDate || !endDate) { toast.warn(l.missing_dates); return; }
+    if (startDate < today) { toast.warn(l.past_date); return; }
+    if (totalDays <= 0) { toast.warn(l.invalid_dates); return; }
+    if (!reason.trim()) { toast.warn(l.missing_reason); return; }
     setSubmitting(true);
     const { error } = await supabase.from('leave_requests').insert([{ employee_id: employee.id, leave_type: type, start_date: startDate, end_date: endDate, total_days: totalDays, reason: reason.trim(), status: 'pending' }]);
     setSubmitting(false);
-    if (error) { crossAlert('Error', error.message); return; }
-    crossAlert(l.submitted, `${l.submitted_msg} ${totalDays} ${totalDays > 1 ? l.days : l.day}.`);
+    if (error) { toast.error(error.message, 'Error'); return; }
+    toast.success(`${l.submitted_msg} ${totalDays} ${totalDays > 1 ? l.days : l.day}.`, l.submitted);
     setStartDate(''); setEndDate(''); setReason('');
     await refreshLeaves(); setTab('history');
   };
@@ -1215,13 +1382,13 @@ const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang }) => {
 
   const handle = async () => {
     if (!cur.trim() || !nw.trim() || !cnf.trim()) return;
-    if (nw.length < 6) return crossAlert('', l.weak_pw);
-    if (nw !== cnf)    return crossAlert('', l.mismatch);
+    if (nw.length < 6) { toast.warn(l.weak_pw); return; }
+    if (nw !== cnf) { toast.warn(l.mismatch); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: nw });
     setLoading(false);
-    if (error) { crossAlert('Error', error.message); return; }
-    crossAlert(l.pw_success, ''); goBack();
+    if (error) { toast.error(error.message, 'Error'); return; }
+    toast.success(l.pw_success); setTimeout(goBack, 1000);
   };
 
   const PwField = ({ label, value, setValue, show, setShow }) => (
@@ -1336,19 +1503,19 @@ const HRDashboardScreenComp = ({ dark, goBack, lang }) => {
   };
 
   const sendNotification = async () => {
-    if (!notifMsg.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء كتابة نص الإشعار' : 'Please write notification text.');
+    if (!notifMsg.trim()) { toast.warn(lang === 'ar' ? 'الرجاء كتابة نص الإشعار' : 'Please write notification text.'); return; }
     setNotifSending(true);
     try {
       const { data: emps } = await supabase.from('employees').select('id').eq('status', 'active');
       await supabase.from('notifications').insert(emps.map(e => ({ employee_id: e.id, type: notifType, message: notifMsg, is_read: false })));
       setNotifMsg('');
-      crossAlert(lang === 'ar' ? 'تم' : 'Done', lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
-    } catch (_) { crossAlert('Error', 'Failed to send.'); }
+      toast.success(lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
+    } catch (_) { toast.error('Failed to send.', 'Error'); }
     setNotifSending(false);
   };
 
   const handleExport = async () => {
-    if (Platform.OS !== 'web') return crossAlert(l.not_available, lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.');
+    if (Platform.OS !== 'web') { toast.warn(lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.'); return; }
     setExpLoading(true);
     try {
       const XLSX = await import('xlsx');
@@ -1372,12 +1539,12 @@ const HRDashboardScreenComp = ({ dark, goBack, lang }) => {
         rows = (data || []).map(r => ({ Employee: `${r.employees.first_name} ${r.employees.last_name}`, Type: r.leave_type, Start: r.start_date, End: r.end_date, Days: r.total_days, Reason: r.reason, Status: r.status }));
         sheetName = 'Leaves'; fileName = `leaves_${nowISO()}.xlsx`;
       }
-      if (!rows.length) { setExpLoading(false); return crossAlert('', lang === 'ar' ? 'لا توجد بيانات' : 'No data found.'); }
+      if (!rows.length) { setExpLoading(false); toast.warn(lang === 'ar' ? 'لا توجد بيانات' : 'No data found.'); return; }
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
       XLSX.writeFile(wb, fileName);
-    } catch (e) { crossAlert('Error', e.message); }
+    } catch (e) { toast.error(e.message, 'Error'); }
     setExpLoading(false);
   };
 
@@ -1681,7 +1848,15 @@ export default function App() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOnline,    setIsOnline]    = useState(true);
-  const appState = useRef(AppState.currentState);
+  const appState    = useRef(AppState.currentState);
+  const toastRef    = useRef(null);
+  const confirmRef  = useRef(null);
+
+  /* Wire global managers to component refs */
+  useEffect(() => {
+    _toastRef   = toastRef.current;
+    _confirmRef = confirmRef.current;
+  }, []);
 
   /* ── Offline detection (web) ── */
   useEffect(() => {
@@ -1753,7 +1928,7 @@ export default function App() {
   /* ── Check In ── */
   const handleCheckIn = async () => {
     if (!employee) return;
-    if (!isOnline) return crossAlert('', L[lang].offline);
+    if (!isOnline) { toast.warn(L[lang].offline); return; }
     setCheckingIn(true);
     try {
       const [office, locResult] = await Promise.all([
@@ -1761,11 +1936,11 @@ export default function App() {
         Platform.OS === 'web' ? getLocationWeb() : getLocationNative(),
       ]);
       if (!office) {
-        crossAlert(L[lang].loc_error, lang === 'ar' ? 'موقع المكتب غير مضبوط. تواصل مع HR.' : 'Office location not configured. Contact HR.');
+        toast.error(lang === 'ar' ? 'موقع المكتب غير مضبوط' : 'Office not configured', L[lang].loc_error);
         return;
       }
       if (!locResult.loc) {
-        crossAlert(L[lang].loc_error, locResult.reason === 'permission' ? L[lang].loc_perm_denied : L[lang].enable_gps);
+        toast.error(locResult.reason === 'permission' ? L[lang].loc_perm_denied : L[lang].enable_gps, L[lang].loc_error);
         return;
       }
       const { loc } = locResult;
@@ -1773,21 +1948,24 @@ export default function App() {
       const buffer  = Math.min(loc.accuracy || 0, 50);
       const allowed = office.radius_meters + buffer;
       if (dist > allowed) {
-        crossAlert(
+        toast.error(
+          `${lang === 'ar' ? 'أنت على بعد' : 'You are'} ${dist.toFixed(0)}m — ${lang === 'ar' ? 'النطاق المسموح' : 'Max'}: ${office.radius_meters}m`,
           L[lang].out_of_range,
-          `${lang === 'ar' ? 'أنت على بعد' : 'You are'} ${dist.toFixed(0)}m ${lang === 'ar' ? 'من المكتب' : 'from the office'}.\n${lang === 'ar' ? 'النطاق المسموح' : 'Max allowed'}: ${office.radius_meters}m`,
         );
         return;
       }
       const today = nowISO(), time = nowTime();
       const { data: existing } = await supabase.from('attendance_records').select('id').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-      if (existing) { crossAlert('', L[lang].already_in); return; }
+      if (existing) { toast.warn(L[lang].already_in); return; }
       const { error } = await supabase.from('attendance_records').insert([{ employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id }]);
-      if (error) { crossAlert('Error', error.message); return; }
-      crossAlert(L[lang].checked_in, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}\n${lang === 'ar' ? 'المسافة' : 'Distance'}: ${dist.toFixed(0)}m`);
+      if (error) { toast.error(error.message, 'Error'); return; }
+      toast.success(
+        `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}  •  ${lang === 'ar' ? 'المسافة' : 'Distance'}: ${dist.toFixed(0)}m`,
+        L[lang].checked_in,
+      );
       setIsClockedIn(true);
     } catch (err) {
-      crossAlert('Error', err.message || 'Unknown error');
+      toast.error(err.message || 'Unknown error', 'Error');
     } finally {
       setCheckingIn(false);
     }
@@ -1795,19 +1973,19 @@ export default function App() {
 
   const handleCheckOut = async () => {
     if (!employee) return;
-    if (!isOnline) return crossAlert('', L[lang].offline);
+    if (!isOnline) { toast.warn(L[lang].offline); return; }
     setCheckingOut(true);
     try {
       const today = nowISO(), time = nowTime();
       const { data: rec } = await supabase.from('attendance_records').select('*').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-      if (!rec)               { crossAlert('', L[lang].not_checked_in); return; }
-      if (rec.check_out_time) { crossAlert('', L[lang].already_out);    return; }
+      if (!rec)               { toast.warn(L[lang].not_checked_in); return; }
+      if (rec.check_out_time) { toast.warn(L[lang].already_out);    return; }
       const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
-      if (error) { crossAlert('Error', error.message); return; }
-      crossAlert(L[lang].checked_out, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}`);
+      if (error) { toast.error(error.message, 'Error'); return; }
+      toast.success(`${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}`, L[lang].checked_out);
       setIsClockedIn(false);
     } catch (err) {
-      crossAlert('Error', err.message || 'Unknown error');
+      toast.error(err.message || 'Unknown error', 'Error');
     } finally {
       setCheckingOut(false);
     }
@@ -1851,6 +2029,8 @@ export default function App() {
       <ErrorBoundary>
         {renderScreen()}
         <OfflineBanner visible={!isOnline} lang={lang} />
+        <ToastContainer ref={toastRef} />
+        <ConfirmModal   ref={confirmRef} />
       </ErrorBoundary>
     </SafeAreaProvider>
   );
