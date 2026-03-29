@@ -2856,21 +2856,9 @@ const nav = useCallback((s) => {
   };
 
   const handleLogout = useCallback(() => {
-    if (Platform.OS === 'web') {
-      const l = L[lang];
-      const confirmed = window.confirm(l.logout_confirm);
-      if (confirmed) supabase.auth.signOut();
-      return;
-    }
-    Alert.alert(
-      L[lang].logout_title,
-      L[lang].logout_confirm,
-      [
-        { text: L[lang].no, style: 'cancel' },
-        { text: L[lang].yes, style: 'destructive', onPress: () => supabase.auth.signOut() },
-      ]
-    );
-  }, [lang]);
+    supabase.auth.signOut();
+}, []);
+  
 
   const renderScreen = () => {
     switch (screen) {
