@@ -9,6 +9,10 @@ import { supabase } from './supabase';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const IS_WEB = Platform.OS === 'web';
+const IS_SMALL = SCREEN_W < 380;
+
 /* ═══════════════════ OPTIONAL NATIVE MODULES ═══════════════════ */
 let MapView = null, Marker = null, Circle = null;
 if (Platform.OS !== 'web') {
@@ -19,7 +23,6 @@ if (Platform.OS !== 'web') {
 }
 let Location = null;
 try { Location = require('expo-location'); } catch (_) {}
-
 let LocalAuthentication = null;
 try { LocalAuthentication = require('expo-local-authentication'); } catch (_) {}
   
