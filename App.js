@@ -22,6 +22,27 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const IS_SMALL = SCREEN_W < 380;
 
 /* ══════════════════════════════════════════════════════
+   CROSS-PLATFORM ALERT
+   crossAlert لا يعمل على الويب — هذه الدالة تحل المشكلة
+══════════════════════════════════════════════════════ */
+const crossAlert = (title, message, buttons) => {
+  if (Platform.OS !== 'web') {
+    crossAlert(title, message, buttons);
+    return;
+  }
+  // Web: use window.confirm or window.alert
+  const confirmBtn = buttons?.find(b => b.style !== 'cancel' && b.onPress);
+  const cancelBtn  = buttons?.find(b => b.style === 'cancel');
+  const text = message ? `${title}\n\n${message}` : title;
+  if (confirmBtn) {
+    if (window.confirm(text)) confirmBtn.onPress?.();
+    else cancelBtn?.onPress?.();
+  } else {
+    window.alert(text);
+  }
+};
+
+/* ══════════════════════════════════════════════════════
    SHADOW
 ══════════════════════════════════════════════════════ */
 const shadow = (size = 'md') => {
@@ -556,21 +577,21 @@ const LoginScreen = ({ lang, setLang }) => {
   }, []);
 
   const handleLogin = async () => {
-    if (!email.trim()) return Alert.alert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
-    if (!pw.trim())    return Alert.alert('', lang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password.');
+    if (!email.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
+    if (!pw.trim())    return crossAlert('', lang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password.');
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw });
     setLoading(false);
-    if (error) Alert.alert(lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed', error.message);
+    if (error) crossAlert(lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed', error.message);
   };
 
   const handleReset = async () => {
-    if (!resetEmail.trim()) return Alert.alert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
+    if (!resetEmail.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
     setResetLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim());
     setResetLoading(false);
-    if (error) { Alert.alert('Error', error.message); return; }
-    Alert.alert(l.reset_sent, l.reset_sent_msg);
+    if (error) { crossAlert('Error', error.message); return; }
+    crossAlert(l.reset_sent, l.reset_sent_msg);
     setResetOpen(false); setResetEmail('');
   };
 
@@ -665,7 +686,7 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
   };
 
   const handleLogout = () => {
-    Alert.alert(l.logout_confirm, l.logout_msg, [
+    crossAlert(l.logout_confirm, l.logout_msg, [
       { text: l.cancel, style: 'cancel' },
       { text: l.sign_out, style: 'destructive', onPress: () => supabase.auth.signOut() },
     ]);
@@ -925,15 +946,15 @@ const LeaveRequestScreenComp = ({ dark, employee, goBack, lang, setLang }) => {
   }, [startDate, endDate]);
 
   const handleSubmit = async () => {
-    if (!startDate || !endDate) return Alert.alert('', l.missing_dates);
-    if (startDate < today)       return Alert.alert('', l.past_date);
-    if (totalDays <= 0)          return Alert.alert('', l.invalid_dates);
-    if (!reason.trim())          return Alert.alert('', l.missing_reason);
+    if (!startDate || !endDate) return crossAlert('', l.missing_dates);
+    if (startDate < today)       return crossAlert('', l.past_date);
+    if (totalDays <= 0)          return crossAlert('', l.invalid_dates);
+    if (!reason.trim())          return crossAlert('', l.missing_reason);
     setSubmitting(true);
     const { error } = await supabase.from('leave_requests').insert([{ employee_id: employee.id, leave_type: type, start_date: startDate, end_date: endDate, total_days: totalDays, reason: reason.trim(), status: 'pending' }]);
     setSubmitting(false);
-    if (error) { Alert.alert('Error', error.message); return; }
-    Alert.alert(l.submitted, `${l.submitted_msg} ${totalDays} ${totalDays > 1 ? l.days : l.day}.`);
+    if (error) { crossAlert('Error', error.message); return; }
+    crossAlert(l.submitted, `${l.submitted_msg} ${totalDays} ${totalDays > 1 ? l.days : l.day}.`);
     setStartDate(''); setEndDate(''); setReason('');
     await refreshLeaves(); setTab('history');
   };
@@ -1194,13 +1215,13 @@ const ChangePasswordScreenComp = ({ dark, goBack, lang, setLang }) => {
 
   const handle = async () => {
     if (!cur.trim() || !nw.trim() || !cnf.trim()) return;
-    if (nw.length < 6) return Alert.alert('', l.weak_pw);
-    if (nw !== cnf)    return Alert.alert('', l.mismatch);
+    if (nw.length < 6) return crossAlert('', l.weak_pw);
+    if (nw !== cnf)    return crossAlert('', l.mismatch);
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: nw });
     setLoading(false);
-    if (error) { Alert.alert('Error', error.message); return; }
-    Alert.alert(l.pw_success, ''); goBack();
+    if (error) { crossAlert('Error', error.message); return; }
+    crossAlert(l.pw_success, ''); goBack();
   };
 
   const PwField = ({ label, value, setValue, show, setShow }) => (
@@ -1315,19 +1336,19 @@ const HRDashboardScreenComp = ({ dark, goBack, lang }) => {
   };
 
   const sendNotification = async () => {
-    if (!notifMsg.trim()) return Alert.alert('', lang === 'ar' ? 'الرجاء كتابة نص الإشعار' : 'Please write notification text.');
+    if (!notifMsg.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء كتابة نص الإشعار' : 'Please write notification text.');
     setNotifSending(true);
     try {
       const { data: emps } = await supabase.from('employees').select('id').eq('status', 'active');
       await supabase.from('notifications').insert(emps.map(e => ({ employee_id: e.id, type: notifType, message: notifMsg, is_read: false })));
       setNotifMsg('');
-      Alert.alert(lang === 'ar' ? 'تم' : 'Done', lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
-    } catch (_) { Alert.alert('Error', 'Failed to send.'); }
+      crossAlert(lang === 'ar' ? 'تم' : 'Done', lang === 'ar' ? 'تم إرسال الإشعار بنجاح' : 'Notification sent successfully.');
+    } catch (_) { crossAlert('Error', 'Failed to send.'); }
     setNotifSending(false);
   };
 
   const handleExport = async () => {
-    if (Platform.OS !== 'web') return Alert.alert(l.not_available, lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.');
+    if (Platform.OS !== 'web') return crossAlert(l.not_available, lang === 'ar' ? 'التصدير متاح على المتصفح فقط' : 'Export is available on web browser only.');
     setExpLoading(true);
     try {
       const XLSX = await import('xlsx');
@@ -1351,12 +1372,12 @@ const HRDashboardScreenComp = ({ dark, goBack, lang }) => {
         rows = (data || []).map(r => ({ Employee: `${r.employees.first_name} ${r.employees.last_name}`, Type: r.leave_type, Start: r.start_date, End: r.end_date, Days: r.total_days, Reason: r.reason, Status: r.status }));
         sheetName = 'Leaves'; fileName = `leaves_${nowISO()}.xlsx`;
       }
-      if (!rows.length) { setExpLoading(false); return Alert.alert('', lang === 'ar' ? 'لا توجد بيانات' : 'No data found.'); }
+      if (!rows.length) { setExpLoading(false); return crossAlert('', lang === 'ar' ? 'لا توجد بيانات' : 'No data found.'); }
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
       XLSX.writeFile(wb, fileName);
-    } catch (e) { Alert.alert('Error', e.message); }
+    } catch (e) { crossAlert('Error', e.message); }
     setExpLoading(false);
   };
 
@@ -1732,66 +1753,64 @@ export default function App() {
   /* ── Check In ── */
   const handleCheckIn = async () => {
     if (!employee) return;
-    if (!isOnline) return Alert.alert('', L[lang].offline);
+    if (!isOnline) return crossAlert('', L[lang].offline);
     setCheckingIn(true);
-
-    const [office, locResult] = await Promise.all([
-      getOffice(),
-      Platform.OS === 'web' ? getLocationWeb() : getLocationNative(),
-    ]);
-
-    if (!office) {
-      Alert.alert(L[lang].loc_error, 'Office location not configured.');
-      setCheckingIn(false); return;
-    }
-
-    if (!locResult.loc) {
-      const msg = locResult.reason === 'permission' ? L[lang].loc_perm_denied : L[lang].enable_gps;
-      Alert.alert(L[lang].loc_error, msg);
-      setCheckingIn(false); return;
-    }
-
-    const { loc } = locResult;
-    const dist = haversine(loc.latitude, loc.longitude, office.latitude, office.longitude);
-
-    /* Accuracy buffer: compensate for GPS imprecision (max 50m) */
-    const buffer  = Math.min(loc.accuracy || 0, 50);
-    const allowed = office.radius_meters + buffer;
-
-    if (dist > allowed) {
-      Alert.alert(
-        L[lang].out_of_range,
-        `${lang === 'ar' ? 'أنت على بعد' : 'You are'} ${dist.toFixed(0)}m ${lang === 'ar' ? 'من المكتب' : 'from the office'}.\n${lang === 'ar' ? 'النطاق المسموح' : 'Max allowed'}: ${office.radius_meters}m`,
-      );
-      setCheckingIn(false); return;
-    }
-
-    const today = nowISO(), time = nowTime();
-    const { data: existing } = await supabase.from('attendance_records').select('id').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-    if (existing) { Alert.alert('', L[lang].already_in); setCheckingIn(false); return; }
-
-    const { error } = await supabase.from('attendance_records').insert([{ employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id }]);
-    if (error) Alert.alert('Error', error.message);
-    else {
-      Alert.alert(L[lang].checked_in, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}\n${lang === 'ar' ? 'المسافة' : 'Distance'}: ${dist.toFixed(0)}m`);
+    try {
+      const [office, locResult] = await Promise.all([
+        getOffice(),
+        Platform.OS === 'web' ? getLocationWeb() : getLocationNative(),
+      ]);
+      if (!office) {
+        crossAlert(L[lang].loc_error, lang === 'ar' ? 'موقع المكتب غير مضبوط. تواصل مع HR.' : 'Office location not configured. Contact HR.');
+        return;
+      }
+      if (!locResult.loc) {
+        crossAlert(L[lang].loc_error, locResult.reason === 'permission' ? L[lang].loc_perm_denied : L[lang].enable_gps);
+        return;
+      }
+      const { loc } = locResult;
+      const dist    = haversine(loc.latitude, loc.longitude, office.latitude, office.longitude);
+      const buffer  = Math.min(loc.accuracy || 0, 50);
+      const allowed = office.radius_meters + buffer;
+      if (dist > allowed) {
+        crossAlert(
+          L[lang].out_of_range,
+          `${lang === 'ar' ? 'أنت على بعد' : 'You are'} ${dist.toFixed(0)}m ${lang === 'ar' ? 'من المكتب' : 'from the office'}.\n${lang === 'ar' ? 'النطاق المسموح' : 'Max allowed'}: ${office.radius_meters}m`,
+        );
+        return;
+      }
+      const today = nowISO(), time = nowTime();
+      const { data: existing } = await supabase.from('attendance_records').select('id').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      if (existing) { crossAlert('', L[lang].already_in); return; }
+      const { error } = await supabase.from('attendance_records').insert([{ employee_id: employee.id, attendance_date: today, check_in_time: time, office_id: office.id }]);
+      if (error) { crossAlert('Error', error.message); return; }
+      crossAlert(L[lang].checked_in, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}\n${lang === 'ar' ? 'المسافة' : 'Distance'}: ${dist.toFixed(0)}m`);
       setIsClockedIn(true);
+    } catch (err) {
+      crossAlert('Error', err.message || 'Unknown error');
+    } finally {
+      setCheckingIn(false);
     }
-    setCheckingIn(false);
   };
 
-  /* ── Check Out ── */
   const handleCheckOut = async () => {
     if (!employee) return;
-    if (!isOnline) return Alert.alert('', L[lang].offline);
+    if (!isOnline) return crossAlert('', L[lang].offline);
     setCheckingOut(true);
-    const today = nowISO(), time = nowTime();
-    const { data: rec } = await supabase.from('attendance_records').select('*').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
-    if (!rec)             { Alert.alert('', L[lang].not_checked_in);  setCheckingOut(false); return; }
-    if (rec.check_out_time) { Alert.alert('', L[lang].already_out);   setCheckingOut(false); return; }
-    const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
-    if (error) Alert.alert('Error', error.message);
-    else { Alert.alert(L[lang].checked_out, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}`); setIsClockedIn(false); }
-    setCheckingOut(false);
+    try {
+      const today = nowISO(), time = nowTime();
+      const { data: rec } = await supabase.from('attendance_records').select('*').eq('employee_id', employee.id).eq('attendance_date', today).maybeSingle();
+      if (!rec)               { crossAlert('', L[lang].not_checked_in); return; }
+      if (rec.check_out_time) { crossAlert('', L[lang].already_out);    return; }
+      const { error } = await supabase.from('attendance_records').update({ check_out_time: time }).eq('id', rec.id);
+      if (error) { crossAlert('Error', error.message); return; }
+      crossAlert(L[lang].checked_out, `${lang === 'ar' ? 'الوقت' : 'Time'}: ${fmtTime(time)}`);
+      setIsClockedIn(false);
+    } catch (err) {
+      crossAlert('Error', err.message || 'Unknown error');
+    } finally {
+      setCheckingOut(false);
+    }
   };
 
   const handleSetLang = useCallback((l) => { setLang(l); AsyncStorage.setItem('app_lang', l); }, []);
