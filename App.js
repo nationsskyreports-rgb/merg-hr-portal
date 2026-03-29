@@ -554,7 +554,7 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
         <Animated.View style={{transform:[{translateY:floatAnim}]}}><View style={{flexDirection:'row',alignItems:'center'}}><CompanyLogo size="sm" dark={dark} /><Text style={{color:t.text,fontWeight:'800',fontSize:17,marginLeft:7,letterSpacing:0.4}}>MERGE</Text></View></Animated.View>
         <View style={{flexDirection:'row',alignItems:'center',gap:10}}>
           <LangToggle dark={dark} lang={lang} setLang={setLang} />
-          <TouchableOpacity onPress={()=>onNav('notifications')} activeOpacity={0.7} style={{width:46,height:46,borderRadius:23,backgroundColor:t.card,alignItems:'center',justifyContent:'center',borderWidth:1.5,borderColor:t.border,...shadow('sm')}}>
+          <TouchableOpacity onPress={()=>onNav('notifications')} activeOpacity={0.7} style={{width:46,height:46,borderRadius:23,backgroundColor:t.card,alignItems:'center',justifyContent:'center',borderWidth:1.5,borderColor:t.border,...shadow('sm')}>
             <Text style={{fontSize:20}}>🔔</Text>
             {unreadCount>0 && <View style={{position:'absolute',top:2,right:2,backgroundColor:t.red,borderRadius:10,minWidth:18,height:18,alignItems:'center',justifyContent:'center',borderWidth:2,borderColor:t.bg}}><Text style={{color:'#fff',fontSize:9,fontWeight:'800'}}>{unreadCount>9?'9+':unreadCount}</Text></View>}
           </TouchableOpacity>
