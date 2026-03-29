@@ -659,7 +659,7 @@ const LeaveRequestScreenComp = ({dark,employee,goBack,lang,setLang}) => {
   const t=useT_hook(dark),l=L[lang];
   const types=['Annual','Sick','Emergency','Personal','Maternity','Unpaid'];
   const [type,setType]=useState('Annual'),[startDate,setStartDate]=useState(''),[endDate,setEndDate]=useState(''),[reason,setReason]=useState('');
-  const [submitting,setSubmitting]=useState(false),[myLeaves,setMyLeaves]=useState([]),[tab,setTab]=useState('new');
+  const [submitting,setSubmitting]=useState(false),[myLeaves,setMyLeaves]=setMyLeaves=useState([]),[tab,setTab]=useState('new');
   useEffect(()=>{if(!employee?.id)return;(async()=>{const{data}=await supabase.from('leave_requests').select('*').eq('employee_id',employee.id).order('created_at',{ascending:false}).limit(20);setMyLeaves(data||[]);})();},[employee]);
   const totalDays=useMemo(()=>{if(!startDate||!endDate)return 0;const s=new Date(startDate),e=new Date(endDate);if(e<s)return 0;return Math.ceil((e-s)/86400000)+1;},[startDate,endDate]);
   const handleSubmit=async()=>{
