@@ -6,8 +6,6 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from 'react';
 import { supabase } from './supabase';
-try { LocalAuthentication = require('expo-local-authentication'); } catch (_) {}
-try { Location = require('expo-location'); } catch (_) {}
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -19,16 +17,12 @@ if (Platform.OS !== 'web') {
     MapView = m.default; Marker = m.Marker; Circle = m.Circle;
   } catch (_) {}
 }
+let Location = null;
+try { Location = require('expo-location'); } catch (_) {}
 
 let LocalAuthentication = null;
-try {
-  LocalAuthentication = require('expo-local-authentication');
-} catch (_) {}
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-const IS_WEB = Platform.OS === 'web';
-const IS_SMALL = SCREEN_W < 380;
-
+try { LocalAuthentication = require('expo-local-authentication'); } catch (_) {}
+  
 /* ═══════════════════ ERROR BOUNDARY ═══════════════════ */
 class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -2779,6 +2773,23 @@ export default function App() {
       return true; // On error, allow through
     }
   };
+const nav = useCallback((s) => {
+  if (s === 'refresh') {
+    checkTodayStatus();
+    fetchUnread();
+    return;
+  }
+  setScreen(s);
+}, [checkTodayStatus, fetchUnread]);
+  
+const nav = useCallback((s) => {
+    if (s === 'refresh') {
+      checkTodayStatus();
+      fetchUnread();
+      return;
+    }
+    setScreen(s);
+  }, [checkTodayStatus, fetchUnread]);
 
   const handleCheckIn = async () => {
     if (!employee) return;
@@ -2849,7 +2860,6 @@ export default function App() {
       setCheckingOut(false);
     }
   };
-
 
   const handleLogout = useCallback(() => {
     if (Platform.OS === 'web') {
