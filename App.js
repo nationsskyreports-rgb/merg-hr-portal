@@ -280,7 +280,7 @@ const DateInput = ({dark,value,onChange,placeholder,lang}) => {
 /* ═══════════════════ LOGIN SCREEN ═══════════════════ */
 const LoginScreen = ({onLogin,lang,setLang}) => {
   const [email,setEmail]=useState(''),[pw,setPw]=useState(''),[showPw,setShowPw]=useState(false),[loading,setLoading]=useState(false);
-  const t=useT(true), l=L[lang];
+  const l=L[lang];
   const logoScale=useRef(new Animated.Value(0.5)).current;
   const logoOp=useRef(new Animated.Value(0)).current;
   const tagOp=useRef(new Animated.Value(0)).current;
@@ -311,65 +311,68 @@ const LoginScreen = ({onLogin,lang,setLang}) => {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={{flex:1,backgroundColor:'#0B1120'}}>
-      <View style={{position:'absolute',top:-150,right:-100,width:500,height:500,borderRadius:250,backgroundColor:'rgba(56,189,248,0.04)'}} />
-      <View style={{position:'absolute',bottom:-200,left:-150,width:600,height:600,borderRadius:300,backgroundColor:'rgba(34,197,94,0.03)'}} />
-      <View style={{position:'absolute',top:'18%',left:0,right:0,alignItems:'center',opacity:0.025,transform:[{scale:3}]}}>
-        <Text style={{fontSize:60,fontWeight:'900',color:'#38BDF8',letterSpacing:4}}>MERGE</Text>
+    <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={{flex:1,backgroundColor:'#FFFFFF'}}>
+
+      {/* Decorative light circles */}
+      <View style={{position:'absolute',top:-120,right:-80,width:400,height:400,borderRadius:200,backgroundColor:'rgba(56,189,248,0.06)'}} />
+      <View style={{position:'absolute',bottom:-150,left:-100,width:500,height:500,borderRadius:250,backgroundColor:'rgba(34,197,94,0.04)'}} />
+
+      {/* Language Toggle */}
+      <View style={{position:'absolute',top:50,right:20,zIndex:10}}>
+        <TouchableOpacity onPress={()=>setLang(lang==='en'?'ar':'en')} activeOpacity={0.7}
+          style={{backgroundColor:'rgba(56,189,248,0.1)',borderRadius:10,paddingHorizontal:10,paddingVertical:6,borderWidth:1,borderColor:'rgba(56,189,248,0.2)'}}>
+          <Text style={{color:'#0284C7',fontWeight:'700',fontSize:12}}>🌐 {lang==='en'?'عربي':'EN'}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={{flexGrow:1,justifyContent:'center',paddingHorizontal:28,paddingVertical:50}}
         bounces={false} keyboardShouldPersistTaps="handled">
 
-        {/* Language Toggle */}
-        <View style={{position:'absolute',top:50,right:28,zIndex:10}}>
-          <LangToggle dark={true} lang={lang} setLang={setLang} />
-        </View>
-
         {/* Animated Logo */}
-        <View style={{alignItems:'center',marginBottom:36}}>
+        <View style={{alignItems:'center',marginBottom:40}}>
           <Animated.View style={{opacity:logoOp,transform:[{scale:logoScale}]}}>
-            <Image source={LOGO_IMG} style={{width:160,height:100,resizeMode:'contain'}} />
+            <Image source={LOGO_IMG} style={{width:180,height:115,resizeMode:'contain'}} />
           </Animated.View>
-          <Animated.Text style={{color:'#7B93AD',fontSize:13,marginTop:12,letterSpacing:2,opacity:tagOp,fontWeight:'500'}}>
+          <Animated.Text style={{color:'#64748B',fontSize:13,marginTop:8,letterSpacing:2,opacity:tagOp,fontWeight:'500'}}>
             Your Job Way
           </Animated.Text>
         </View>
 
         {/* Card */}
         <Animated.View style={{opacity:cardOp,transform:[{translateY:cardSlide}]}}>
-          <View style={{backgroundColor:'#111B2E',borderRadius:24,padding:28,borderWidth:1,borderColor:'rgba(56,189,248,0.12)',
-            shadowColor:'#000',shadowOffset:{width:0,height:24},shadowOpacity:0.3,shadowRadius:48,elevation:12}}>
-            <Text style={{color:'#F1F5F9',fontSize:22,fontWeight:'700',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.welcome_back}</Text>
-            <Text style={{color:'#7B93AD',fontSize:14,marginBottom:28,textAlign:lang==='ar'?'right':'left'}}>{l.sign_in_sub}</Text>
+          <View style={{backgroundColor:'#FFFFFF',borderRadius:24,padding:28,width:'100%',
+            borderWidth:1.5,borderColor:'#E2E8F0',
+            shadowColor:'#0284C7',shadowOffset:{width:0,height:20},shadowOpacity:0.08,shadowRadius:40,elevation:8}}>
+            <Text style={{color:'#0B1120',fontSize:22,fontWeight:'700',marginBottom:4,textAlign:lang==='ar'?'right':'left'}}>{l.welcome_back}</Text>
+            <Text style={{color:'#64748B',fontSize:14,marginBottom:28,textAlign:lang==='ar'?'right':'left'}}>{l.sign_in_sub}</Text>
 
             <View style={{marginBottom:18}}>
-              <Text style={{color:'#7B93AD',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.email}</Text>
-              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#0A0F1A',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#1E2D45'}}>
+              <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.email}</Text>
+              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#F8FAFF',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#E2E8F0'}}>
                 <Text style={{fontSize:16,marginRight:10}}>✉</Text>
-                <TextInput style={{flex:1,color:'#F1F5F9',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
-                  placeholder={l.enter_email} placeholderTextColor="#4A6178" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+                <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
+                  placeholder={l.enter_email} placeholderTextColor="#94A3B8" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
               </View>
             </View>
 
             <View style={{marginBottom:24}}>
-              <Text style={{color:'#7B93AD',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.password}</Text>
-              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#0A0F1A',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#1E2D45'}}>
+              <Text style={{color:'#64748B',fontSize:11,fontWeight:'700',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8,textAlign:lang==='ar'?'right':'left'}}>{l.password}</Text>
+              <View style={{flexDirection:'row',alignItems:'center',height:54,backgroundColor:'#F8FAFF',borderRadius:14,paddingHorizontal:16,borderWidth:1.5,borderColor:'#E2E8F0'}}>
                 <Text style={{fontSize:16,marginRight:10}}>🔒</Text>
-                <TextInput style={{flex:1,color:'#F1F5F9',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
-                  placeholder={l.enter_pw} placeholderTextColor="#4A6178" value={pw} onChangeText={setPw} secureTextEntry={!showPw} />
-                <TouchableOpacity onPress={()=>setShowPw(!showPw)} hitSlop={8}><Text style={{fontSize:16,color:'#7B93AD'}}>{showPw?'🙈':'👁'}</Text></TouchableOpacity>
+                <TextInput style={{flex:1,color:'#0B1120',fontSize:15,fontWeight:'500',textAlign:lang==='ar'?'right':'left'}}
+                  placeholder={l.enter_pw} placeholderTextColor="#94A3B8" value={pw} onChangeText={setPw} secureTextEntry={!showPw} />
+                <TouchableOpacity onPress={()=>setShowPw(!showPw)} hitSlop={8}><Text style={{fontSize:16,color:'#94A3B8'}}>{showPw?'🙈':'👁'}</Text></TouchableOpacity>
               </View>
             </View>
 
             <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.8}
               style={{height:56,borderRadius:14,backgroundColor:'#38BDF8',alignItems:'center',justifyContent:'center',
-                shadowColor:'#38BDF8',shadowOffset:{width:0,height:10},shadowOpacity:0.35,shadowRadius:24,elevation:6,opacity:loading?0.6:1}}>
-              {loading ? <ActivityIndicator color="#0B1120" size="small" />
-                : <Text style={{color:'#0B1120',fontWeight:'800',fontSize:16,letterSpacing:0.5}}>{l.sign_in}</Text>}
+                shadowColor:'#38BDF8',shadowOffset:{width:0,height:10},shadowOpacity:0.3,shadowRadius:24,elevation:6,opacity:loading?0.6:1}}>
+              {loading ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={{color:'#FFFFFF',fontWeight:'800',fontSize:16,letterSpacing:0.5}}>{l.sign_in}</Text>}
             </TouchableOpacity>
           </View>
-          <Text style={{color:'#1E2D45',fontSize:11,textAlign:'center',marginTop:24}}>Merge HR Portal v2.0</Text>
+          <Text style={{color:'#CBD5E1',fontSize:11,textAlign:'center',marginTop:24}}>Merge HR Portal v2.0</Text>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
