@@ -6,10 +6,7 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from 'react';
 import { supabase } from './supabase';
-let LocalAuthentication = null;
 try { LocalAuthentication = require('expo-local-authentication'); } catch (_) {}
-
-let Location = null;
 try { Location = require('expo-location'); } catch (_) {}
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
