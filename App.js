@@ -6,7 +6,16 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from 'react';
 import { supabase } from './supabase';
-import * as Location from 'expo-location';
+let MapView = null, Marker = null, Circle = null;
+if (Platform.OS !== 'web') {
+  try { const m = require('react-native-maps'); MapView = m.default; Marker = m.Marker; Circle = m.Circle; } catch (_) {}
+}
+
+let LocalAuthentication = null;
+try { LocalAuthentication = require('expo-local-authentication'); } catch (_) {}
+
+let Location = null;
+try { Location = require('expo-location'); } catch (_) {}
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
