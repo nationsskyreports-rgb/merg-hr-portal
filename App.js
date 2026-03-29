@@ -9,7 +9,6 @@ import { supabase } from './supabase';
 import * as Location from 'expo-location';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
 
 /* ═══════════════════ OPTIONAL NATIVE MODULES ═══════════════════ */
 let MapView = null, Marker = null, Circle = null;
@@ -106,10 +105,14 @@ const useNetworkStatus = () => {
         window.removeEventListener('offline', handleOffline);
       };
     }
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected && state.isInternetReachable !== false);
-    });
-    return () => unsubscribe();
+    let NetInfo;
+    try { NetInfo = require('@react-native-community/netinfo'); } catch (_) {}
+    if (NetInfo) {
+      const unsubscribe = NetInfo.addEventListener(state => {
+        setIsConnected(state.isConnected && state.isInternetReachable !== false);
+      });
+      return () => unsubscribe();
+    }
   }, []);
   return isConnected;
 };
