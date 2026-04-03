@@ -908,7 +908,7 @@ async function renderHome() {
       ${rec?.check_in_time?`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">${t().check_in_label}: <b>${fmtTime(rec.check_in_time)}</b>${rec.check_out_time?` · ${t().check_out_label}: <b>${fmtTime(rec.check_out_time)}</b>`:''}</div>`:''}
       
       ${needsConfirm && !isMobile ? `
-        <button class="primary-btn" style="margin-bottom:12px;background:var(--sky);padding:10px" onclick="confirmCheckIn(${rec.id})">💻 ${t().confirm_mobile}</button>
+        <button class="primary-btn" style="margin-bottom:12px;background:var(--sky);padding:10px" onclick="confirmCheckIn('${rec.id}')">💻 ${t().confirm_mobile}</button>
       ` : ''}
 
       <div class="att-btns">
@@ -981,12 +981,18 @@ async function handleCheckIn() {
 }
 
 async function confirmCheckIn(id) {
+  if(!id) return toast('Invalid Record ID','error');
+  const btn = event.currentTarget;
+  if(btn) btn.disabled = true;
   try {
     const {error} = await sb.from('attendance_records').update({is_confirmed:true}).eq('id',id);
     if(error) throw error;
     toast(t().confirm_success,'success');
     renderEmp('home');
-  } catch(e) { toast(e.message,'error'); }
+  } catch(e) { 
+    toast(e.message,'error'); 
+    if(btn) btn.disabled = false;
+  }
 }
 
 async function handleCheckOut() {
