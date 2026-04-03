@@ -453,35 +453,55 @@ const handleLogin = async () => {
     if (!email.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
     if (!pw.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password.');
     setLoading(true);
-    const { data: empCheck } = await supabase
-      .from('employees')
-      .select('id, status')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle();
-    if (!empCheck) {
+    try {
+      const { data: empCheck } = await supabase
+        .from('employees')
+        .select('id, status')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+      if (!empCheck) {
+        setLoading(false);
+        return crossAlert(
+          lang === 'ar' ? 'غير مصرح' : 'Unauthorized',
+          lang === 'ar' ? 'هذا البريد غير مسجل كموظف' : 'This email is not registered as an employee.'
+        );
+      }
+      if (empCheck.status !== 'active') {
+        setLoading(false);
+        return crossAlert(
+          lang === 'ar' ? 'الحساب موقوف' : 'Account Inactive',
+          lang === 'ar' ? 'حسابك غير نشط. تواصل مع HR.' : 'Your account is inactive. Contact HR.'
+        );
+      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: pw
+      });
       setLoading(false);
-      return crossAlert(
-        lang === 'ar' ? 'غير مصرح' : 'Unauthorized',
-        lang === 'ar' ? 'هذا البريد غير مسجل كموظف' : 'This email is not registered as an employee.'
-      );
-    }
-    if (empCheck.status !== 'active') {
+      if (error) crossAlert(lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed', error.message);
+    } catch(e) {
       setLoading(false);
-      return crossAlert(
-        lang === 'ar' ? 'الحساب موقوف' : 'Account Inactive',
-        lang === 'ar' ? 'حسابك غير نشط. تواصل مع HR.' : 'Your account is inactive. Contact HR.'
-      );
+      crossAlert('Error', e.message);
     }
-    const { error } = await supabase.auth.signInWithPassword({ 
-      email: email.trim().toLowerCase(), 
-      password: pw 
-    });
-    setLoading(false);
-    if (error) crossAlert(lang === 'ar' ? 'فشل تسجيل الدخول' : 'Login Failed', error.message);
   };
-  
-  const fld = { flex: 1, color: '#0B1120', fontSize: 15, fontWeight: '500', padding: 0, textAlign: lang === 'ar' ? 'right' : 'left' };
 
+  const handleReset = async () => {
+    if (!resetEmail.trim()) return crossAlert('', lang === 'ar' ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email.');
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim());
+      setResetLoading(false);
+      if (error) { crossAlert('Error', error.message); return; }
+      crossAlert('', lang === 'ar' ? 'تم إرسال رابط الاستعادة على بريدك' : 'Reset link sent to your email!');
+      setResetOpen(false);
+      setResetEmail('');
+    } catch(e) {
+      setResetLoading(false);
+      crossAlert('Error', e.message);
+    }
+  };
+
+  const fld = { flex: 1, color: '#0B1120', fontSize: 15, fontWeight: '500', padding: 0, textAlign: lang === 'ar' ? 'right' : 'left' };
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
