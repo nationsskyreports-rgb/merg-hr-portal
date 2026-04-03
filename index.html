@@ -828,16 +828,12 @@ async function renderLeave() {
       <div class="sec-title">${t().leave_type}</div>
       <div class="chip-row">${types.map(tp=>`<button class="chip ${leaveType===tp?'active':''}" onclick="setLeaveType('${tp}')">${tp}</button>`).join('')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" min="${nowISO()}"/></div>
-        <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" min="${nowISO()}"/></div>
+        <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
+        <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
       </div>
       <div id="daysPill"></div>
       <div class="form-field"><label class="field-label">${t().reason}</label><textarea class="form-input" id="lv_reason" placeholder="${t().describe_reason}"></textarea></div>
       <button class="primary-btn" onclick="submitLeave()">📤 ${t().submit_request}</button>
-      <script>
-        document.getElementById('lv_start')?.addEventListener('change',updateDays);
-        document.getElementById('lv_end')?.addEventListener('change',updateDays);
-      <\/script>
     `:`
       ${!leaves||leaves.length===0
         ?`<div class="empty"><div class="empty-icon">🌴</div><div class="empty-title">${t().no_leaves}</div><div class="empty-sub">${t().no_leaves_sub}</div></div>`
@@ -1184,8 +1180,8 @@ function renderHRExport() {
       </div>
       ${expType!=='employees'?`
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-          <div class="form-field"><label class="field-label">${t().from_date}</label><input class="form-input" type="date" id="expFrom" value="${expFrom}" onchange="expFrom=this.value"/></div>
-          <div class="form-field"><label class="field-label">${t().to_date}</label><input class="form-input" type="date" id="expTo" value="${expTo}" onchange="expTo=this.value"/></div>
+          <div class="form-field"><label class="field-label">${t().from_date}</label><input class="form-input" type="date" id="expFrom" value="${expFrom}" onclick="try{this.showPicker()}catch(e){}" onchange="expFrom=this.value"/></div>
+          <div class="form-field"><label class="field-label">${t().to_date}</label><input class="form-input" type="date" id="expTo" value="${expTo}" onclick="try{this.showPicker()}catch(e){}" onchange="expTo=this.value"/></div>
         </div>`:''}
       <button class="primary-btn" onclick="doExport()">📥 ${t().generate_download}</button>
     </div>
