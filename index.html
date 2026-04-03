@@ -108,35 +108,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* TOAST */
-#toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100px);
-  background: rgba(30, 41, 59, 0.95);
-  color: #fff;
-  padding: 16px 24px;
-  border-radius: 16px;
-  font-size: 15px;
-  font-weight: 700;
-  z-index: 9999;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 280px;
-  justify-content: center;
-}
-#toast.show { transform: translateX(-50%) translateY(0); }
-#toast.error { border-left: 5px solid #EF4444; background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-#toast.success { border-left: 5px solid #22C55E; background: rgba(34, 197, 94, 0.15); color: #22C55E; border: 1px solid rgba(34, 197, 94, 0.3); }
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;transition:transform .3s;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.error{background:#EF4444}
+#toast.success{background:#22C55E}
 
 /* APP HEADER */
 .app-header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.06)}
-.header-logo{display:flex;align-items:center;gap:9px;direction:ltr}
+.header-logo{display:flex;align-items:center;gap:9px}
 .header-logo-icon{width:34px;height:34px;background:var(--sky);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(56,189,248,.3);overflow:hidden}
 .header-logo-icon img{width:34px;height:34px;object-fit:cover}
 .header-logo-icon svg{width:16px;height:16px}
@@ -301,20 +280,6 @@ textarea.form-input{height:100px;padding:12px 14px;resize:none;line-height:1.6}
 @media(max-width:380px){
   .stat-val{font-size:20px}
 }
-[dir="rtl"] .emp-select-arrow {
-  right: auto;
-  left: 16px; 
-}
-[dir="rtl"] .emp-select {
-  padding: 0 16px 0 44px;
-}
-[dir="rtl"] .notif-badge {
-  right: auto;
-  left: 2px; 
-}
-[dir="rtl"] .header-logo {
-  flex-direction: row; 
-
 </style>
 </head>
 <body>
@@ -337,7 +302,7 @@ textarea.form-input{height:100px;padding:12px 14px;resize:none;line-height:1.6}
   <div class="login-box">
     <!-- Logo -->
     <div class="logo-wrap">
-      <svg viewBox="0 0<svg viewBox="0 0 210 140" xmlns="http://www.w3.org/2000/svg" style="width:210px;height:auto;margin-bottom:16px;direction:ltr">
+      <svg viewBox="0 0 210 140" xmlns<svg viewBox="0 0 210 140" xmlns="http://www.w3.org/2000/svg" style="width:210px;height:auto;margin-bottom:16px;direction:ltr">
   <g transform="translate(10,10 )">
     <rect x="0"  y="0"  width="19" height="88" fill="#22C55E" rx="3"/>
     <rect x="26" y="0"  width="19" height="55" fill="#38BDF8" opacity="0.6" rx="3"/>
@@ -347,7 +312,6 @@ textarea.form-input{height:100px;padding:12px 14px;resize:none;line-height:1.6}
     <path d="M18,114 Q95,128 172,114" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.5"/>
   </g>
 </svg>
-
       <div class="logo-sub" id="logoSub">HR PORTAL</div>
       <div class="logo-line"></div>
     </div>
@@ -684,19 +648,13 @@ const getGreeting = () => {
 };
 const statusColor = s => s==='approved'?'#22C55E':s==='rejected'?'#EF4444':'#F59E0B';
 
-function toast(msg, typefunction toast(msg, type='') {
+function toast(msg, type='') {
   const el = $('toast');
-  let icon = '🔔';
-  if(type === 'success') icon = '✅';
-  if(type === 'error') icon = '❌';
-  
-  el.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
-  el.className = 'show ' + type;
-  
-  setTimeout(() => {
-    el.className = '';
-  }, 3500);
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' '+type : '');
+  setTimeout(()=>el.className='', 3000);
 }
+
 function togglePw(id, btn) {
   const inp = $(id);
   if(!inp) return;
