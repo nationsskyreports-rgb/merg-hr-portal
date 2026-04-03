@@ -912,7 +912,7 @@ async function renderHome() {
       ` : ''}
 
       <div class="att-btns">
-        <button class="att-btn" style="background:var(--green)" onclick="handleCheckIn()" ${isClockedIn || needsConfirm ?'disabled':''} id="ciBtn">✅ ${t().check_in}</button>
+        <button class="att-btn" style="background:var(--green)" onclick="handleCheckIn()" ${isClockedIn || (needsConfirm && isMobile) ?'disabled':''} id="ciBtn">✅ ${t().check_in}</button>
         <button class="att-btn" style="background:var(--red)" onclick="handleCheckOut()" ${!isClockedIn || needsConfirm ?'disabled':''} id="coBtn">🚪 ${t().check_out}</button>
       </div>
     </div>
@@ -945,19 +945,31 @@ async function handleCheckIn() {
     const dist = haversine(loc.lat,loc.lng,office.latitude,office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc,50);
     if(dist>allowed) return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error');
-    const {data:ex} = await sb.from('attendance_records').select('id').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
-    if(ex) return toast(t().already_in,'error');
+    const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const {error} = await sb.from('attendance_records').insert([{
-      employee_id:currentEmployee.id,
-      attendance_date:nowISO(),
-      check_in_time:nowTime(),
-      office_id:office.id,
-      is_mobile: isMobile,
-      is_confirmed: !isMobile
-    }]);
-    if(error) return toast(error.message,'error');
+    
+    if(ex) {
+      // Re-entry: Update existing record
+      const {error} = await sb.from('attendance_records').update({
+        check_in_time: nowTime(),
+        check_out_time: null,
+        is_mobile: isMobile,
+        is_confirmed: !isMobile
+      }).eq('id', ex.id);
+      if(error) return toast(error.message,'error');
+    } else {
+      // First check-in of the day
+      const {error} = await sb.from('attendance_records').insert([{
+        employee_id:currentEmployee.id,
+        attendance_date:nowISO(),
+        check_in_time:nowTime(),
+        office_id:office.id,
+        is_mobile: isMobile,
+        is_confirmed: !isMobile
+      }]);
+      if(error) return toast(error.message,'error');
+    }
     
     if(isMobile) {
       toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
