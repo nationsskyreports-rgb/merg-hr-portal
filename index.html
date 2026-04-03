@@ -15,12 +15,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --sky:#38BDF8;--sky2:#0284C7;--green:#22C55E;--red:#EF4444;--amber:#F59E0B;
-  --purple:#A855F7;--indigo:#6366F1;
-  --bg:#EEF5FF;--card:#fff;--border:#D1E0F0;--surface:#E3EDF8;
-  --text:#07101E;--sub:#506A84;--muted:#8FA8C0;--input:#F5FAFF;
-}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
@@ -38,7 +32,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .geo5{width:180px;height:180px;top:40%;left:50%;transform:translate(-50%,-50%) rotate(45deg);background:rgba(56,189,248,.025)}
 
 /* Grid overlay */
-#loginScreen::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(34,197,94,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(34,197,94,.05) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+#loginScreen{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
 
 .login-box{width:100%;max-width:400px;z-index:1;padding-bottom:20px}
 
