@@ -312,7 +312,6 @@ textarea.form-input{height:100px;padding:12px 14px;resize:none;line-height:1.6}
     <path d="M18,114 Q95,128 172,114" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.5"/>
   </g>
 </svg>
-      <div class="logo-name" id="logoTitle">MERGE</div>
       <div class="logo-sub" id="logoSub">HR PORTAL</div>
       <div class="logo-line"></div>
     </div>
@@ -1170,6 +1169,7 @@ async function initHR() {
     {id:'attendance',icon:'📍', label:t().attendance_tab},
     {id:'leaves',    icon:'🌴', label:t().leaves_tab},
     {id:'employees', icon:'👥', label:t().employees_tab},
+    {id:'salaries',  icon:'💰', label:lang==='ar'?'المرتبات':'Salaries'},
     {id:'notifs',    icon:'🔔', label:t().notifs_tab},
     {id:'export',    icon:'📤', label:t().export_tab},
   ];
@@ -1189,6 +1189,7 @@ async function renderHR(tab) {
   else if(tab==='attendance') await renderHRAttendance();
   else if(tab==='leaves')     await renderHRLeaves();
   else if(tab==='employees')  await renderHREmployees();
+  else if(tab==='salaries')   await renderHRSalaries();
   else if(tab==='notifs')     renderHRNotifs();
   else if(tab==='export')     renderHRExport();
 }
@@ -1400,6 +1401,171 @@ async function doExport() {
   const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
   URL.revokeObjectURL(url);
   toast('Downloaded! ✅','success');
+}
+
+// ═══ HR SALARIES ═══
+let salaryMonth = nowISO().slice(0,7); // YYYY-MM
+let salaryEmpId = null;
+let adjType = 'bonus';
+
+async function renderHRSalaries() {
+  const {data:emps} = await sb.from('employees').select('id,first_name,last_name,department,job_title').eq('status','active').order('first_name');
+  if(!salaryEmpId && emps?.length) salaryEmpId = emps[0].id;
+
+  const selectedEmp = (emps||[]).find(e=>e.id===salaryEmpId);
+
+  // Load salary + adjustments for selected employee & month
+  const monthStart = salaryMonth+'-01';
+  const [{data:salData},{data:adjs}] = await Promise.all([
+    sb.from('salaries').select('*').eq('employee_id',salaryEmpId).order('effective_date',{ascending:false}).limit(1),
+    sb.from('salary_adjustments').select('*').eq('employee_id',salaryEmpId).gte('month',monthStart).lte('month',monthStart),
+  ]);
+
+  const baseSalary = salData?.[0]?.base_salary || 0;
+  const adjustments = adjs || [];
+  const totalAdj = adjustments.reduce((sum,a) => {
+    return sum + (['overtime','bonus','allowance'].includes(a.type) ? +a.amount : -Math.abs(+a.amount));
+  },0);
+  const netSalary = baseSalary + totalAdj;
+
+  const adjColors = {
+    overtime: {bg:'rgba(34,197,94,.1)',color:'var(--green)',label:lang==='ar'?'أوفر تايم':'Overtime', sign:'+'},
+    bonus:    {bg:'rgba(56,189,248,.1)',color:'var(--sky)',  label:lang==='ar'?'مكافأة':'Bonus',    sign:'+'},
+    allowance:{bg:'rgba(168,85,247,.1)',color:'var(--purple)',label:lang==='ar'?'بدل':'Allowance', sign:'+'},
+    absence:  {bg:'rgba(239,68,68,.1)', color:'var(--red)',  label:lang==='ar'?'غياب':'Absence',   sign:'-'},
+    late:     {bg:'rgba(245,158,11,.1)',color:'var(--amber)',label:lang==='ar'?'تأخير':'Late',      sign:'-'},
+    deduction:{bg:'rgba(239,68,68,.1)', color:'var(--red)',  label:lang==='ar'?'خصم':'Deduction',  sign:'-'},
+  };
+
+  $('hrContent').innerHTML=`
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">💰 ${lang==='ar'?'إدارة المرتبات':'Salaries'}</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="form-field" style="margin:0">
+        <label class="field-label">${lang==='ar'?'الموظف':'Employee'}</label>
+        <select class="form-select" onchange="salaryEmpId=this.value;renderHRSalaries()">
+          ${(emps||[]).map(e=>`<option value="${e.id}" ${e.id===salaryEmpId?'selected':''}>${e.first_name} ${e.last_name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field" style="margin:0">
+        <label class="field-label">${lang==='ar'?'الشهر':'Month'}</label>
+        <input class="form-input" type="month" value="${salaryMonth}" onclick="try{this.showPicker()}catch(e){}" onchange="salaryMonth=this.value;renderHRSalaries()"/>
+      </div>
+    </div>
+
+    <!-- Employee Info -->
+    <div class="card" style="margin-bottom:12px;border:1.5px solid rgba(56,189,248,.2)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]}${selectedEmp?.last_name?.[0]}</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">${selectedEmp?.first_name} ${selectedEmp?.last_name}</div>
+          <div style="font-size:12px;color:var(--sub)">${selectedEmp?.job_title||''} · ${selectedEmp?.department||''}</div>
+        </div>
+      </div>
+
+      <!-- Base Salary -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:12px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;color:var(--sub)">${lang==='ar'?'المرتب الأساسي':'Base Salary'}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" id="baseSalInput" value="${baseSalary}" min="0"
+            style="width:110px;height:36px;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:0 10px;font-size:14px;font-weight:700;color:var(--text);font-family:inherit;outline:none;text-align:center"
+            onfocus="this.style.borderColor='var(--sky)'" onblur="this.style.borderColor='var(--border)'"/>
+          <button onclick="saveBaseSalary()" style="height:36px;padding:0 14px;background:var(--sky);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${lang==='ar'?'حفظ':'Save'}</button>
+        </div>
+      </div>
+
+      <!-- Adjustments list -->
+      ${adjustments.length>0?`
+        <div style="margin-bottom:10px">
+          ${adjustments.map(a=>{
+            const c=adjColors[a.type]||adjColors.bonus;
+            const isPos=['overtime','bonus','allowance'].includes(a.type);
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:${c.bg};border-radius:10px;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.color}30">${c.label}</span>
+                <span style="font-size:12px;color:var(--sub)">${a.reason||''}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px;font-weight:800;color:${c.color}">${c.sign}${Math.abs(a.amount).toLocaleString()} ${lang==='ar'?'ج':'EGP'}</span>
+                <button onclick="deleteAdj('${a.id}')" style="background:rgba(239,68,68,.15);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:14px">✕</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`:''}
+
+      <!-- Net salary -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${netSalary>=baseSalary?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1.5px solid ${netSalary>=baseSalary?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};border-radius:14px">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">💰 ${lang==='ar'?'الصافي':'Net Salary'}</div>
+        <div style="font-size:22px;font-weight:900;color:${netSalary>=baseSalary?'var(--green)':'var(--red)'}">
+          ${netSalary.toLocaleString()} ${lang==='ar'?'ج':'EGP'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Adjustment -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">➕ ${lang==='ar'?'إضافة تعديل':'Add Adjustment'}</div>
+
+      <!-- Type chips -->
+      <div class="chip-row" style="margin-bottom:12px">
+        ${Object.entries(adjColors).map(([id,c])=>`
+          <button class="chip ${adjType===id?'active':''}" onclick="adjType='${id}';renderHRSalaries()"
+            style="${adjType===id?`background:${c.color};border-color:${c.color};color:#fff`:''}">${c.sign} ${c.label}</button>
+        `).join('')}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-field" style="margin:0">
+          <label class="field-label">${lang==='ar'?'المبلغ':'Amount'}</label>
+          <input class="form-input" type="number" id="adjAmount" placeholder="0" min="0"/>
+        </div>
+        <div class="form-field" style="margin:0">
+          <label class="field-label">${lang==='ar'?'السبب':'Reason'}</label>
+          <input class="form-input" type="text" id="adjReason" placeholder="${lang==='ar'?'مثل: 3 أيام غياب':'e.g. 2 days absence'}"/>
+        </div>
+      </div>
+      <button class="primary-btn" onclick="addAdjustment()">
+        ${lang==='ar'?'إضافة':'Add'} ${adjColors[adjType]?.label}
+      </button>
+    </div>
+  `;
+}
+
+async function saveBaseSalary() {
+  const val = parseFloat($('baseSalInput')?.value||0);
+  if(isNaN(val)||val<0) return toast('Invalid amount','error');
+  const {data:ex} = await sb.from('salaries').select('id').eq('employee_id',salaryEmpId).limit(1).maybeSingle();
+  let error;
+  if(ex) {
+    ({error} = await sb.from('salaries').update({base_salary:val,effective_date:nowISO()}).eq('id',ex.id));
+  } else {
+    ({error} = await sb.from('salaries').insert([{employee_id:salaryEmpId,base_salary:val,effective_date:nowISO()}]));
+  }
+  if(error) return toast(error.message,'error');
+  toast(lang==='ar'?'تم حفظ المرتب ✅':'Salary saved ✅','success');
+  renderHRSalaries();
+}
+
+async function addAdjustment() {
+  const amount = parseFloat($('adjAmount')?.value||0);
+  const reason = $('adjReason')?.value?.trim();
+  if(!amount||amount<=0) return toast(lang==='ar'?'أدخل مبلغاً':'Enter amount','error');
+  const monthStart = salaryMonth+'-01';
+  const {error} = await sb.from('salary_adjustments').insert([{
+    employee_id:salaryEmpId, type:adjType, amount, reason,
+    month:monthStart, created_by:currentEmployee.id
+  }]);
+  if(error) return toast(error.message,'error');
+  toast(lang==='ar'?'تمت الإضافة ✅':'Added ✅','success');
+  renderHRSalaries();
+}
+
+async function deleteAdj(id) {
+  if(!confirm(lang==='ar'?'حذف هذا التعديل؟':'Delete this adjustment?')) return;
+  const {error} = await sb.from('salary_adjustments').delete().eq('id',id);
+  if(error) return toast(error.message,'error');
+  toast(lang==='ar'?'تم الحذف':'Deleted','success');
+  renderHRSalaries();
 }
 
 // ═══ INIT ═══
