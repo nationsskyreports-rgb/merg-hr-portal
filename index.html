@@ -547,6 +547,8 @@ const T = {
     checked_in:'Checked In ✅', checked_out:'Checked Out 👋',
     time_lbl:'Time', distance:'Distance', offline:'No Internet Connection.',
     days_lbl:'days', day_lbl:'day', records:'records', under_review:'Under Review',
+    pending_confirm:'Pending Confirmation', confirm_mobile:'Confirm Mobile Check-in',
+    confirm_success:'Check-in confirmed successfully!',
     cancel:'Cancel', logout_confirm:'Confirm Logout',
     logout_msg:'Are you sure you want to sign out?', sign_out:'Sign Out',
     no_att_today:'No attendance recorded today.',
@@ -618,6 +620,8 @@ const T = {
     checked_in:'تم تسجيل الدخول ✅', checked_out:'تم تسجيل الخروج 👋',
     time_lbl:'الوقت', distance:'المسافة', offline:'لا يوجد اتصال بالإنترنت.',
     days_lbl:'أيام', day_lbl:'يوم', records:'سجلات', under_review:'قيد المراجعة',
+    pending_confirm:'بانتظار التأكيد', confirm_mobile:'تأكيد دخول الموبايل',
+    confirm_success:'تم تأكيد الحضور بنجاح!',
     cancel:'إلغاء', logout_confirm:'تأكيد تسجيل الخروج',
     logout_msg:'هل أنت متأكد من تسجيل الخروج؟', sign_out:'تسجيل الخروج',
     no_att_today:'لا يوجد حضور مسجل اليوم.',
@@ -880,10 +884,12 @@ async function renderHome() {
   const initials = (emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
   const {data:rec} = await sb.from('attendance_records').select('*').eq('employee_id',emp.id).eq('attendance_date',nowISO()).maybeSingle();
   const isClockedIn = !!(rec && rec.check_in_time && !rec.check_out_time);
+  const needsConfirm = rec?.is_mobile && !rec?.is_confirmed;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   $('empContent').innerHTML = `
     <div style="margin-bottom:18px">
-      <div class="greeting-name">${getGreeting()} 👋</div>
+      <div class="greeting-name">${getGreeting()} 👋 ${needsConfirm ? `<span style="color:var(--amber);font-size:14px">(${t().pending_confirm})</span>` : ''}</div>
       <div class="greeting-date">${new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
     </div>
     <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;border:1.5px solid rgba(56,189,248,.25)">
@@ -893,16 +899,21 @@ async function renderHome() {
         <div style="font-size:12px;color:var(--sub);margin-top:3px">${emp.job_title||emp.position||''} · ${emp.department||''}</div>
       </div>
     </div>
-    <div class="att-card">
+    <div class="att-card" style="${needsConfirm ? 'border: 2px dashed var(--amber)' : ''}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="width:10px;height:10px;border-radius:5px;background:${isClockedIn?'var(--green)':'var(--muted)'}"></div>
-        <span style="font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.7px">${isClockedIn?t().clocked_in:t().todays_att}</span>
-        ${isClockedIn?`<span class="badge" style="background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)">${t().active}</span>`:''}
+        <div style="width:10px;height:10px;border-radius:5px;background:${needsConfirm ? 'var(--amber)' : (isClockedIn?'var(--green)':'var(--muted)')}"></div>
+        <span style="font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.7px">${needsConfirm ? t().pending_confirm : (isClockedIn?t().clocked_in:t().todays_att)}</span>
+        ${isClockedIn && !needsConfirm ?`<span class="badge" style="background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)">${t().active}</span>`:''}
       </div>
       ${rec?.check_in_time?`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">${t().check_in_label}: <b>${fmtTime(rec.check_in_time)}</b>${rec.check_out_time?` · ${t().check_out_label}: <b>${fmtTime(rec.check_out_time)}</b>`:''}</div>`:''}
+      
+      ${needsConfirm && !isMobile ? `
+        <button class="primary-btn" style="margin-bottom:12px;background:var(--sky);padding:10px" onclick="confirmCheckIn(${rec.id})">💻 ${t().confirm_mobile}</button>
+      ` : ''}
+
       <div class="att-btns">
-        <button class="att-btn" style="background:var(--green)" onclick="handleCheckIn()" ${isClockedIn?'disabled':''} id="ciBtn">✅ ${t().check_in}</button>
-        <button class="att-btn" style="background:var(--red)" onclick="handleCheckOut()" ${!isClockedIn?'disabled':''} id="coBtn">🚪 ${t().check_out}</button>
+        <button class="att-btn" style="background:var(--green)" onclick="handleCheckIn()" ${isClockedIn || needsConfirm ?'disabled':''} id="ciBtn">✅ ${t().check_in}</button>
+        <button class="att-btn" style="background:var(--red)" onclick="handleCheckOut()" ${!isClockedIn || needsConfirm ?'disabled':''} id="coBtn">🚪 ${t().check_out}</button>
       </div>
     </div>
     <div class="sec-title">${t().quick_actions}</div>
@@ -936,11 +947,34 @@ async function handleCheckIn() {
     if(dist>allowed) return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error');
     const {data:ex} = await sb.from('attendance_records').select('id').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     if(ex) return toast(t().already_in,'error');
-    const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id}]);
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const {error} = await sb.from('attendance_records').insert([{
+      employee_id:currentEmployee.id,
+      attendance_date:nowISO(),
+      check_in_time:nowTime(),
+      office_id:office.id,
+      is_mobile: isMobile,
+      is_confirmed: !isMobile
+    }]);
     if(error) return toast(error.message,'error');
-    toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
+    
+    if(isMobile) {
+      toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
+    } else {
+      toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
+    }
     renderEmp('home');
   } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
+}
+
+async function confirmCheckIn(id) {
+  try {
+    const {error} = await sb.from('attendance_records').update({is_confirmed:true}).eq('id',id);
+    if(error) throw error;
+    toast(t().confirm_success,'success');
+    renderEmp('home');
+  } catch(e) { toast(e.message,'error'); }
 }
 
 async function handleCheckOut() {
