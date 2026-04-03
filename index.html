@@ -30,32 +30,80 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 
-/* LOGIN */
-#loginScreen{background:#fff;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
-.bg-blob{position:absolute;border-radius:50%;pointer-events:none}
-.blob1{top:-80px;right:-50px;width:280px;height:280px;background:rgba(56,189,248,.07)}
-.blob2{bottom:-100px;left:-60px;width:320px;height:320px;background:rgba(34,197,94,.05)}
-.login-box{width:100%;max-width:420px;z-index:1}
-.logo-wrap{text-align:center;margin-bottom:32px}
-.logo-img{width:130px;height:auto;margin-bottom:10px;border-radius:20px;box-shadow:0 8px 28px rgba(56,189,248,.25)}
-.logo-fallback{width:80px;height:80px;background:var(--sky);border-radius:22px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(56,189,248,.38);margin-bottom:14px}
+/* LOGIN — Dark Geometric */
+#loginScreen{background:#050C18;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
+
+/* Geometric background shapes */
+.geo-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.geo{position:absolute;background:rgba(56,189,248,.055);transform-origin:center}
+.geo1{width:700px;height:700px;top:-200px;right:-180px;transform:rotate(22deg);clip-path:polygon(40% 0%,100% 0%,100% 100%,0% 100%)}
+.geo2{width:600px;height:600px;bottom:-220px;left:-160px;transform:rotate(-15deg);clip-path:polygon(0% 0%,70% 0%,100% 100%,0% 100%)}
+.geo3{width:320px;height:320px;top:60px;left:-80px;transform:rotate(30deg);background:rgba(56,189,248,.035)}
+.geo4{width:260px;height:260px;bottom:80px;right:-60px;transform:rotate(-20deg);background:rgba(56,189,248,.04)}
+.geo5{width:180px;height:180px;top:40%;left:50%;transform:translate(-50%,-50%) rotate(45deg);background:rgba(56,189,248,.025)}
+
+/* Grid overlay */
+#loginScreen::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+
+.login-box{width:100%;max-width:400px;z-index:1;padding-bottom:20px}
+
+/* Logo area */
+.logo-wrap{text-align:center;margin-bottom:28px}
+.logo-img{width:90px;height:90px;object-fit:contain;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(56,189,248,.5))}
+.logo-fallback{width:80px;height:80px;background:var(--sky);border-radius:22px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 0 30px rgba(56,189,248,.5)}
 .logo-fallback svg{width:38px;height:38px}
-.logo-name{font-size:26px;font-weight:800;letter-spacing:5px;color:#07101E}
-.logo-sub{font-size:11px;color:#64748B;letter-spacing:3px;margin-top:3px}
-.login-title{font-size:24px;font-weight:800;color:#07101E;margin-bottom:5px}
-.login-sub{font-size:14px;color:#64748B;margin-bottom:26px;line-height:1.6}
-.field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:#475569;margin-bottom:7px;display:block}
-.field-wrap{display:flex;align-items:center;height:54px;background:#F7FAFF;border-radius:14px;padding:0 16px;border:1.5px solid #E2EAF4;transition:border-color .2s;margin-bottom:14px}
-.field-wrap:focus-within{border-color:var(--sky)}
-.field-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:500;color:#07101E;font-family:inherit}
-.field-wrap input::placeholder{color:#9BB0C8}
-.pw-eye{cursor:pointer;font-size:18px;padding:4px;color:#9BB0C8;background:none;border:none}
-.forgot-btn{background:none;border:none;color:var(--sky2);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:22px;padding:3px 0;font-family:inherit}
-.primary-btn{width:100%;height:54px;background:var(--sky);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 22px rgba(56,189,248,.3);transition:transform .15s,opacity .15s}
+.logo-name{font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 0 40px rgba(56,189,248,.3)}
+.logo-sub{font-size:11px;color:rgba(56,189,248,.7);letter-spacing:5px;margin-top:8px;font-weight:600}
+.logo-line{width:48px;height:2px;background:var(--sky);margin:12px auto 0;border-radius:2px;box-shadow:0 0 10px rgba(56,189,248,.6)}
+
+/* Login panel */
+.login-panel{background:rgba(10,20,40,.7);border:1px solid rgba(56,189,248,.15);border-radius:20px;padding:28px;backdrop-filter:blur(12px)}
+
+/* Admin button */
+.admin-btn{width:100%;height:58px;background:linear-gradient(135deg,#3B82F6,#38BDF8);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(56,189,248,.35);transition:all .2s;margin-bottom:20px}
+.admin-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(56,189,248,.45)}
+
+/* OR divider */
+.or-divider{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:rgba(56,189,248,.15)}
+.or-divider span{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:2px}
+
+/* Employee select */
+.emp-select-wrap{position:relative;margin-bottom:14px}
+.emp-select{width:100%;height:54px;background:rgba(255,255,255,.06);border:1px solid rgba(56,189,248,.2);border-radius:14px;padding:0 44px 0 16px;font-size:14px;font-weight:600;color:#fff;font-family:inherit;outline:none;appearance:none;cursor:pointer;transition:border-color .2s}
+.emp-select:focus{border-color:rgba(56,189,248,.6)}
+.emp-select option{background:#0F1A2E;color:#fff}
+.emp-select-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:rgba(56,189,248,.7);pointer-events:none;font-size:14px}
+
+/* Employee login button */
+.emp-btn{width:100%;height:54px;background:transparent;border:1.5px solid rgba(56,189,248,.35);border-radius:14px;color:rgba(255,255,255,.85);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.emp-btn:hover{border-color:rgba(56,189,248,.7);background:rgba(56,189,248,.08);color:#fff}
+
+/* Back to landing */
+.back-btn{background:none;border:none;color:rgba(56,189,248,.7);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;padding:0;margin-bottom:22px}
+.back-btn:hover{color:var(--sky)}
+
+/* Input fields (dark version) */
+.field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:rgba(255,255,255,.4);margin-bottom:8px;display:block}
+.field-wrap{display:flex;align-items:center;height:54px;background:rgba(255,255,255,.06);border-radius:14px;padding:0 16px;border:1px solid rgba(56,189,248,.2);transition:border-color .2s;margin-bottom:14px}
+.field-wrap:focus-within{border-color:rgba(56,189,248,.6);background:rgba(56,189,248,.05)}
+.field-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:500;color:#fff;font-family:inherit}
+.field-wrap input::placeholder{color:rgba(255,255,255,.25)}
+.pw-eye{cursor:pointer;font-size:18px;padding:4px;color:rgba(255,255,255,.3);background:none;border:none}
+.forgot-btn{background:none;border:none;color:rgba(56,189,248,.7);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:18px;padding:3px 0;font-family:inherit}
+.forgot-btn:hover{color:var(--sky)}
+
+/* Selected employee display */
+.selected-emp{display:flex;align-items:center;gap:12px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.selected-emp-avatar{width:40px;height:40px;border-radius:20px;background:linear-gradient(135deg,var(--sky),#3B82F6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0}
+.selected-emp-name{font-size:15px;font-weight:700;color:#fff}
+.selected-emp-dept{font-size:12px;color:rgba(56,189,248,.7);margin-top:2px}
+
+.primary-btn{width:100%;height:54px;background:linear-gradient(135deg,#3B82F6,#38BDF8);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 22px rgba(56,189,248,.3);transition:transform .15s,opacity .15s}
 .primary-btn:hover{transform:translateY(-1px)}
 .primary-btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
-.login-footer{text-align:center;color:#CBD5E1;font-size:11px;margin-top:24px;letter-spacing:1px}
-.lang-toggle{position:absolute;top:20px;right:20px;z-index:10;background:rgba(2,132,199,.08);border:1px solid rgba(2,132,199,.18);border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:var(--sky2);font-weight:700;font-family:inherit}
+.login-footer{text-align:center;color:rgba(255,255,255,.2);font-size:11px;margin-top:20px;letter-spacing:1px}
+.lang-toggle{position:absolute;top:18px;right:18px;z-index:10;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:rgba(56,189,248,.8);font-weight:700;font-family:inherit}
 .spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -240,38 +288,92 @@ textarea.form-input{height:100px;padding:12px 14px;resize:none;line-height:1.6}
 
 <!-- ═══ LOGIN ═══ -->
 <div id="loginScreen" class="screen active">
-  <div class="bg-blob blob1"></div>
-  <div class="bg-blob blob2"></div>
+  <!-- Geometric background -->
+  <div class="geo-bg">
+    <div class="geo geo1"></div>
+    <div class="geo geo2"></div>
+    <div class="geo geo3"></div>
+    <div class="geo geo4"></div>
+    <div class="geo geo5"></div>
+  </div>
+
   <button class="lang-toggle" onclick="toggleLang()">🌐 <span id="langBtnTxt">عربي</span></button>
+
   <div class="login-box">
+    <!-- Logo -->
     <div class="logo-wrap">
-      <!-- Logo image — falls back to SVG if file not found -->
-      <img src="assets/logo.png" alt="MERGE HR" class="logo-img"
+      <img src="assets/logo.png" alt="MERGE" class="logo-img"
            onerror="this.style.display='none';document.getElementById('logoFallback').style.display='inline-flex'"/>
       <div class="logo-fallback" id="logoFallback" style="display:none">
         <svg viewBox="0 0 38 38" fill="none"><rect x="6" y="10" width="6" height="20" rx="2.5" fill="rgba(255,255,255,.92)"/><rect x="16" y="16" width="6" height="14" rx="2.5" fill="rgba(255,255,255,.55)"/><rect x="26" y="10" width="6" height="20" rx="2.5" fill="rgba(255,255,255,.92)"/></svg>
       </div>
-      <div class="logo-name">MERGE</div>
-      <div class="logo-sub">HR PORTAL</div>
+      <div class="logo-name" id="logoTitle">MERGE</div>
+      <div class="logo-sub" id="logoSub">HR PORTAL</div>
+      <div class="logo-line"></div>
     </div>
-    <div class="login-title" id="lt">Welcome Back</div>
-    <div class="login-sub" id="ls">Sign in to your employee account</div>
-    <div class="form-field">
-      <label class="field-label" id="ll_email">Email Address</label>
-      <div class="field-wrap"><input type="email" id="loginEmail" placeholder="name@company.com" autocomplete="email"/></div>
-    </div>
-    <div class="form-field">
-      <label class="field-label" id="ll_pw">Password</label>
-      <div class="field-wrap">
-        <input type="password" id="loginPw" placeholder="Enter your password" autocomplete="current-password"/>
-        <button class="pw-eye" onclick="togglePw('loginPw',this)">👁</button>
+
+    <!-- ── STATE 1: Landing ── -->
+    <div id="loginLanding" class="login-panel">
+      <button class="admin-btn" onclick="showAdminLogin()" id="adminBtnTxt">
+        🛡️ <span id="adminBtnLabel">Login as Admin</span>
+      </button>
+      <div class="or-divider"><span>OR</span></div>
+      <div class="emp-select-wrap">
+        <select class="emp-select" id="empSelect">
+          <option value="" id="empSelectPlaceholder">Select Employee...</option>
+        </select>
+        <span class="emp-select-arrow">▼</span>
       </div>
+      <button class="emp-btn" onclick="showEmpLogin()" id="empBtnLabel">
+        👤 <span id="empBtnText">Login as Employee</span>
+      </button>
+      <div class="login-footer" style="margin-top:16px">MERGE HR PORTAL v3.0</div>
     </div>
-    <button class="forgot-btn" id="ll_forgot" onclick="openForgot()">Forgot Password?</button>
-    <button class="primary-btn" id="loginBtn" onclick="handleLogin()">
-      <span id="loginBtnTxt">Sign In</span>
-    </button>
-    <div class="login-footer">MERGE HR PORTAL v3.0</div>
+
+    <!-- ── STATE 2: Admin Login ── -->
+    <div id="loginAdmin" class="login-panel" style="display:none">
+      <button class="back-btn" onclick="showLanding()">← <span id="backTxt1">Back</span></button>
+      <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px" id="adminTitle">Admin Access</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:22px" id="adminSub">Sign in with your admin credentials</div>
+      <div class="form-field">
+        <label class="field-label" id="al_email">Email</label>
+        <div class="field-wrap"><input type="email" id="adminEmail" value="admin@merge.com" autocomplete="email"/></div>
+      </div>
+      <div class="form-field">
+        <label class="field-label" id="al_pw">Password</label>
+        <div class="field-wrap">
+          <input type="password" id="adminPw" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="pw-eye" onclick="togglePw('adminPw',this)">👁</button>
+        </div>
+      </div>
+      <button class="forgot-btn" onclick="openForgot()" id="al_forgot">Forgot Password?</button>
+      <button class="primary-btn" onclick="handleAdminLogin()" id="adminLoginBtn">
+        <span id="adminLoginBtnTxt">Sign In</span>
+      </button>
+    </div>
+
+    <!-- ── STATE 3: Employee Login ── -->
+    <div id="loginEmployee" class="login-panel" style="display:none">
+      <button class="back-btn" onclick="showLanding()">← <span id="backTxt2">Back</span></button>
+      <div id="selectedEmpCard" class="selected-emp">
+        <div class="selected-emp-avatar" id="selEmpInitials">?</div>
+        <div>
+          <div class="selected-emp-name" id="selEmpName">—</div>
+          <div class="selected-emp-dept" id="selEmpDept">—</div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="field-label" id="el_pw">Password</label>
+        <div class="field-wrap">
+          <input type="password" id="empPw" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="pw-eye" onclick="togglePw('empPw',this)">👁</button>
+        </div>
+      </div>
+      <button class="forgot-btn" onclick="openForgot()" id="el_forgot">Forgot Password?</button>
+      <button class="primary-btn" onclick="handleEmpLogin()" id="empLoginBtn">
+        <span id="empLoginBtnTxt">Sign In</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -603,12 +705,26 @@ function updateStaticText() {
 }
 
 function renderLogin() {
-  $('lt').textContent = t().welcome_back;
-  $('ls').textContent = t().sign_in_sub;
-  $('ll_email').textContent = t().email;
-  $('ll_pw').textContent = t().password;
-  $('ll_forgot').textContent = t().forgot_pw;
-  $('loginBtnTxt').textContent = t().sign_in;
+  // Update landing labels
+  const adminLabel = $('adminBtnLabel');
+  const empLabel = $('empBtnText');
+  const empPlaceholder = $('empSelect')?.options?.[0];
+  if(adminLabel) adminLabel.textContent = lang==='ar'?'تسجيل دخول الأدمن':'Login as Admin';
+  if(empLabel) empLabel.textContent = lang==='ar'?'تسجيل دخول الموظف':'Login as Employee';
+  if(empPlaceholder) empPlaceholder.textContent = lang==='ar'?'اختر موظفاً...':'Select Employee...';
+  // Update admin login panel labels
+  if($('adminTitle')) $('adminTitle').textContent = lang==='ar'?'دخول الأدمن':'Admin Access';
+  if($('adminSub')) $('adminSub').textContent = lang==='ar'?'سجّل الدخول بحساب الأدمن':'Sign in with your admin credentials';
+  if($('al_email')) $('al_email').textContent = t().email_lbl;
+  if($('al_pw')) $('al_pw').textContent = t().password;
+  if($('al_forgot')) $('al_forgot').textContent = t().forgot_pw;
+  if($('adminLoginBtnTxt')) $('adminLoginBtnTxt').textContent = t().sign_in;
+  // Update employee login panel labels
+  if($('el_pw')) $('el_pw').textContent = t().password;
+  if($('el_forgot')) $('el_forgot').textContent = t().forgot_pw;
+  if($('empLoginBtnTxt')) $('empLoginBtnTxt').textContent = t().sign_in;
+  if($('backTxt1')) $('backTxt1').textContent = t().back;
+  if($('backTxt2')) $('backTxt2').textContent = t().back;
   updateStaticText();
 }
 
@@ -624,32 +740,87 @@ function showScreen(id) {
 }
 
 // ═══ AUTH ═══
-async function handleLogin() {
-  const email = $('loginEmail').value.trim().toLowerCase();
-  const pw = $('loginPw').value;
-  if(!email) return toast(lang==='ar'?'الرجاء إدخال البريد':'Please enter email','error');
-  if(!pw) return toast(lang==='ar'?'الرجاء إدخال كلمة المرور':'Please enter password','error');
+// ═══ LOGIN STATE MANAGEMENT ═══
+let employeesList = []; // cache for dropdown
+let selectedEmployee = null; // employee chosen from dropdown
 
-  const btn = $('loginBtn'); btn.disabled = true;
-  $('loginBtnTxt').innerHTML = '<div class="spinner"></div>';
-
+async function loadEmployeesList() {
+  const sel = $('empSelect');
+  if(!sel) return;
   try {
-    const {data:emp} = await sb.from('employees').select('id,status,first_name,last_name,email').eq('email',email).maybeSingle();
-    if(!emp) { toast(lang==='ar'?'هذا البريد غير مسجل كموظف':'Email not registered as employee','error'); return; }
-    if(emp.status!=='active') { toast(lang==='ar'?'حسابك غير نشط':'Account inactive','error'); return; }
-
-    const {data:authData, error} = await sb.auth.signInWithPassword({email, password:pw});
-    if(error) { toast(error.message,'error'); return; }
-
-    currentUser = authData.user;
-    const {data:fullEmp} = await sb.from('employees').select('*').eq('email',email).single();
-    currentEmployee = fullEmp;
-    isAdmin = email === 'admin@merge.com';
-    if(isAdmin) { showScreen('hrApp'); initHR(); }
-    else { showScreen('empApp'); initEmp(); }
-  } catch(e) { toast(e.message,'error'); }
-  finally { btn.disabled=false; $('loginBtnTxt').textContent=t().sign_in; }
+    const {data:emps} = await sb.from('employees').select('id,first_name,last_name,email,department,job_title,status').eq('status','active').order('first_name');
+    employeesList = emps || [];
+    const placeholder = lang==='ar'?'اختر موظفاً...':'Select Employee...';
+    sel.innerHTML = `<option value="">${placeholder}</option>` +
+      employeesList.map(e=>`<option value="${e.id}">${e.first_name} ${e.last_name} — ${e.department||''}</option>`).join('');
+  } catch(e) { console.error(e); }
 }
+
+function showLanding() {
+  $('loginLanding').style.display='block';
+  $('loginAdmin').style.display='none';
+  $('loginEmployee').style.display='none';
+  selectedEmployee=null;
+}
+
+function showAdminLogin() {
+  $('loginLanding').style.display='none';
+  $('loginAdmin').style.display='block';
+  $('loginEmployee').style.display='none';
+  setTimeout(()=>$('adminPw')?.focus(),100);
+}
+
+function showEmpLogin() {
+  const sel = $('empSelect');
+  const empId = sel?.value;
+  if(!empId) { toast(lang==='ar'?'الرجاء اختيار موظف':'Please select an employee','error'); return; }
+  selectedEmployee = employeesList.find(e=>e.id===empId);
+  if(!selectedEmployee) return;
+  const initials = (selectedEmployee.first_name?.[0]||'')+(selectedEmployee.last_name?.[0]||'');
+  $('selEmpInitials').textContent = initials;
+  $('selEmpName').textContent = `${selectedEmployee.first_name} ${selectedEmployee.last_name}`;
+  $('selEmpDept').textContent = selectedEmployee.job_title ? `${selectedEmployee.job_title} · ${selectedEmployee.department||''}` : selectedEmployee.department||'';
+  $('loginLanding').style.display='none';
+  $('loginAdmin').style.display='none';
+  $('loginEmployee').style.display='block';
+  setTimeout(()=>$('empPw')?.focus(),100);
+}
+
+async function handleAdminLogin() {
+  const email = $('adminEmail').value.trim().toLowerCase();
+  const pw = $('adminPw').value;
+  if(!pw) return toast(lang==='ar'?'أدخل كلمة المرور':'Enter password','error');
+  const btn=$('adminLoginBtn'); btn.disabled=true;
+  $('adminLoginBtnTxt').innerHTML='<div class="spinner"></div>';
+  try {
+    const {data:emp} = await sb.from('employees').select('*').eq('email',email).maybeSingle();
+    if(!emp) { toast(lang==='ar'?'البريد غير مسجل':'Email not registered','error'); return; }
+    if(emp.status!=='active') { toast(lang==='ar'?'الحساب غير نشط':'Account inactive','error'); return; }
+    const {data:authData,error} = await sb.auth.signInWithPassword({email,password:pw});
+    if(error) { toast(error.message,'error'); return; }
+    currentUser=authData.user; currentEmployee=emp; isAdmin=true;
+    showScreen('hrApp'); initHR();
+  } catch(e) { toast(e.message,'error'); }
+  finally { btn.disabled=false; $('adminLoginBtnTxt').textContent=t().sign_in; }
+}
+
+async function handleEmpLogin() {
+  if(!selectedEmployee) return;
+  const pw = $('empPw').value;
+  if(!pw) return toast(lang==='ar'?'أدخل كلمة المرور':'Enter password','error');
+  const btn=$('empLoginBtn'); btn.disabled=true;
+  $('empLoginBtnTxt').innerHTML='<div class="spinner"></div>';
+  try {
+    const {data:authData,error} = await sb.auth.signInWithPassword({email:selectedEmployee.email,password:pw});
+    if(error) { toast(error.message,'error'); return; }
+    currentUser=authData.user; currentEmployee=selectedEmployee; isAdmin=false;
+    showScreen('empApp'); initEmp();
+  } catch(e) { toast(e.message,'error'); }
+  finally { btn.disabled=false; $('empLoginBtnTxt').textContent=t().sign_in; }
+}
+
+// Keep old handleLogin for session restore compatibility
+async function handleLogin() { showLanding(); }
 
 async function handleLogout() {
   if(!confirm(lang==='ar'?'هل تريد تسجيل الخروج؟':'Logout?')) return;
@@ -1229,6 +1400,7 @@ function init() {
   updateLangBtns();
   updateStaticText();
   renderLogin();
+  loadEmployeesList(); // load employees for dropdown
   sb.auth.getSession().then(({data:{session}})=>{
     if(session) {
       currentUser=session.user;
