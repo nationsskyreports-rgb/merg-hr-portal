@@ -20,89 +20,435 @@
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #EEF5FF;
+      background: #FFFFFF;
       color: #07101E;
       overflow-x: hidden;
+      min-height: 100vh;
     }
+    
     #root { min-height: 100vh; }
-    .loading-screen {
+    
+    /* Login Screen */
+    .login-wrapper {
+      position: relative;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #080E1C 0%, #14213D 100%);
+      padding: 28px;
+      background: #FFFFFF;
+      overflow: hidden;
     }
-    .loading-logo {
+    
+    .bg-circle-1 {
+      position: absolute;
+      top: -80px;
+      right: -50px;
+      width: 280px;
+      height: 280px;
+      border-radius: 140px;
+      background: rgba(56,189,248,0.06);
+      z-index: 0;
+    }
+    
+    .bg-circle-2 {
+      position: absolute;
+      bottom: -100px;
+      left: -60px;
+      width: 300px;
+      height: 300px;
+      border-radius: 150px;
+      background: rgba(34,197,94,0.04);
+      z-index: 0;
+    }
+    
+    .lang-btn {
+      position: absolute;
+      top: 54px;
+      right: 20px;
+      z-index: 10;
+      background: rgba(2,132,199,0.08);
+      border: 1px solid rgba(2,132,199,0.18);
+      border-radius: 10px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #0284C7;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    
+    .lang-btn:hover {
+      background: rgba(2,132,199,0.15);
+    }
+    
+    .logo-section {
+      text-align: center;
+      margin-bottom: 36px;
+      z-index: 1;
+    }
+    
+    .logo-box {
       width: 84px;
       height: 84px;
       background: #38BDF8;
       border-radius: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 24px rgba(56,189,248,0.4);
+      margin-bottom: 17px;
+    }
+    
+    .logo-text {
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 5px;
+    }
+    
+    .logo-sub {
+      color: #64748B;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      margin-top: 4px;
+    }
+    
+    .title {
+      color: #0B1120;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      letter-spacing: -0.3px;
+    }
+    
+    .subtitle {
+      color: #64748B;
+      font-size: 14px;
+      margin-bottom: 28px;
+      line-height: 20px;
+    }
+    
+    .form-group {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 16px;
+      z-index: 1;
+    }
+    
+    .form-label {
+      display: block;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      margin-bottom: 8px;
+    }
+    
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      height: 54px;
+      background: #F7FAFF;
+      border-radius: 14px;
+      padding: 0 16px;
+      border: 1.5px solid #E2EAF4;
+      transition: border-color 0.2s;
+    }
+    
+    .input-wrapper:focus-within {
+      border-color: #38BDF8;
+    }
+    
+    .form-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #0B1120;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    
+    .form-input::placeholder {
+      color: #9BB0C8;
+    }
+    
+    .pw-toggle {
+      cursor: pointer;
+      font-size: 19px;
+      margin-left: 10px;
+      user-select: none;
+    }
+    
+    .forgot-link {
+      display: inline-block;
+      margin-bottom: 24px;
+      padding: 4px 0;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #0284C7;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 1;
+    }
+    
+    .signin-btn {
+      width: 100%;
+      max-width: 400px;
+      height: 56px;
+      background: #38BDF8;
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(56,189,248,0.3);
+      transition: all 0.2s;
+      z-index: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
-      box-shadow: 0 6px 24px rgba(56,189,248,0.4);
+      gap: 8px;
     }
-    .loading-text {
-      color: #F0F6FF;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 3px;
+    
+    .signin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(56,189,248,0.4);
     }
-    .loading-sub {
-      color: #6E8CAD;
-      font-size: 12px;
-      margin-top: 8px;
-      letter-spacing: 2px;
+    
+    .signin-btn:active {
+      transform: translateY(0);
     }
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid rgba(56,189,248,0.2);
-      border-top-color: #38BDF8;
+    
+    .signin-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .footer-text {
+      color: #CBD5E1;
+      font-size: 11px;
+      text-align: center;
+      margin-top: 28px;
+      letter-spacing: 1px;
+      z-index: 1;
+    }
+    
+    /* RTL Support */
+    .rtl {
+      direction: rtl;
+      text-align: right;
+    }
+    
+    .rtl .lang-btn {
+      right: auto;
+      left: 20px;
+    }
+    
+    .rtl .form-label,
+    .rtl .subtitle,
+    .rtl .title {
+      text-align: right;
+    }
+    
+    .rtl .form-input {
+      text-align: right;
+    }
+    
+    .rtl .pw-toggle {
+      margin-left: 0;
+      margin-right: 10px;
+    }
+    
+    /* Spinner */
+    .btn-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
       border-radius: 50%;
-      margin-top: 24px;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.6s linear infinite;
     }
+    
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-wrapper { padding: 20px; }
+      .title { font-size: 22px; }
+      .logo-box { width: 72px; height: 72px; border-radius: 18px; }
+      .logo-text { font-size: 22px; }
+    }
   </style>
 </head>
 <body>
-  <div id="root">
-    <div class="loading-screen">
-      <div class="loading-logo">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect x="4" y="12" width="6" height="20" rx="2" fill="rgba(255,255,255,0.9)" />
-          <rect x="15" y="18" width="6" height="14" rx="2" fill="rgba(255,255,255,0.55)" />
-          <rect x="26" y="12" width="6" height="20" rx="2" fill="rgba(255,255,255,0.9)" />
-        </svg>
-      </div>
-      <div class="loading-text">MERGE</div>
-      <div class="loading-sub">HR PORTAL</div>
-      <div class="spinner"></div>
-    </div>
-  </div>
+  <div id="root"></div>
   
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
-  <!-- Load our app -->
-  <script type="text/babel" data-type="module">
-    // App will be loaded here
-    console.log('MERGE HR Portal - Loading...');
+  <!-- APP CODE -->
+  <script type="text/babel">
+const { useState } = React;
+
+/* ════════════════════════════════════
+   LOCALES
+═════════════════════════════════════ */
+const en = {
+  welcome_back:"Welcome Back", sign_in_sub:"Sign in to your employee account",
+  email:"Email Address", password:"Password", sign_in:"Sign In",
+  enter_email:"name@company.com", enter_pw:"Enter your password",
+  forgot_pw:"Forgot Password?",
+};
+const ar = {
+  welcome_back:"مرحباً بعودتك", sign_in_sub:"سجّل الدخول إلى حسابك",
+  email:"البريد الإلكتروني", password:"كلمة المرور", sign_in:"تسجيل الدخول",
+  enter_email:"name@company.com", enter_pw:"أدخل كلمة المرور",
+  forgot_pw:"نسيت كلمة المرور؟",
+};
+const L = { en, ar };
+
+/* ════════════════════════════════════
+   LOGIN COMPONENT
+═════════════════════════════════════ */
+function App() {
+  const [lang, setLang] = useState('en');
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const l = L[lang];
+  const isAr = lang === 'ar';
+
+  const handleLogin = () => {
+    if (!email.trim()) return alert(isAr ? 'الرجاء إدخال البريد الإلكتروني' : 'Please enter your email');
+    if (!pw.trim()) return alert(isAr ? 'الرجاء إدخال كلمة المرور' : 'Please enter your password');
+    
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      alert(isAr ? '✅ تم تسجيل الدخول بنجاح!' : '✅ Login Successful!');
+    }, 1500);
+  };
+
+  return (
+    <div className={`login-wrapper ${isAr ? 'rtl' : ''}`}>
+      {/* Background */}
+      <div className="bg-circle-1" />
+      <div className="bg-circle-2" />
+      
+      {/* Lang Toggle */}
+      <button className="lang-btn" onClick={() => setLang(isAr ? 'en' : 'ar')}>
+        🌐 {isAr ? 'EN' : 'عربي'}
+      </button>
+
+      {/* Logo */}
+      <div className="logo-section">
+        <div className="logo-box">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <rect x="6" y="10" width="5" height="18" rx="2" fill="rgba(255,255,255,0.9)"/>
+            <rect x="15.5" y="16" width="5" height="12" rx="2" fill="rgba(255,255,255,0.55)"/>
+            <rect x="25" y="10" width="5" height="18" rx="2" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+        </div>
+        <div className="logo-text">MERGE</div>
+        <div className="logo-sub">HR PORTAL</div>
+      </div>
+
+      {/* Title */}
+      <h1 className="title">{l.welcome_back}</h1>
+      <p className="subtitle">{l.sign_in_sub}</p>
+
+      {/* Email */}
+      <div className="form-group">
+        <label className="form-label">{l.email}</label>
+        <div className="input-wrapper">
+          <input 
+            className="form-input"
+            type="email"
+            placeholder={l.enter_email}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Password */}
+      <div className="form-group">
+        <label className="form-label">{l.password}</label>
+        <div className="input-wrapper">
+          <input 
+            className="form-input"
+            type={showPw ? 'text' : 'password'}
+            placeholder={l.enter_pw}
+            value={pw}
+            onChange={e => setPw(e.target.value)}
+          />
+          <span className="pw-toggle" onClick={() => setShowPw(!showPw)}>
+            {showPw ? '🙈' : '👁'}
+          </span>
+        </div>
+      </div>
+
+      {/* Forgot */}
+      <button className="forgot-link" onClick={() => alert(l.forgot_pw)}>
+        {l.forgot_pw}
+      </button>
+
+      {/* Sign In Button */}
+      <button 
+        className="signin-btn" 
+        onClick={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <div className="btn-spinner"/>
+            {isAr ? 'جاري...' : 'Loading...'}
+          </>
+        ) : (
+          l.sign_in
+        )}
+      </button>
+
+      {/* Footer */}
+      <div className="footer-text">MERGE HR PORTAL v2.0 — PWA</div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════
+   RENDER
+═════════════════════════════════════ */
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+console.log('✅ MERGE HR Portal Loaded Successfully!');
   </script>
   
-  <!-- Register Service Worker -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js')
-          .then(reg => console.log('SW registered:', reg.scope))
-          .catch(err => console.log('SW registration failed:', err));
+          .then(function(reg) { console.log('✅ SW registered:', reg.scope); })
+          .catch(function(err) { console.log('❌ SW failed:', err); });
       });
     }
   </script>
