@@ -985,10 +985,15 @@ async function renderHistory() {
   `;
 }
 
-let leaveTab='new', leaveType='Annual';
+let leaveTab='new', leaveType='annual';
 async function renderLeave() {
   const {data:leaves} = await sb.from('leave_requests').select('*').eq('employee_id',currentEmployee.id).order('created_at',{ascending:false}).limit(20);
-  const types=['Annual','Sick','Emergency','Personal','Maternity','Unpaid'];
+  const types=[
+    {val:'annual',   label:'Annual 🌴'},
+    {val:'sick',     label:'Sick 🤒'},
+    {val:'emergency',label:'Emergency 🚨'},
+    {val:'unpaid',   label:'Unpaid 💸'},
+  ];
   $('empContent').innerHTML = `
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">${t().leave_request}</div>
     <div class="tab-bar">
@@ -997,7 +1002,7 @@ async function renderLeave() {
     </div>
     ${leaveTab==='new'?`
       <div class="sec-title">${t().leave_type}</div>
-      <div class="chip-row">${types.map(tp=>`<button class="chip ${leaveType===tp?'active':''}" onclick="setLeaveType('${tp}')">${tp}</button>`).join('')}</div>
+      <div class="chip-row">${types.map(tp=>`<button class="chip ${leaveType===tp.val?'active':''}" onclick="setLeaveType('${tp.val}')">${tp.label}</button>`).join('')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
         <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
         <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
