@@ -200,7 +200,7 @@ class ErrorBoundary extends React.Component {
 const OfflineBanner = ({ visible, lang }) => {
   const slideY = useRef(new Animated.Value(-52)).current;
   useEffect(() => {
-    Animated.spring(slideY, { toValue: visible ? 0 : -52, friction: 8, tension: 60, useNativeDriver: true }).start();
+    Animated.spring(slideY, { toValue: visible ? 0 : -52, friction: 8, tension: 60, useNativeDriver: false }).start();
   }, [visible]);
   return (
     <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999, backgroundColor: '#EF4444', paddingVertical: 12, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, transform: [{ translateY: slideY }] }}>
@@ -439,12 +439,12 @@ const LoginScreen = ({ lang, setLang }) => {
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(logoY,  { toValue: 0, friction: 6, tension: 50, useNativeDriver: true }),
-        Animated.timing(logoOp, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.spring(logoY,  { toValue: 0, friction: 6, tension: 50, useNativeDriver: false }),
+        Animated.timing(logoOp, { toValue: 1, duration: 500, useNativeDriver: false }),
       ]),
       Animated.parallel([
-        Animated.timing(cardOp, { toValue: 1, duration: 420, useNativeDriver: true }),
-        Animated.timing(cardY,  { toValue: 0, duration: 420, useNativeDriver: true }),
+        Animated.timing(cardOp, { toValue: 1, duration: 420, useNativeDriver: false }),
+        Animated.timing(cardY,  { toValue: 0, duration: 420, useNativeDriver: false }),
       ]),
     ]).start();
   }, []);
@@ -575,12 +575,12 @@ const HomeScreen = ({ dark, employee, isClockedIn, checkingIn, checkingOut, unre
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 480, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 480, useNativeDriver: true }),
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 480, useNativeDriver: false }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 480, useNativeDriver: false }),
     ]).start();
     Animated.loop(Animated.sequence([
-      Animated.timing(floatAnim, { toValue: -3, duration: 2200, useNativeDriver: true }),
-      Animated.timing(floatAnim, { toValue:  0, duration: 2200, useNativeDriver: true }),
+      Animated.timing(floatAnim, { toValue: -3, duration: 2200, useNativeDriver: false }),
+      Animated.timing(floatAnim, { toValue:  0, duration: 2200, useNativeDriver: false }),
     ])).start();
   }, []);
 
