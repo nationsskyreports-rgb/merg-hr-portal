@@ -15,12 +15,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --sky:#38BDF8;--sky2:#0284C7;--green:#22C55E;--red:#EF4444;--amber:#F59E0B;
+  --purple:#A855F7;--indigo:#6366F1;
+  --bg:#EEF5FF;--card:#fff;--border:#D1E0F0;--surface:#E3EDF8;
+  --text:#07101E;--sub:#506A84;--muted:#8FA8C0;--input:#F5FAFF;
+}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.dark{
+  --bg:#080E1C;--card:#0F1A2E;--border:#1C2E47;--surface:#14213D;
+  --text:#F0F6FF;--sub:#6E8CAD;--muted:#3E5470;--input:#060B16;
+}
+
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 
 /* LOGIN — Dark Geometric */
-#loginScreen{background:#F0FDF4;display:flex;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
+#loginScreen{background:#050C18;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
 
 /* Geometric background shapes */
 .geo-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
@@ -32,7 +43,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .geo5{width:180px;height:180px;top:40%;left:50%;transform:translate(-50%,-50%) rotate(45deg);background:rgba(56,189,248,.025)}
 
 /* Grid overlay */
-#loginScreen{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden}
+#loginScreen::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
 
 .login-box{width:100%;max-width:400px;z-index:1;padding-bottom:20px}
 
@@ -41,12 +52,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .logo-img{width:180px;height:auto;margin-bottom:16px;filter:drop-shadow(0 0 16px rgba(56,189,248,.25))}
 .logo-fallback{width:80px;height:80px;background:var(--sky);border-radius:22px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 0 30px rgba(56,189,248,.5)}
 .logo-fallback svg{width:38px;height:38px}
-.logo-name{font-size:44px;font-weight:900;color:#0284C7 !important;line-height:1;letter-spacing:-1px;text-shadow:none !important}
-.logo-sub{font-size:11px;color:#0284C7 !important;letter-spacing:5px;margin-top:8px;font-weight:600}
+.logo-name{font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 0 40px rgba(56,189,248,.3)}
+.logo-sub{font-size:11px;color:rgba(56,189,248,.7);letter-spacing:5px;margin-top:8px;font-weight:600}
 .logo-line{width:48px;height:2px;background:var(--sky);margin:12px auto 0;border-radius:2px;box-shadow:0 0 10px rgba(56,189,248,.6)}
 
 /* Login panel */
-.login-panel{background:#ffffff;border:1px solid #E2E8F0;border-radius:20px;padding:28px;box-shadow:0 10px 25px rgba(0,0,0,0.05)}
+.login-panel{background:rgba(10,20,40,.7);border:1px solid rgba(56,189,248,.15);border-radius:20px;padding:28px;backdrop-filter:blur(12px)}
 
 /* Admin button */
 .admin-btn{width:100%;height:58px;background:linear-gradient(135deg,#3B82F6,#38BDF8);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(56,189,248,.35);transition:all .2s;margin-bottom:20px}
@@ -59,13 +70,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 /* Employee select */
 .emp-select-wrap{position:relative;margin-bottom:14px}
-.emp-select{width:100%;height:54px;background:#F8FAFC;border:1px solid #CBD5E1;border-radius:14px;padding:0 44px 0 16px;font-size:14px;font-weight:600;color:#1E293B;font-family:inherit;outline:none;appearance:none;cursor:pointer;transition:border-color .2s}
+.emp-select{width:100%;height:54px;background:rgba(255,255,255,.06);border:1px solid rgba(56,189,248,.2);border-radius:14px;padding:0 44px 0 16px;font-size:14px;font-weight:600;color:#fff;font-family:inherit;outline:none;appearance:none;cursor:pointer;transition:border-color .2s}
 .emp-select:focus{border-color:rgba(56,189,248,.6)}
 .emp-select option{background:#0F1A2E;color:#fff}
 .emp-select-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:rgba(56,189,248,.7);pointer-events:none;font-size:14px}
 
 /* Employee login button */
-.emp-btn{width:100%;height:54px;background:transparent;border:1.5px solid #34D399;border-radius:14px;color:#065F46;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.emp-btn{width:100%;height:54px;background:transparent;border:1.5px solid rgba(56,189,248,.35);border-radius:14px;color:rgba(255,255,255,.85);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
 .emp-btn:hover{border-color:rgba(56,189,248,.7);background:rgba(56,189,248,.08);color:#fff}
 
 /* Back to landing */
@@ -74,9 +85,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 /* Input fields (dark version) */
 .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:rgba(255,255,255,.4);margin-bottom:8px;display:block}
-.field-wrap{display:flex;align-items:center;height:54px;background:#F8FAFC;border-radius:14px;padding:0 16px;border:1px solid #CBD5E1;transition:border-color .2s;margin-bottom:14px}
+.field-wrap{display:flex;align-items:center;height:54px;background:rgba(255,255,255,.06);border-radius:14px;padding:0 16px;border:1px solid rgba(56,189,248,.2);transition:border-color .2s;margin-bottom:14px}
 .field-wrap:focus-within{border-color:rgba(56,189,248,.6);background:rgba(56,189,248,.05)}
-.field-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:500;color:#1E293B;font-family:inherit}
+.field-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:500;color:#fff;font-family:inherit}
 .field-wrap input::placeholder{color:rgba(255,255,255,.25)}
 .pw-eye{cursor:pointer;font-size:18px;padding:4px;color:rgba(255,255,255,.3);background:none;border:none}
 .forgot-btn{background:none;border:none;color:rgba(56,189,248,.7);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:18px;padding:3px 0;font-family:inherit}
