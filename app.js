@@ -385,6 +385,7 @@ async function initEmp() {
         <button class="hr-tab active" onclick="showEmpTab('home')" style="padding:8px;font-size:11px">🏠 <span id="navt_home">Home</span></button>
         <button class="hr-tab" onclick="showEmpTab('history')" style="padding:8px;font-size:11px">📊 <span id="navt_history">${t().history}</span></button>
         <button class="hr-tab" onclick="showEmpTab('leave')" style="padding:8px;font-size:11px">🌴 <span id="navt_leave">${t().leave}</span></button>
+        <button class="hr-tab" onclick="showEmpTab('tasks')" style="padding:8px;font-size:11px">✅ <span>${lang==='ar'?'تاسكاتي':'Tasks'}</span></button>
         <button class="hr-tab" onclick="showEmpTab('notifs')" style="padding:8px;font-size:11px">🔔 <span id="navt_notifs">${t().notifications}</span><span id="notifBadge" style="display:none;position:absolute;width:16px;height:16px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;font-weight:700;align-items:center;justify-content:center;margin-left:2px"></span></button>
         <button class="hr-tab" onclick="showEmpTab('profile')" style="padding:8px;font-size:11px">👤 <span id="navt_profile">${t().profile}</span></button>
       </div>
@@ -406,6 +407,7 @@ async function renderEmp(tab) {
   else if(tab==='history') await renderHistory();
   else if(tab==='leave') await renderLeave();
   else if(tab==='notifs') await renderNotifs();
+  else if(tab==='tasks') await renderEmpTasks();
   else if(tab==='profile') await renderProfile();
 }
 
@@ -820,3 +822,56 @@ function init() {
 }
 
 init();
+async function renderEmpTasks() {
+  const {data:tasks} = await sb.from('tasks')
+    .select('*')
+    .eq('assigned_to', currentEmployee.id)
+    .order('deadline', {ascending:true});
+  const items = tasks||[];
+  const pending = items.filter(t=>t.status==='pending');
+  const done    = items.filter(t=>t.status==='done');
+
+  $('empContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">✅ ${lang==='ar'?'تاسكاتي':'My Tasks'}</div>
+
+    ${items.length===0
+      ?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">${lang==='ar'?'مفيش تاسكات عليك':'No tasks assigned'}</div></div>`
+      :`
+        ${pending.length>0?`
+          <div class="sec-title">${lang==='ar'?'قيد التنفيذ':'Pending'} (${pending.length})</div>
+          ${pending.map(tk=>{
+            const isLate = tk.deadline && tk.deadline < nowISO();
+            return `<div class="card-sm" style="border-color:${isLate?'rgba(239,68,68,.4)':''}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                <div style="flex:1">
+                  <div style="font-size:15px;font-weight:700;color:var(--text)">${tk.title}</div>
+                  ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)} ${isLate?'⚠️':''}</span>`:''}
+                <button onclick="markTaskDone('${tk.id}')" class="primary-btn" style="padding:7px 14px;font-size:12px;background:var(--green)">✅ ${lang==='ar'?'تم الإنجاز':'Mark Done'}</button>
+              </div>
+            </div>`;
+          }).join('')}
+        `:''}
+
+        ${done.length>0?`
+          <div class="sec-title" style="margin-top:16px">${lang==='ar'?'المنتهية':'Completed'} (${done.length})</div>
+          ${done.map(tk=>`
+            <div class="card-sm" style="opacity:.6;border-color:rgba(34,197,94,.3)">
+              <div style="font-size:14px;font-weight:600;color:var(--sub);text-decoration:line-through">${tk.title}</div>
+              ${tk.deadline?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📅 ${fmtDate(tk.deadline)}</div>`:''}
+            </div>
+          `).join('')}
+        `:''}
+      `}
+  `;
+}
+
+async function markTaskDone(id) {
+  const {error} = await sb.from('tasks').update({status:'done'}).eq('id',id);
+  if(error) return toast(error.message,'error');
+  toast(lang==='ar'?'أحسنت! تم إنجاز التاسك 🎉':'Task completed 🎉','success');
+  renderEmpTasks();
+}
