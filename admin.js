@@ -80,7 +80,6 @@ async function renderHROverview() {
     sb.from('leave_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
   ]);
 
-  let att = attRaw||[];
   if(att.length>0) {
     const ids = [...new Set(att.map(a=>a.employee_id).filter(Boolean))];
     const {data:emps} = await sb.from('employees').select('id,first_name,last_name,department').in('id',ids);
