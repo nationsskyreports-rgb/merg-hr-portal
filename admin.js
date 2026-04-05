@@ -55,7 +55,7 @@ async function initHR() {
   renderHR(hrTab);
 }
 
-function showHRTab(tab) { hrTab = tab; initHR(); }
+function showHRTab(tab) { hrTab = tab; empSearchTerm = ''; initHR(); }
 
 async function renderHR(tab) {
   const el = $('hrContent');
