@@ -265,10 +265,14 @@ async function renderHRLeaves() {
           <div style="font-size:13px;color:var(--sub);margin-bottom:8px">📅 ${fmtDate(lv.start_date)} — ${fmtDate(lv.end_date)}</div>
           ${lv.reason?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">"${lv.reason}"</div>`:''}
           ${lv.status==='pending'?`
-            <div style="display:flex;gap:8px">
-              <button class="primary-btn" style="flex:1;background:var(--green);padding:8px" onclick="approveLeave('${lv.id}')">${t().approve}</button>
-              <button class="primary-btn" style="flex:1;background:var(--red);padding:8px" onclick="rejectLeave('${lv.id}')">${t().reject}</button>
-            </div>`:''}
+        <div style="display:flex;gap:8px">
+         <button class="primary-btn" style="flex:1;background:var(--green);padding:8px" onclick="approveLeave('${lv.id}')">${t().approve}</button>
+        <button class="primary-btn" style="flex:1;background:var(--red);padding:8px" onclick="rejectLeave('${lv.id}')">${t().reject}</button>
+        <button class="primary-btn" style="background:rgba(239,68,68,.15);color:var(--red);padding:8px;border:1px solid rgba(239,68,68,.2);box-shadow:none" onclick="deleteLeave('${lv.id}','${lv.status}','${lv.employee_id}','${lv.start_date}','${lv.end_date}','${lv.leave_type}')">🗑️</button>
+  </div>`:`
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="primary-btn" style="width:100%;background:rgba(239,68,68,.15);color:var(--red);padding:8px;border:1px solid rgba(239,68,68,.2);box-shadow:none" onclick="deleteLeave('${lv.id}','${lv.status}','${lv.employee_id}','${lv.start_date}','${lv.end_date}','${lv.leave_type}')">🗑️ ${lang==='ar'?'حذف':'Delete'}</button>
+  </div>`}
         </div>`).join('')}
   `;
 }
@@ -759,6 +763,28 @@ async function deleteFile(id, encodedUrl) {
         toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅','success');
         await renderHRFiles();
       } catch(e){ toast(e.message,'error'); }
+    }
+  });
+}
+async function deleteLeave(id, status, empId, startDate, endDate, leaveType) {
+  showConfirm({
+    icon: '🗑️',
+    title: lang==='ar'?'حذف طلب الإجازة':'Delete Leave Request',
+    msg: lang==='ar'?'هل أنت متأكد؟ سيتم حذف الطلب نهائياً':'Are you sure? This will permanently delete the request.',
+    okLabel: lang==='ar'?'حذف':'Delete',
+    okColor: 'var(--red)',
+    onOk: async () => {
+      const DEDUCTIBLE = ['annual','sick','emergency'];
+      if(status==='approved' && DEDUCTIBLE.includes(leaveType?.toLowerCase())) {
+        const days = Math.ceil((new Date(endDate) - new Date(startDate)) / 86400000) + 1;
+        const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',empId).single();
+        const currentBal = emp?.leave_balance ?? 0;
+        await sb.from('employees').update({leave_balance: currentBal + days}).eq('id', empId);
+      }
+      const {error} = await sb.from('leave_requests').delete().eq('id', id);
+      if(error) return toast(error.message,'error');
+      toast(lang==='ar'?'تم حذف الطلب ✅':'Request deleted ✅','success');
+      renderHR('leaves');
     }
   });
 }
