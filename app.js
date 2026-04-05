@@ -276,11 +276,11 @@ function renderLogin() {
           <label class="field-label">${t().password}</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" type="password" id="li_pw" placeholder="${t().enter_pw}" style="flex:1"/>
-            <button onclick="togglePw('li_pw',this)" style="background:var(--input);border:1.5px solid var(--border);border-radius:8px;width:44px;cursor:pointer;font-size:16px">👁</button>
+            <button onclick="togglePw('li_pw',this)" style="background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;width:44px;cursor:pointer;font-size:16px">👁</button>
           </div>
         </div>
         <button class="primary-btn" onclick="handleLogin()" style="width:100%;margin-bottom:12px">${t().sign_in}</button>
-        <button class="primary-btn" style="width:100%;background:var(--input);color:var(--text)" onclick="openModal('forgotPwModal')">${t().forgot_pw}</button>
+        <button class="primary-btn" style="width:100%;background:var(--input-bg);color:var(--text)" onclick="openModal('forgotPwModal')">${t().forgot_pw}</button>
         <div style="text-align:center;margin-top:20px">
           <button onclick="toggleLang()" style="background:none;border:none;color:var(--green);cursor:pointer;font-weight:700;font-size:14px">${lang==='en'?'عربي':'EN'}</button>
           <span style="color:var(--border);margin:0 8px">•</span>
