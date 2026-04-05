@@ -39,10 +39,10 @@ async function initHR() {
         </div>
       </div>
       <div style="display:flex;flex:1;overflow:hidden">
-        <div style="background:var(--input-bg);border-right:1px solid var(--border);padding:8px;overflow-y:auto;width:120px;flex-shrink:0">
+        <div style="background:var(--surface-2);border-${lang==='ar'?'left':'right'}:1px solid var(--border);padding:8px;overflow-y:auto;width:120px;flex-shrink:0">
           ${tabs.map(tb=>`
-            <button class="hr-tab ${tb.id===hrTab?'active':''}" onclick="showHRTab('${tb.id}')"
-              style="width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;margin-bottom:4px;border-radius:10px;font-size:11px;text-align:center">
+            <button onclick="showHRTab('${tb.id}')"
+              style="width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;margin-bottom:4px;border-radius:10px;font-size:11px;text-align:center;border:none;cursor:pointer;font-family:inherit;font-weight:${tb.id===hrTab?'800':'600'};background:${tb.id===hrTab?'var(--indigo-dim)':'transparent'};color:${tb.id===hrTab?'var(--indigo)':'var(--muted)'};transition:all .15s;outline:${tb.id===hrTab?'1.5px solid var(--indigo-mid)':'none'}">
               <span style="font-size:22px">${tb.icon}</span>
               <span>${tb.label}</span>
             </button>
@@ -73,13 +73,14 @@ async function renderHR(tab) {
 
 async function renderHROverview() {
   const today = nowISO();
-  
+
   const [{count:total},{data:attRaw},{count:pending}] = await Promise.all([
     sb.from('employees').select('*',{count:'exact',head:true}).eq('status','active'),
     sb.from('attendance_records').select('*').eq('attendance_date',today),
     sb.from('leave_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
   ]);
 
+  let att = attRaw||[];
   if(att.length>0) {
     const ids = [...new Set(att.map(a=>a.employee_id).filter(Boolean))];
     const {data:emps} = await sb.from('employees').select('id,first_name,last_name,department').in('id',ids);
@@ -165,7 +166,6 @@ async function renderHROverview() {
     `:''}
   `;
 }
-  let att = attR
 
 let attDate = nowISO();
 
@@ -228,6 +228,7 @@ async function renderHRAttendance() {
         }).join('')}
   `;
 }
+
 async function renderHRLeaves() {
   const {data:leaves} = await sb.from('leave_requests').select('*,employees(first_name,last_name,department)').order('created_at',{ascending:false});
   const items = leaves||[];
@@ -264,14 +265,12 @@ async function renderHRLeaves() {
 }
 
 async function approveLeave(id) {
-  // جيب بيانات الطلب الأول
   const {data:lv, error:lvErr} = await sb.from('leave_requests').select('*').eq('id',id).single();
   if(lvErr) return toast(lvErr.message,'error');
 
   const DEDUCTIBLE = ['annual','sick','emergency'];
   const days = Math.ceil((new Date(lv.end_date) - new Date(lv.start_date)) / 86400000) + 1;
 
-  // لو النوع بيخصم، نخصم من رصيد الموظف
   if(DEDUCTIBLE.includes(lv.leave_type?.toLowerCase())) {
     const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',lv.employee_id).single();
     const currentBal = emp?.leave_balance ?? 21;
@@ -286,7 +285,6 @@ async function approveLeave(id) {
 }
 
 async function rejectLeave(id) {
-  // لو كانت approved قبل كده وبنرجعها، نرجع الأيام
   const {data:lv} = await sb.from('leave_requests').select('*').eq('id',id).single();
   const DEDUCTIBLE = ['annual','sick','emergency'];
 
@@ -362,6 +360,7 @@ async function renderHRSalaries() {
   }
 
   if(salaryEmpId) {
+    selectedEmp = items.find(e=>e.id===salaryEmpId) || items[0];
     const {data:sal} = await sb.from('salaries').select('*').eq('employee_id',salaryEmpId).order('effective_date',{ascending:false}).limit(1).maybeSingle();
     baseSalary = sal?.base_salary||0;
     const {data:adjs} = await sb.from('salary_adjustments').select('*').eq('employee_id',salaryEmpId).eq('month',salaryMonth+'-01');
@@ -398,11 +397,11 @@ async function renderHRSalaries() {
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface-2);border-radius:12px;margin-bottom:10px">
         <div style="font-size:13px;font-weight:600;color:var(--sub)">${lang==='ar'?'المرتب الأساسي':'Base Salary'}</div>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="number" id="baseSalInput" value="${baseSalary}" min="0"
-            style="width:110px;height:36px;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:0 10px;font-size:14px;font-weight:700;color:var(--text);font-family:inherit;outline:none;text-align:center"
+            style="width:110px;height:36px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:10px;padding:0 10px;font-size:14px;font-weight:700;color:var(--text);font-family:inherit;outline:none;text-align:center"
             onfocus="this.style.borderColor='var(--sky)'" onblur="this.style.borderColor='var(--border)'"/>
           <button onclick="saveBaseSalary()" style="height:36px;padding:0 14px;background:var(--sky);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${lang==='ar'?'حفظ':'Save'}</button>
         </div>
@@ -501,6 +500,7 @@ async function deleteAdj(id) {
     }
   });
 }
+
 let notifType = 'announcement';
 function renderHRNotifs() {
   $('hrContent').innerHTML = `
@@ -669,7 +669,6 @@ async function addTask() {
   const {error} = await sb.from('tasks').insert([{title, description:desc, assigned_to:empId, deadline, status:'pending'}]);
   if(error) return toast(error.message,'error');
 
-  // ابعت نوتيفيكيشن للموظف
   await sb.from('notifications').insert([{
     employee_id: empId,
     title: lang==='ar'?`تاسك جديد: ${title}`:`New Task: ${title}`,
