@@ -767,23 +767,27 @@ async function deleteFile(id, encodedUrl) {
   });
 }
 async function deleteLeave(id, status, empId, startDate, endDate, leaveType) {
+  const DEDUCTIBLE = ['annual','sick','emergency'];
+  const isDeductible = status==='approved' && DEDUCTIBLE.includes(leaveType?.toLowerCase());
+  const days = Math.ceil((new Date(endDate) - new Date(startDate)) / 86400000) + 1;
+
   showConfirm({
     icon: '🗑️',
     title: lang==='ar'?'حذف طلب الإجازة':'Delete Leave Request',
-    msg: lang==='ar'?'هل أنت متأكد؟ سيتم حذف الطلب نهائياً':'Are you sure? This will permanently delete the request.',
-    okLabel: lang==='ar'?'حذف':'Delete',
+    msg: isDeductible
+      ? (lang==='ar'?`هل تريد إرجاع ${days} يوم للرصيد أم الحذف بدون إرجاع؟`:`Delete and return ${days} days to balance?`)
+      : (lang==='ar'?'هل أنت متأكد من الحذف؟':'Are you sure you want to delete this request?'),
+    okLabel: isDeductible ? (lang==='ar'?`حذف + إرجاع ${days} يوم`:`Delete + Return ${days}d`) : (lang==='ar'?'حذف':'Delete'),
     okColor: 'var(--red)',
     onOk: async () => {
-      const DEDUCTIBLE = ['annual','sick','emergency'];
-      if(status==='approved' && DEDUCTIBLE.includes(leaveType?.toLowerCase())) {
-        const days = Math.ceil((new Date(endDate) - new Date(startDate)) / 86400000) + 1;
+      if(isDeductible) {
         const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',empId).single();
         const currentBal = emp?.leave_balance ?? 0;
         await sb.from('employees').update({leave_balance: currentBal + days}).eq('id', empId);
       }
       const {error} = await sb.from('leave_requests').delete().eq('id', id);
       if(error) return toast(error.message,'error');
-      toast(lang==='ar'?'تم حذف الطلب ✅':'Request deleted ✅','success');
+      toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅','success');
       renderHR('leaves');
     }
   });
