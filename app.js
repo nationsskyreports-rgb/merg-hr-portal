@@ -3,7 +3,16 @@ const sb = window.supabase.createClient(
   'https://wnuzxosjjhucxnlaptbf.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndudXp4b3Nqamh1Y3hubGFwdGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODY5MjgsImV4cCI6MjA4OTg2MjkyOH0.o-3ORuewx9hpgmwiJZMNNBt0LehSmutxVRsPEw-3u58'
 );
-
+function showConfirm({ icon='⚠️', title, msg, okLabel, okColor='var(--red)', onOk }) {
+  $('confirmIcon').textContent   = icon;
+  $('confirmTitle').textContent  = title;
+  $('confirmMsg').textContent    = msg;
+  $('confirmOkBtn').textContent  = okLabel;
+  $('confirmOkBtn').style.background = okColor;
+  $('confirmCancelBtn').textContent  = t().cancel;
+  $('confirmOkBtn').onclick = () => { closeModal('confirmModal'); onOk(); };
+  openModal('confirmModal');
+}
 // ═══ GLOBALS ═══
 let lang = localStorage.getItem('lang') || 'en';
 let darkMode = localStorage.getItem('dark') === '1';
@@ -334,13 +343,20 @@ async function handleChangePw() {
 }
 
 function handleLogout() {
-  if(confirm(t().logout_msg)) {
-    sb.auth.signOut();
-    currentUser = null;
-    currentEmployee = null;
-    isAdmin = false;
-    renderLogin();
-  }
+  showConfirm({
+    icon: '🚪',
+    title: t().logout_confirm,
+    msg: t().logout_msg,
+    okLabel: t().sign_out,
+    okColor: 'var(--red)',
+    onOk: () => {
+      sb.auth.signOut();
+      currentUser = null;
+      currentEmployee = null;
+      isAdmin = false;
+      renderLogin();
+    }
+  });
 }
 
 function toggleDark() {
