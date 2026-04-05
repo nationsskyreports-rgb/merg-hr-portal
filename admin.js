@@ -25,6 +25,8 @@ async function initHR() {
     {id:'employees',  icon:'👥', label:t().employees_tab},
     {id:'salaries',   icon:'💰', label:lang==='ar'?'المرتبات':'Salaries'},
     {id:'notifs',     icon:'🔔', label:t().notifs_tab},
+    {id:'tasks',      icon:'✅', label:lang==='ar'?'التاسكات':'Tasks'},
+    {id:'empfiles',   icon:'📁', label:lang==='ar'?'ملفات':'Files'},
     {id:'export',     icon:'📤', label:t().export_tab},
   ];
   $('hrApp').innerHTML = `
@@ -64,6 +66,8 @@ async function renderHR(tab) {
   else if(tab==='employees')  await renderHREmployees();
   else if(tab==='salaries')   await renderHRSalaries();
   else if(tab==='notifs')     renderHRNotifs();
+  else if(tab==='tasks')      await renderHRTasks();
+  else if(tab==='empfiles')   await renderHRFiles();
   else if(tab==='export')     renderHRExport();
 }
 
@@ -537,4 +541,218 @@ async function exportAttendance() {
   const a    = document.createElement('a');
   a.href = url; a.download = 'attendance.csv'; a.click();
   URL.revokeObjectURL(url);
+}
+// ═══ TASKS ═══
+let taskEmpId = null;
+
+async function renderHRTasks() {
+  const {data:emps} = await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
+  const items = emps||[];
+  if(!taskEmpId && items.length>0) taskEmpId = items[0].id;
+
+  const {data:tasks} = await sb.from('tasks').select('*').order('created_at',{ascending:false});
+  const allTasks = tasks||[];
+
+  const empMap = {};
+  items.forEach(e => empMap[e.id] = `${e.first_name} ${e.last_name}`);
+
+  $('hrContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">✅ ${lang==='ar'?'التاسكات':'Tasks'}</div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">➕ ${lang==='ar'?'تاسك جديد':'New Task'}</div>
+      <div class="form-field">
+        <label class="field-label">${lang==='ar'?'العنوان':'Title'}</label>
+        <input class="form-input" type="text" id="task_title" placeholder="${lang==='ar'?'اسم التاسك...':'Task name...'}"/>
+      </div>
+      <div class="form-field">
+        <label class="field-label">${lang==='ar'?'التفاصيل':'Description'}</label>
+        <textarea class="form-input" id="task_desc" placeholder="${lang==='ar'?'تفاصيل اختيارية...':'Optional details...'}" style="min-height:70px"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-field" style="margin:0">
+          <label class="field-label">${lang==='ar'?'الموظف':'Employee'}</label>
+          <select class="form-input" id="task_emp">
+            ${items.map(e=>`<option value="${e.id}">${e.first_name} ${e.last_name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field" style="margin:0">
+          <label class="field-label">${lang==='ar'?'الديد لاين':'Deadline'}</label>
+          <input class="form-input" type="date" id="task_deadline" min="${nowISO()}"/>
+        </div>
+      </div>
+      <button class="primary-btn" onclick="addTask()" style="width:100%;margin-top:12px">📤 ${lang==='ar'?'إرسال التاسك':'Send Task'}</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'كل التاسكات':'All Tasks'} (${allTasks.length})</div>
+
+    ${allTasks.length===0
+      ?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">${lang==='ar'?'لا توجد تاسكات':'No tasks yet'}</div></div>`
+      :allTasks.map(tk=>{
+        const empName = empMap[tk.assigned_to]||'—';
+        const isDone  = tk.status==='done';
+        const isLate  = tk.deadline && tk.deadline < nowISO() && !isDone;
+        return `<div class="card-sm" style="border-color:${isLate?'rgba(239,68,68,.4)':isDone?'rgba(34,197,94,.3)':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700;color:var(--text);text-decoration:${isDone?'line-through':''}">${tk.title}</div>
+              ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
+            </div>
+            <button onclick="deleteTask('${tk.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0;margin-left:8px">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="badge" style="background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">👤 ${empName}</span>
+            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}</span>`:''}
+            <span class="badge" style="background:${isDone?'rgba(34,197,94,.1)':'rgba(99,102,241,.1)'};color:${isDone?'var(--green)':'var(--indigo)'};border:1px solid ${isDone?'rgba(34,197,94,.2)':'rgba(99,102,241,.2)'}">
+              ${isDone?(lang==='ar'?'✅ منتهي':'✅ Done'):(lang==='ar'?'⏳ قيد التنفيذ':'⏳ Pending')}
+            </span>
+          </div>
+        </div>`;
+      }).join('')}
+  `;
+}
+
+async function addTask() {
+  const title    = $('task_title')?.value?.trim();
+  const desc     = $('task_desc')?.value?.trim();
+  const empId    = $('task_emp')?.value;
+  const deadline = $('task_deadline')?.value;
+  if(!title)    return toast(lang==='ar'?'أدخل عنوان التاسك':'Enter task title','error');
+  if(!empId)    return toast(lang==='ar'?'اختر موظفاً':'Select employee','error');
+  if(!deadline) return toast(lang==='ar'?'اختر ديد لاين':'Select deadline','error');
+  const {error} = await sb.from('tasks').insert([{title, description:desc, assigned_to:empId, deadline, status:'pending'}]);
+  if(error) return toast(error.message,'error');
+
+  // ابعت نوتيفيكيشن للموظف
+  await sb.from('notifications').insert([{
+    employee_id: empId,
+    title: lang==='ar'?`تاسك جديد: ${title}`:`New Task: ${title}`,
+    message: `${lang==='ar'?'الديد لاين:':'Deadline:'} ${fmtDate(deadline)}${desc?' — '+desc:''}`,
+    type: 'reminder',
+    is_read: false
+  }]);
+
+  toast(lang==='ar'?'تم إرسال التاسك ✅':'Task sent ✅','success');
+  renderHRTasks();
+}
+
+async function deleteTask(id) {
+  showConfirm({
+    icon: '🗑️',
+    title: lang==='ar'?'حذف التاسك':'Delete Task',
+    msg: lang==='ar'?'هل أنت متأكد من حذف هذا التاسك؟':'Are you sure you want to delete this task?',
+    okLabel: lang==='ar'?'حذف':'Delete',
+    okColor: 'var(--red)',
+    onOk: async () => {
+      const {error} = await sb.from('tasks').delete().eq('id',id);
+      if(error) return toast(error.message,'error');
+      toast(lang==='ar'?'تم الحذف':'Deleted','success');
+      renderHRTasks();
+    }
+  });
+}
+
+// ═══ EMPLOYEE FILES ═══
+let filesEmpId = null;
+
+async function renderHRFiles() {
+  const {data:emps} = await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
+  const items = emps||[];
+  if(!filesEmpId && items.length>0) filesEmpId = items[0].id;
+
+  const {data:files} = await sb.from('employee_files').select('*').eq('employee_id',filesEmpId).order('uploaded_at',{ascending:false});
+  const empFiles = files||[];
+
+  $('hrContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">📁 ${lang==='ar'?'ملفات الموظفين':'Employee Files'}</div>
+
+    <div class="form-field" style="margin-bottom:16px">
+      <label class="field-label">${lang==='ar'?'اختر موظف':'Select Employee'}</label>
+      <select class="form-input" onchange="filesEmpId=this.value;renderHRFiles()">
+        ${items.map(e=>`<option value="${e.id}" ${e.id===filesEmpId?'selected':''}>${e.first_name} ${e.last_name}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">⬆️ ${lang==='ar'?'رفع ملف':'Upload File'}</div>
+      <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s" onclick="$('fileInput').click()" id="dropZone">
+        <div style="font-size:36px;margin-bottom:8px">📎</div>
+        <div style="font-size:14px;font-weight:600;color:var(--sub)">${lang==='ar'?'اضغط لاختيار ملف':'Click to choose file'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">PDF, Word, Excel, Images</div>
+        <input type="file" id="fileInput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" onchange="handleFileUpload(this)"/>
+      </div>
+      <div id="uploadProgress" style="display:none;margin-top:12px;text-align:center;color:var(--sub);font-size:13px">⏳ ${lang==='ar'?'جاري الرفع...':'Uploading...'}</div>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الملفات':'Files'} (${empFiles.length})</div>
+
+    ${empFiles.length===0
+      ?`<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${lang==='ar'?'لا توجد ملفات':'No files yet'}</div></div>`
+      :empFiles.map(f=>{
+        const icon = f.file_type?.includes('pdf')?'📄':f.file_type?.includes('word')||f.file_type?.includes('doc')?'📝':f.file_type?.includes('sheet')||f.file_type?.includes('xls')?'📊':'📎';
+        return `<div class="card-sm" style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px;flex-shrink:0">${icon}</div>
+          <div style="flex:1;overflow:hidden">
+            <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.file_name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(f.uploaded_at).toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <a href="${f.file_url}" target="_blank" style="background:rgba(56,189,248,.12);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">👁</a>
+            <button onclick="deleteFile('${f.id}','${f.file_url}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--red);font-size:14px">✕</button>
+          </div>
+        </div>`;
+      }).join('')}
+  `;
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 10*1024*1024) return toast(lang==='ar'?'الملف أكبر من 10MB':'File exceeds 10MB','error');
+
+  $('uploadProgress').style.display = 'block';
+  $('dropZone').style.opacity = '0.5';
+
+  try {
+    const ext      = file.name.split('.').pop();
+    const fileName = `${filesEmpId}/${Date.now()}.${ext}`;
+    const {error:upErr} = await sb.storage.from('employee-files').upload(fileName, file, {upsert:true});
+    if(upErr) throw upErr;
+
+    const {data:urlData} = sb.storage.from('employee-files').getPublicUrl(fileName);
+    const fileUrl = urlData.publicUrl;
+
+    const {error:dbErr} = await sb.from('employee_files').insert([{
+      employee_id: filesEmpId,
+      file_name:   file.name,
+      file_url:    fileUrl,
+      file_type:   file.type
+    }]);
+    if(dbErr) throw dbErr;
+
+    toast(lang==='ar'?'تم رفع الملف ✅':'File uploaded ✅','success');
+    renderHRFiles();
+  } catch(e) {
+    toast(e.message,'error');
+    $('uploadProgress').style.display = 'none';
+    $('dropZone').style.opacity = '1';
+  }
+}
+
+async function deleteFile(id, url) {
+  showConfirm({
+    icon: '🗑️',
+    title: lang==='ar'?'حذف الملف':'Delete File',
+    msg: lang==='ar'?'هل أنت متأكد من حذف هذا الملف؟':'Are you sure you want to delete this file?',
+    okLabel: lang==='ar'?'حذف':'Delete',
+    okColor: 'var(--red)',
+    onOk: async () => {
+      const path = url.split('/employee-files/')[1];
+      if(path) await sb.storage.from('employee-files').remove([decodeURIComponent(path)]);
+      const {error} = await sb.from('employee_files').delete().eq('id',id);
+      if(error) return toast(error.message,'error');
+      toast(lang==='ar'?'تم الحذف':'Deleted','success');
+      renderHRFiles();
+    }
+  });
 }
