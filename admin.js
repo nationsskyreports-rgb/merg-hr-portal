@@ -528,20 +528,42 @@ function renderHRExport() {
 async function exportAttendance() {
   const from = $('exp_from')?.value;
   const to   = $('exp_to')?.value;
-  if(!from||!to) return toast('Select date range','error');
-  const {data} = await sb.from('attendance_records')
-    .select('*,employees(first_name,last_name,employee_code)')
-    .gte('attendance_date',from).lte('attendance_date',to)
+  if(!from||!to) return toast(lang==='ar'?'اختر التاريخ':'Select date range','error');
+
+  toast(lang==='ar'?'جاري التحضير...':'Preparing...','');
+
+  const {data, error} = await sb.from('attendance_records')
+    .select('*')
+    .gte('attendance_date', from)
+    .lte('attendance_date', to)
     .order('attendance_date');
-  if(!data||data.length===0) return toast('No data found','error');
+
+  if(error) return toast(error.message,'error');
+  if(!data || data.length===0) return toast(lang==='ar'?'لا توجد بيانات':'No data found','error');
+
+  const ids = [...new Set(data.map(r=>r.employee_id).filter(Boolean))];
+  const {data:emps} = await sb.from('employees').select('id,first_name,last_name,employee_code').in('id',ids);
+  const empMap = {};
+  (emps||[]).forEach(e => empMap[e.id] = e);
+
   const csv = 'Employee,Code,Date,Check-In,Check-Out\n' +
-    data.map(r=>`${r.employees?.first_name} ${r.employees?.last_name},${r.employees?.employee_code},${r.attendance_date},${r.check_in_time||''},${r.check_out_time||''}`).join('\n');
-  const blob = new Blob([csv],{type:'text/csv'});
+    data.map(r => {
+      const emp = empMap[r.employee_id]||{};
+      return `${emp.first_name||''} ${emp.last_name||''},${emp.employee_code||''},${r.attendance_date},${r.check_in_time||''},${r.check_out_time||''}`;
+    }).join('\n');
+
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = 'attendance.csv'; a.click();
+  a.href = url;
+  a.download = `attendance_${from}_${to}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  toast(lang==='ar'?'تم التحميل ✅':'Downloaded ✅','success');
 }
+
 // ═══ TASKS ═══
 let taskEmpId = null;
 
