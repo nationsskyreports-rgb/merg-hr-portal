@@ -39,7 +39,7 @@ async function initHR() {
         </div>
       </div>
       <div style="display:flex;flex:1;overflow:hidden">
-        <div style="background:var(--input);border-right:1px solid var(--border);padding:8px;overflow-y:auto;width:120px;flex-shrink:0">
+        <div style="background:var(--input-bg);border-right:1px solid var(--border);padding:8px;overflow-y:auto;width:120px;flex-shrink:0">
           ${tabs.map(tb=>`
             <button class="hr-tab ${tb.id===hrTab?'active':''}" onclick="showHRTab('${tb.id}')"
               style="width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;margin-bottom:4px;border-radius:10px;font-size:11px;text-align:center">
