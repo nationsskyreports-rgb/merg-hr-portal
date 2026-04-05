@@ -750,26 +750,16 @@ function startRealtimeNotifs() {
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
-      table: 'notifications',
-      filter: `employee_id=eq.${currentEmployee.id}`
+      table: 'notifications'
     }, payload => {
       const n = payload.new;
-      showPushNotif(n.title||n.message||'Notification');
-      fetchUnread();
-    })
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'notifications',
-      filter: `employee_id=is.null`
-    }, payload => {
-      const n = payload.new;
-      showPushNotif(n.title||n.message||'Notification');
-      fetchUnread();
+      if(n.employee_id === currentEmployee.id || n.employee_id === null) {
+        showPushNotif(n.title||n.message||'Notification');
+        fetchUnread();
+      }
     })
     .subscribe();
 }
-
 function showPushNotif(msg) {
   const el = document.createElement('div');
   el.style.cssText = `
