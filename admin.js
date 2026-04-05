@@ -74,14 +74,98 @@ async function renderHR(tab) {
 async function renderHROverview() {
   const today = nowISO();
   
-  // 1. جلب البيانات الأساسية (العدد الإجمالي، سجلات الحضور، والطلبات المعلقة)
   const [{count:total},{data:attRaw},{count:pending}] = await Promise.all([
     sb.from('employees').select('*',{count:'exact',head:true}).eq('status','active'),
-    sb.from('attendance_records').select('employee_id').eq('attendance_date',today),
+    sb.from('attendance_records').select('*').eq('attendance_date',today),
     sb.from('leave_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
   ]);
 
-  // 2. جلب أسماء الموظفين الموجودين حالياً فقط لربطها بالسجلات
+  let att = attRaw||[];
+  if(att.length>0) {
+    const ids = [...new Set(att.map(a=>a.employee_id).filter(Boolean))];
+    const {data:emps} = await sb.from('employees').select('id,first_name,last_name,department').in('id',ids);
+    const empMap = {};
+    (emps||[]).forEach(e => empMap[e.id] = e);
+    att = att.map(a=>({...a, employees: empMap[a.employee_id]}));
+  }
+
+  const present  = att.length;
+  const absent   = (total||0) - present;
+  const late     = att.filter(a => a.check_in_time && a.check_in_time > '09:15:00');
+  const onTime   = att.filter(a => a.check_in_time && a.check_in_time <= '09:15:00');
+
+  $('hrContent').innerHTML = `
+    <div class="hr-stat-grid">
+      <div class="hr-stat">
+        <div class="hr-stat-icon" style="background:rgba(56,189,248,.1)">👥</div>
+        <div class="hr-stat-val" style="color:var(--sky)">${total||0}</div>
+        <div class="hr-stat-label">${t().total_employees}</div>
+      </div>
+      <div class="hr-stat">
+        <div class="hr-stat-icon" style="background:rgba(34,197,94,.1)">✅</div>
+        <div class="hr-stat-val" style="color:var(--green)">${present}</div>
+        <div class="hr-stat-label">${t().present}</div>
+      </div>
+      <div class="hr-stat">
+        <div class="hr-stat-icon" style="background:rgba(239,68,68,.1)">❌</div>
+        <div class="hr-stat-val" style="color:var(--red)">${absent}</div>
+        <div class="hr-stat-label">${t().absent}</div>
+      </div>
+      <div class="hr-stat">
+        <div class="hr-stat-icon" style="background:rgba(245,158,11,.1)">🌴</div>
+        <div class="hr-stat-val" style="color:var(--amber)">${pending||0}</div>
+        <div class="hr-stat-label">${t().pending_leaves}</div>
+      </div>
+    </div>
+
+    ${late.length>0?`
+      <div class="sec-title" style="color:var(--red)">⚠️ ${lang==='ar'?'متأخرون اليوم':'Late Today'} (${late.length})</div>
+      ${late.map(a=>{
+        const emp = a.employees;
+        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
+        const dept = emp?.department||'';
+        const mins = Math.round((new Date('1970-01-01T'+a.check_in_time) - new Date('1970-01-01T09:15:00'))/60000);
+        return `<div class="card-sm" style="border-color:rgba(239,68,68,.3);margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:20px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⏰</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:var(--text);font-size:14px">${name}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:2px">${dept}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:15px;font-weight:800;color:var(--red)">${fmtTime(a.check_in_time)}</div>
+              <div style="font-size:11px;color:var(--red);margin-top:2px">+${mins} ${lang==='ar'?'دقيقة':'min'}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    `:''}
+
+    ${onTime.length>0?`
+      <div class="sec-title" style="color:var(--green)">✅ ${lang==='ar'?'في الوقت':'On Time'} (${onTime.length})</div>
+      ${onTime.map(a=>{
+        const emp = a.employees;
+        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
+        return `<div class="card-sm" style="border-color:rgba(34,197,94,.2);margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:20px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✅</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:var(--text);font-size:14px">${name}</div>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:var(--green)">${fmtTime(a.check_in_time)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    `:''}
+
+    ${att.length===0?`
+      <div class="card" style="text-align:center;padding:32px">
+        <div style="font-size:44px;margin-bottom:8px">📭</div>
+        <div style="color:var(--sub)">${t().no_att_today}</div>
+      </div>
+    `:''}
+  `;
+}
   let att = attRaw || [];
   if(att.length > 0) {
     const ids = [...new Set(att.map(a => a.employee_id).filter(Boolean))];
