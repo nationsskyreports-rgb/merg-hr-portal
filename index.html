@@ -21,20 +21,17 @@ html { font-size:16px; -webkit-tap-highlight-color:transparent; }
    DESIGN TOKENS — LIGHT
 ══════════════════════════════════════════ */
 :root {
-  /* surfaces */
   --bg:          #f0f2f8;
   --surface:     #ffffff;
   --surface-2:   #f7f8fc;
   --surface-3:   #eef0f7;
   --glass:       rgba(255,255,255,0.72);
 
-  /* text */
   --text:        #0d1117;
   --sub:         #5a6478;
   --muted:       #9ba5b7;
   --on-accent:   #ffffff;
 
-  /* accent palette */
   --indigo:      #6366f1;
   --indigo-dim:  rgba(99,102,241,0.10);
   --indigo-mid:  rgba(99,102,241,0.20);
@@ -49,7 +46,6 @@ html { font-size:16px; -webkit-tap-highlight-color:transparent; }
   --purple:      #a855f7;
   --purple-dim:  rgba(168,85,247,0.10);
 
-  /* borders & shadows */
   --border:      rgba(0,0,0,0.07);
   --border-mid:  rgba(0,0,0,0.12);
   --input-bg:    #f0f2f8;
@@ -59,7 +55,6 @@ html { font-size:16px; -webkit-tap-highlight-color:transparent; }
   --shadow-lg:   0 8px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
   --shadow-accent: 0 8px 24px rgba(99,102,241,0.28);
 
-  /* radii */
   --r-sm:  8px;
   --r-md:  12px;
   --r-lg:  16px;
@@ -67,7 +62,6 @@ html { font-size:16px; -webkit-tap-highlight-color:transparent; }
   --r-2xl: 24px;
   --r-full: 9999px;
 
-  /* timing */
   --ease-out: cubic-bezier(0.16,1,0.3,1);
   --ease-in:  cubic-bezier(0.4,0,1,1);
   --t-fast:   0.15s;
@@ -315,7 +309,7 @@ h1,h2,h3,h4,h5,
 .form-input::placeholder { color: var(--muted); }
 
 /* ══════════════════════════════════════════
-   TABS
+   TABS — horizontal (employee bottom nav)
 ══════════════════════════════════════════ */
 .tab-bar {
   display: flex;
@@ -346,23 +340,40 @@ h1,h2,h3,h4,h5,
 .tab-btn.active { color: var(--indigo); border-bottom-color: var(--indigo); }
 .tab-btn:hover:not(.active) { color: var(--sub); }
 
+/* ══════════════════════════════════════════
+   HR SIDEBAR NAV — vertical tabs
+   (الـ hr-tab بقى sidebar بس، مش تابس أفقية)
+══════════════════════════════════════════ */
 .hr-tab {
-  flex-shrink: 0;
-  background: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  font-size: 11px;
+  text-align: center;
   border: none;
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
   cursor: pointer;
-  border-bottom: 2.5px solid transparent;
-  margin-bottom: -1.5px;
-  transition: color var(--t-fast), border-color var(--t-fast);
   font-family: 'Syne', sans-serif;
-  white-space: nowrap;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  transition: all var(--t-fast) var(--ease-out);
+  outline: none;
 }
-.hr-tab.active { color: var(--indigo); border-bottom-color: var(--indigo); }
-.hr-tab:hover:not(.active) { color: var(--sub); }
+.hr-tab:hover {
+  background: var(--indigo-dim);
+  color: var(--indigo);
+}
+.hr-tab.active {
+  background: var(--indigo-dim);
+  color: var(--indigo);
+  font-weight: 800;
+  outline: 1.5px solid var(--indigo-mid);
+}
 
 /* ══════════════════════════════════════════
    CHIPS
@@ -719,19 +730,6 @@ h1,h2,h3,h4,h5,
 }
 .modal-overlay.open { display: flex; animation: fadeIn var(--t-fast) var(--ease-out); }
 
-.modal-sheet {
-  background: var(--surface);
-  border-radius: var(--r-2xl) var(--r-2xl) 0 0;
-  padding: 28px 24px 36px;
-  width: 100%;
-  max-width: 520px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
-  animation: slideUp var(--t-mid) var(--ease-out);
-}
-
-/* Use existing inline style modals but override them via these selectors */
 #forgotPwModal > div,
 #changePwModal > div,
 #addEmpModal > div {
@@ -868,10 +866,7 @@ button:focus:not(:focus-visible) { outline: none; }
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
-<script src="admin.js"></script>
-   <!-- Modal: Confirm Dialog -->
+<!-- Modal: Confirm Dialog -->
 <div id="confirmModal" onclick="if(event.target===this)closeModal('confirmModal')" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:2000;align-items:center;justify-content:center;padding:16px">
   <div style="background:var(--surface);border-radius:var(--r-2xl);padding:28px 24px;width:90%;max-width:380px;border:1px solid var(--border);box-shadow:var(--shadow-lg);animation:scaleIn var(--t-mid) var(--ease-out)">
     <div style="font-size:22px;text-align:center;margin-bottom:12px" id="confirmIcon">⚠️</div>
@@ -883,5 +878,9 @@ button:focus:not(:focus-visible) { outline: none; }
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
