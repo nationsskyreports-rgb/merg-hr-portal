@@ -314,7 +314,7 @@ async function handleLogin() {
     currentEmployee = emp;
     isAdmin = emp.email==='admin@merge.com';
     if(isAdmin) { showScreen('hrApp'); initHR(); }
-    else { showScreen('empApp'); initEmp(); }
+    else { showScreen('empApp'); initEmp(); fetchUnread(); startRealtimeNotifs(); }
   } catch(e) { toast(e.message,'error'); }
 }
 
