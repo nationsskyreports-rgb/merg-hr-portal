@@ -752,8 +752,9 @@ function startRealtimeNotifs() {
       schema: 'public',
       table: 'notifications'
     }, payload => {
+      console.log('Realtime payload:', payload.new); // ← ضيف السطر ده
       const n = payload.new;
-      if(n.employee_id === currentEmployee.id || n.employee_id === null) {
+      if(!n.employee_id || n.employee_id === currentEmployee.id) { // ← عدل الشرط
         showPushNotif(n.title||n.message||'Notification');
         fetchUnread();
       }
