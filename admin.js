@@ -792,12 +792,27 @@ async function deleteFile(id, url) {
     okLabel: lang==='ar'?'حذف':'Delete',
     okColor: 'var(--red)',
     onOk: async () => {
-      const path = url.split('/employee-files/')[1];
-      if(path) await sb.storage.from('employee-files').remove([decodeURIComponent(path)]);
-      const {error} = await sb.from('employee_files').delete().eq('id',id);
-      if(error) return toast(error.message,'error');
-      toast(lang==='ar'?'تم الحذف':'Deleted','success');
-      renderHRFiles();
+      try {
+        // حذف من الـ storage (لو فشل مش مشكلة، نكمل)
+        try {
+          const urlObj = new URL(url);
+          const parts = urlObj.pathname.split('/employee-files/');
+          if(parts[1]) {
+            await sb.storage.from('employee-files').remove([decodeURIComponent(parts[1])]);
+          }
+        } catch(storageErr) {
+          console.warn('Storage delete failed:', storageErr);
+        }
+
+        // حذف من الـ database دايمًا
+        const {error} = await sb.from('employee_files').delete().eq('id', id);
+        if(error) return toast(error.message, 'error');
+        
+        toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅', 'success');
+        await renderHRFiles();  // ← await مهمة هنا
+      } catch(e) {
+        toast(e.message, 'error');
+      }
     }
   });
 }
