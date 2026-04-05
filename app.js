@@ -739,8 +739,62 @@ async function markAllRead() {
 }
 async function fetchUnread() {
   if(!currentEmployee) return;
-  const {count}=await sb.from('notifications').select('*',{count:'exact',head:true}).or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
-  unreadCount=count||0; updateNotifBadge();
+  const {count} = await sb.from('notifications').select('*',{count:'exact',head:true}).or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
+  unreadCount = count||0;
+  updateNotifBadge();
+}
+
+function startRealtimeNotifs() {
+  if(!currentEmployee) return;
+  sb.channel('notifs_'+currentEmployee.id)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `employee_id=eq.${currentEmployee.id}`
+    }, payload => {
+      const n = payload.new;
+      showPushNotif(n.title||n.message||'Notification');
+      fetchUnread();
+    })
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `employee_id=is.null`
+    }, payload => {
+      const n = payload.new;
+      showPushNotif(n.title||n.message||'Notification');
+      fetchUnread();
+    })
+    .subscribe();
+}
+
+function showPushNotif(msg) {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);
+    background:var(--surface);color:var(--text);
+    padding:14px 20px;border-radius:var(--r-xl);
+    box-shadow:var(--shadow-lg);z-index:9999;
+    border:1px solid var(--border);border-left:4px solid var(--indigo);
+    font-size:14px;font-weight:600;max-width:min(340px,90vw);
+    display:flex;align-items:center;gap:10px;
+    transition:transform .4s cubic-bezier(0.16,1,0.3,1),opacity .4s;
+    opacity:0;cursor:pointer;
+  `;
+  el.innerHTML = `<span style="font-size:20px">🔔</span><span>${msg}</span>`;
+  el.onclick = () => { showEmpTab('notifs'); el.remove(); };
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.transform = 'translateX(-50%) translateY(0)';
+    el.style.opacity = '1';
+  });
+  setTimeout(() => {
+    el.style.transform = 'translateX(-50%) translateY(-80px)';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 400);
+  }, 4000);
 }
 function updateNotifBadge() {
   const badge=$('notifBadge');
@@ -814,13 +868,12 @@ function init() {
           currentEmployee=emp;
           isAdmin=emp.email==='admin@merge.com';
           if(isAdmin) { showScreen('hrApp'); initHR(); }
-          else { showScreen('empApp'); initEmp(); }
+          else { showScreen('empApp'); initEmp(); fetchUnread(); startRealtimeNotifs(); }
         }
       });
     }
   });
 }
-
 init();
 async function renderEmpTasks() {
   const {data:tasks} = await sb.from('tasks')
