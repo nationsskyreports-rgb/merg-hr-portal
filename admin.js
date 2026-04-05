@@ -166,66 +166,7 @@ async function renderHROverview() {
     `:''}
   `;
 }
-  let att = attRaw || [];
-  if(att.length > 0) {
-    const ids = [...new Set(att.map(a => a.employee_id).filter(Boolean))];
-    const {data:emps} = await sb.from('employees').select('id, first_name, last_name').in('id', ids);
-    const empMap = {};
-    (emps||[]).forEach(e => empMap[e.id] = e);
-    // ربط بيانات الموظف بكل سجل حضور
-    att = att.map(a => ({...a, employees: empMap[a.employee_id]}));
-  }
-
-  // 3. حساب الأرقام لعرضها في البطاقات العلوية
-  const present = att.length;
-  const absent = (total||0) - present;
-
-  // 4. بناء واجهة المستخدم (HTML)
-  $('hrContent').innerHTML = `
-    <div class="hr-stat-grid">
-      <div class="hr-stat">
-        <div class="hr-stat-icon" style="background:rgba(56,189,248,.1)">👥</div>
-        <div class="hr-stat-val" style="color:var(--sky)">${total||0}</div>
-        <div class="hr-stat-label">${t().total_employees}</div>
-      </div>
-      <div class="hr-stat">
-        <div class="hr-stat-icon" style="background:rgba(34,197,94,.1)">✅</div>
-        <div class="hr-stat-val" style="color:var(--green)">${present}</div>
-        <div class="hr-stat-label">${t().present}</div>
-      </div>
-      <div class="hr-stat">
-        <div class="hr-stat-icon" style="background:rgba(239,68,68,.1)">❌</div>
-        <div class="hr-stat-val" style="color:var(--red)">${absent}</div>
-        <div class="hr-stat-label">${t().absent}</div>
-      </div>
-      <div class="hr-stat">
-        <div class="hr-stat-icon" style="background:rgba(245,158,11,.1)">🌴</div>
-        <div class="hr-stat-val" style="color:var(--amber)">${pending||0}</div>
-        <div class="hr-stat-label">${t().pending_leaves}</div>
-      </div>
-    </div>
-
-    <div class="sec-title">${t().attendance_tab} — ${today}</div>
-    
-    ${att.length === 0
-      ? `<div class="card" style="text-align:center;padding:32px">
-          <div style="font-size:44px;margin-bottom:8px">📭</div>
-          <div style="color:var(--sub)">${t().no_att_today}</div>
-         </div>`
-      : att.slice(0, 5).map(a => {
-          // عرض الاسم إذا وجد، وإلا عرض الـ ID كخيار احتياطي
-          const emp = a.employees;
-          const name = (emp && emp.first_name) ? `${emp.first_name} ${emp.last_name}` : `Employee ID: ${a.employee_id?.slice(0, 8)}`;
-          
-          return `<div class="card-sm" style="display:flex;align-items:center;gap:12px">
-            <div style="width:40px;height:40px;border-radius:20px;background:rgba(56,189,248,.1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--sky)">✓</div>
-            <div style="font-weight:600;color:var(--text);font-size:14px">${name}</div>
-          </div>`;
-        }).join('')}
-  `;
-}
-
-
+  let att = attR
 
 let attDate = nowISO();
 
