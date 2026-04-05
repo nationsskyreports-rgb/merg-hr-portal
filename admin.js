@@ -34,7 +34,7 @@ async function initHR() {
       <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
         <div style="font-size:18px;font-weight:800;color:var(--sky)">MERGE HR</div>
         <div style="display:flex;gap:8px">
-          <button onclick="toggleLang()" style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700" id="hrLangBtn">${lang==='en'?'عربي':'EN'}</button>
+          <button onclick="toggleLang()" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700" id="hrLangBtn">${lang==='en'?'عربي':'EN'}</button>
           <button onclick="handleLogout()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700">🚪 ${t().logout}</button>
         </div>
       </div>
@@ -55,7 +55,15 @@ async function initHR() {
   renderHR(hrTab);
 }
 
-function showHRTab(tab) { hrTab = tab; empSearchTerm = ''; initHR(); }
+// ✅ FIX: reset stale IDs when switching tabs
+function showHRTab(tab) {
+  hrTab = tab;
+  empSearchTerm = '';
+  if(tab !== 'salaries') { salaryEmpId = null; selectedEmp = null; }
+  if(tab !== 'empfiles') filesEmpId = null;
+  if(tab !== 'tasks')    taskEmpId = null;
+  initHR();
+}
 
 async function renderHR(tab) {
   const el = $('hrContent');
@@ -73,7 +81,6 @@ async function renderHR(tab) {
 
 async function renderHROverview() {
   const today = nowISO();
-
   const [{count:total},{data:attRaw},{count:pending}] = await Promise.all([
     sb.from('employees').select('*',{count:'exact',head:true}).eq('status','active'),
     sb.from('attendance_records').select('*').eq('attendance_date',today),
@@ -89,10 +96,10 @@ async function renderHROverview() {
     att = att.map(a=>({...a, employees: empMap[a.employee_id]}));
   }
 
-  const present  = att.length;
-  const absent   = (total||0) - present;
-  const late     = att.filter(a => a.check_in_time && a.check_in_time > '09:15:00');
-  const onTime   = att.filter(a => a.check_in_time && a.check_in_time <= '09:15:00');
+  const present = att.length;
+  const absent  = (total||0) - present;
+  const late    = att.filter(a => a.check_in_time && a.check_in_time > '09:15:00');
+  const onTime  = att.filter(a => a.check_in_time && a.check_in_time <= '09:15:00');
 
   $('hrContent').innerHTML = `
     <div class="hr-stat-grid">
@@ -122,9 +129,9 @@ async function renderHROverview() {
       <div class="sec-title" style="color:var(--red)">⚠️ ${lang==='ar'?'متأخرون اليوم':'Late Today'} (${late.length})</div>
       ${late.map(a=>{
         const emp = a.employees;
-        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
+        const name = emp?`${emp.first_name} ${emp.last_name}`:'—';
         const dept = emp?.department||'';
-        const mins = Math.round((new Date('1970-01-01T'+a.check_in_time) - new Date('1970-01-01T09:15:00'))/60000);
+        const mins = Math.round((new Date('1970-01-01T'+a.check_in_time)-new Date('1970-01-01T09:15:00'))/60000);
         return `<div class="card-sm" style="border-color:rgba(239,68,68,.3);margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:40px;height:40px;border-radius:20px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⏰</div>
@@ -145,13 +152,11 @@ async function renderHROverview() {
       <div class="sec-title" style="color:var(--green)">✅ ${lang==='ar'?'في الوقت':'On Time'} (${onTime.length})</div>
       ${onTime.map(a=>{
         const emp = a.employees;
-        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
+        const name = emp?`${emp.first_name} ${emp.last_name}`:'—';
         return `<div class="card-sm" style="border-color:rgba(34,197,94,.2);margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:40px;height:40px;border-radius:20px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✅</div>
-            <div style="flex:1">
-              <div style="font-weight:700;color:var(--text);font-size:14px">${name}</div>
-            </div>
+            <div style="flex:1"><div style="font-weight:700;color:var(--text);font-size:14px">${name}</div></div>
             <div style="font-size:15px;font-weight:800;color:var(--green)">${fmtTime(a.check_in_time)}</div>
           </div>
         </div>`;
@@ -167,15 +172,19 @@ async function renderHROverview() {
   `;
 }
 
-let attDate = nowISO();
+// ✅ FIX: safe init with fallback
+let attDate = new Date().toISOString().split('T')[0];
 
 async function renderHRAttendance() {
   $('hrContent').innerHTML = '<div style="text-align:center;padding:60px 0"><div class="spinner" style="margin:auto"></div></div>';
 
+  // ✅ FIX: guard empty date
+  const safeDate = attDate || new Date().toISOString().split('T')[0];
+
   const {data:att, error:attErr} = await sb
     .from('attendance_records')
     .select('*')
-    .eq('attendance_date', attDate)
+    .eq('attendance_date', safeDate)
     .order('check_in_time', {ascending:false});
 
   if(attErr) {
@@ -195,37 +204,37 @@ async function renderHRAttendance() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
       <div style="font-size:18px;font-weight:800;color:var(--text)">${t().attendance_tab} (${items.length})</div>
       <input type="date" class="form-input" style="width:auto;padding:8px 12px"
-        value="${attDate}"
-        onchange="attDate=this.value; renderHRAttendance()"/>
+        value="${safeDate}"
+        onchange="attDate=this.value||'${safeDate}';renderHRAttendance()"/>
     </div>
     ${items.length===0
-      ? `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">${t().no_att_today}</div><div class="empty-sub">${attDate}</div></div>`
-      : items.map(a => {
-          const emp = empMap[a.employee_id] || {};
-          const name = emp.first_name ? `${emp.first_name} ${emp.last_name}` : `ID: ${(a.employee_id||'').slice(0,8)}`;
-          const sub  = [emp.employee_code, emp.department].filter(Boolean).join(' · ') || '—';
-          return `<div class="card-sm">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:14px">${name}</div>
-                <div style="font-size:11px;color:var(--sub);margin-top:2px">${sub}</div>
-              </div>
-              <span class="badge" style="background:${a.check_out_time?'rgba(99,102,241,.1)':'rgba(34,197,94,.1)'};color:${a.check_out_time?'var(--indigo)':'var(--green)'};border:1px solid ${a.check_out_time?'rgba(99,102,241,.2)':'rgba(34,197,94,.2)'}">
-                ${a.check_out_time ? (lang==='ar'?'مكتمل':'Complete') : (lang==='ar'?'نشط':'Active')}
-              </span>
+      ?`<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">${t().no_att_today}</div><div class="empty-sub">${safeDate}</div></div>`
+      :items.map(a=>{
+        const emp = empMap[a.employee_id]||{};
+        const name = emp.first_name?`${emp.first_name} ${emp.last_name}`:`ID: ${(a.employee_id||'').slice(0,8)}`;
+        const sub  = [emp.employee_code,emp.department].filter(Boolean).join(' · ')||'—';
+        return `<div class="card-sm">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-weight:700;color:var(--text);font-size:14px">${name}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:2px">${sub}</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div style="background:rgba(34,197,94,.08);border-radius:10px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:3px">${t().check_in_label.toUpperCase()}</div>
-                <div style="font-size:17px;font-weight:800;color:var(--green)">${fmtTime(a.check_in_time)}</div>
-              </div>
-              <div style="background:rgba(239,68,68,.08);border-radius:10px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:3px">${t().check_out_label.toUpperCase()}</div>
-                <div style="font-size:17px;font-weight:800;color:${a.check_out_time?'var(--red)':'var(--muted)'}"> ${fmtTime(a.check_out_time)}</div>
-              </div>
+            <span class="badge" style="background:${a.check_out_time?'rgba(99,102,241,.1)':'rgba(34,197,94,.1)'};color:${a.check_out_time?'var(--indigo)':'var(--green)'};border:1px solid ${a.check_out_time?'rgba(99,102,241,.2)':'rgba(34,197,94,.2)'}">
+              ${a.check_out_time?(lang==='ar'?'مكتمل':'Complete'):(lang==='ar'?'نشط':'Active')}
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:rgba(34,197,94,.08);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:3px">${t().check_in_label.toUpperCase()}</div>
+              <div style="font-size:17px;font-weight:800;color:var(--green)">${fmtTime(a.check_in_time)}</div>
             </div>
-          </div>`;
-        }).join('')}
+            <div style="background:rgba(239,68,68,.08);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:3px">${t().check_out_label.toUpperCase()}</div>
+              <div style="font-size:17px;font-weight:800;color:${a.check_out_time?'var(--red)':'var(--muted)'}"> ${fmtTime(a.check_out_time)}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
   `;
 }
 
@@ -242,8 +251,8 @@ async function renderHRLeaves() {
       :items.map(lv=>`<div class="leave-card" style="border-color:${lv.status==='pending'?'rgba(245,158,11,.35)':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
             <div>
-              <div style="font-weight:700;color:var(--text);font-size:15px">${lv.employees?.first_name} ${lv.employees?.last_name}</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:2px">${lv.employees?.department}</div>
+              <div style="font-weight:700;color:var(--text);font-size:15px">${lv.employees?.first_name||''} ${lv.employees?.last_name||''}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:2px">${lv.employees?.department||''}</div>
             </div>
             <span class="badge" style="background:${statusColor(lv.status)}20;color:${statusColor(lv.status)};border:1px solid ${statusColor(lv.status)}30">${lv.status?.toUpperCase()}</span>
           </div>
@@ -265,19 +274,15 @@ async function renderHRLeaves() {
 }
 
 async function approveLeave(id) {
-  const {data:lv, error:lvErr} = await sb.from('leave_requests').select('*').eq('id',id).single();
+  const {data:lv,error:lvErr} = await sb.from('leave_requests').select('*').eq('id',id).single();
   if(lvErr) return toast(lvErr.message,'error');
-
   const DEDUCTIBLE = ['annual','sick','emergency'];
-  const days = Math.ceil((new Date(lv.end_date) - new Date(lv.start_date)) / 86400000) + 1;
-
+  const days = Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/86400000)+1;
   if(DEDUCTIBLE.includes(lv.leave_type?.toLowerCase())) {
     const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',lv.employee_id).single();
-    const currentBal = emp?.leave_balance ?? 21;
-    const newBal = Math.max(0, currentBal - days);
-    await sb.from('employees').update({leave_balance: newBal}).eq('id', lv.employee_id);
+    const currentBal = emp?.leave_balance??21;
+    await sb.from('employees').update({leave_balance:Math.max(0,currentBal-days)}).eq('id',lv.employee_id);
   }
-
   const {error} = await sb.from('leave_requests').update({status:'approved'}).eq('id',id);
   if(error) return toast(error.message,'error');
   toast(lang==='ar'?`تمت الموافقة — تم خصم ${days} يوم ✅`:`Approved — ${days} days deducted ✅`,'success');
@@ -287,14 +292,11 @@ async function approveLeave(id) {
 async function rejectLeave(id) {
   const {data:lv} = await sb.from('leave_requests').select('*').eq('id',id).single();
   const DEDUCTIBLE = ['annual','sick','emergency'];
-
-  if(lv?.status === 'approved' && DEDUCTIBLE.includes(lv.leave_type?.toLowerCase())) {
-    const days = Math.ceil((new Date(lv.end_date) - new Date(lv.start_date)) / 86400000) + 1;
+  if(lv?.status==='approved'&&DEDUCTIBLE.includes(lv.leave_type?.toLowerCase())) {
+    const days = Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/86400000)+1;
     const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',lv.employee_id).single();
-    const currentBal = emp?.leave_balance ?? 0;
-    await sb.from('employees').update({leave_balance: currentBal + days}).eq('id', lv.employee_id);
+    await sb.from('employees').update({leave_balance:(emp?.leave_balance??0)+days}).eq('id',lv.employee_id);
   }
-
   const {error} = await sb.from('leave_requests').update({status:'rejected'}).eq('id',id);
   if(error) return toast(error.message,'error');
   toast(lang==='ar'?'تم رفض الطلب':'Leave rejected','success');
@@ -306,8 +308,8 @@ async function renderHREmployees() {
   const {data:emps} = await sb.from('employees').select('*').order('first_name');
   const items = emps||[];
   const filtered = items.filter(e=>
-    e.first_name?.toLowerCase().includes(empSearchTerm.toLowerCase()) ||
-    e.last_name?.toLowerCase().includes(empSearchTerm.toLowerCase()) ||
+    e.first_name?.toLowerCase().includes(empSearchTerm.toLowerCase())||
+    e.last_name?.toLowerCase().includes(empSearchTerm.toLowerCase())||
     e.employee_code?.toLowerCase().includes(empSearchTerm.toLowerCase())
   );
   $('hrContent').innerHTML = `
@@ -315,16 +317,17 @@ async function renderHREmployees() {
       <div style="font-size:18px;font-weight:800;color:var(--text)">${t().employees_tab}</div>
       <button class="primary-btn" onclick="openModal('addEmpModal')">${t().add_employee}</button>
     </div>
+    <!-- ✅ FIX: oninput for real-time search -->
     <input class="form-input" type="text" placeholder="${t().search_emp}" value="${empSearchTerm}"
-      onchange="empSearchTerm=this.value;renderHR('employees')" style="margin-bottom:14px"/>
+      oninput="empSearchTerm=this.value;renderHR('employees')" style="margin-bottom:14px"/>
     ${filtered.length===0
-      ?`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">No employees</div></div>`
+      ?`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">${lang==='ar'?'لا يوجد موظفون':'No employees found'}</div></div>`
       :filtered.map(e=>`<div class="card-sm">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="flex:1">
               <div style="font-weight:700;color:var(--text);font-size:14px">${e.first_name} ${e.last_name}</div>
-              <div style="font-size:11px;color:var(--sub);margin-top:2px">${e.employee_code} · ${e.job_title||e.position}</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">${e.email}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:2px">${e.employee_code||''} · ${e.job_title||e.position||''}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">${e.email||''}</div>
             </div>
             <span class="badge" style="background:${e.status==='active'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${e.status==='active'?'var(--green)':'var(--red)'};border:1px solid ${e.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'}">${e.status==='active'?t().active_st:t().inactive_st}</span>
           </div>
@@ -333,48 +336,50 @@ async function renderHREmployees() {
 }
 
 async function addEmployee() {
-  const first = $('ae_first')?.value?.trim();
-  const last  = $('ae_last')?.value?.trim();
-  const email = $('ae_email')?.value?.trim();
-  const pos   = $('ae_position')?.value?.trim();
-  const dept  = $('ae_dept')?.value?.trim();
-  const phone = $('ae_phone')?.value?.trim();
-  const hire  = $('ae_hire')?.value;
-  if(!first||!last||!email) return toast('Fill required fields','error');
+  const first=$('ae_first')?.value?.trim(), last=$('ae_last')?.value?.trim(), email=$('ae_email')?.value?.trim();
+  const pos=$('ae_position')?.value?.trim(), dept=$('ae_dept')?.value?.trim();
+  const phone=$('ae_phone')?.value?.trim(), hire=$('ae_hire')?.value;
+  if(!first||!last||!email) return toast(lang==='ar'?'الرجاء ملء الحقول المطلوبة':'Fill required fields','error');
   try {
     const {error} = await sb.from('employees').insert([{first_name:first,last_name:last,email,job_title:pos,department:dept,phone,hire_date:hire,status:'active'}]);
     if(error) return toast(error.message,'error');
-    toast('Employee added','success');
+    toast(lang==='ar'?'تمت إضافة الموظف ✅':'Employee added ✅','success');
     closeModal('addEmpModal');
     renderHR('employees');
-  } catch(e) { toast(e.message,'error'); }
+  } catch(e){toast(e.message,'error');}
 }
 
 async function renderHRSalaries() {
   const {data:emps} = await sb.from('employees').select('*').eq('status','active').order('first_name');
   const items = emps||[];
 
-  if(!salaryEmpId && items.length>0) {
+  // ✅ FIX: guard empty list
+  if(items.length===0) {
+    $('hrContent').innerHTML=`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">${lang==='ar'?'لا يوجد موظفون نشطون':'No active employees'}</div></div>`;
+    return;
+  }
+
+  // ✅ FIX: always sync selectedEmp correctly
+  if(!salaryEmpId) {
     salaryEmpId = items[0].id;
     selectedEmp = items[0];
+  } else {
+    selectedEmp = items.find(e=>e.id===salaryEmpId)||items[0];
+    salaryEmpId = selectedEmp.id;
   }
 
-  if(salaryEmpId) {
-    selectedEmp = items.find(e=>e.id===salaryEmpId) || items[0];
-    const {data:sal} = await sb.from('salaries').select('*').eq('employee_id',salaryEmpId).order('effective_date',{ascending:false}).limit(1).maybeSingle();
-    baseSalary = sal?.base_salary||0;
-    const {data:adjs} = await sb.from('salary_adjustments').select('*').eq('employee_id',salaryEmpId).eq('month',salaryMonth+'-01');
-    adjustments = adjs||[];
-  }
+  const {data:sal} = await sb.from('salaries').select('*').eq('employee_id',salaryEmpId).order('effective_date',{ascending:false}).limit(1).maybeSingle();
+  baseSalary = sal?.base_salary||0;
+  const {data:adjs} = await sb.from('salary_adjustments').select('*').eq('employee_id',salaryEmpId).eq('month',salaryMonth+'-01');
+  adjustments = adjs||[];
 
-  const netSalary = baseSalary + adjustments.reduce((sum,a)=>{
-    const isPos = ['overtime','bonus','allowance'].includes(a.type);
-    return sum + (isPos ? a.amount : -a.amount);
+  const netSalary = baseSalary+adjustments.reduce((sum,a)=>{
+    const isPos=['overtime','bonus','allowance'].includes(a.type);
+    return sum+(isPos?a.amount:-a.amount);
   },0);
 
-  $('hrContent').innerHTML = `
+  $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">💰 ${lang==='ar'?'المرتبات':'Salaries'}</div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div class="form-field" style="margin:0">
         <label class="field-label">${lang==='ar'?'الموظف':'Employee'}</label>
@@ -387,16 +392,14 @@ async function renderHRSalaries() {
         <input class="form-input" type="month" value="${salaryMonth}" onclick="try{this.showPicker()}catch(e){}" onchange="salaryMonth=this.value;renderHRSalaries()"/>
       </div>
     </div>
-
     <div class="card" style="margin-bottom:12px;border:1.5px solid rgba(56,189,248,.2)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]}${selectedEmp?.last_name?.[0]}</div>
+        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]||'?'}${selectedEmp?.last_name?.[0]||''}</div>
         <div>
-          <div style="font-size:16px;font-weight:700;color:var(--text)">${selectedEmp?.first_name} ${selectedEmp?.last_name}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">${selectedEmp?.first_name||''} ${selectedEmp?.last_name||''}</div>
           <div style="font-size:12px;color:var(--sub)">${selectedEmp?.job_title||''} · ${selectedEmp?.department||''}</div>
         </div>
       </div>
-
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface-2);border-radius:12px;margin-bottom:10px">
         <div style="font-size:13px;font-weight:600;color:var(--sub)">${lang==='ar'?'المرتب الأساسي':'Base Salary'}</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -406,11 +409,10 @@ async function renderHRSalaries() {
           <button onclick="saveBaseSalary()" style="height:36px;padding:0 14px;background:var(--sky);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${lang==='ar'?'حفظ':'Save'}</button>
         </div>
       </div>
-
       ${adjustments.length>0?`
         <div style="margin-bottom:10px">
           ${adjustments.map(a=>{
-            const c = adjColors[a.type]||adjColors.bonus;
+            const c=adjColors[a.type]||adjColors.bonus;
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:${c.bg};border-radius:10px;margin-bottom:6px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.color}30">${c.label}</span>
@@ -423,7 +425,6 @@ async function renderHRSalaries() {
             </div>`;
           }).join('')}
         </div>`:''}
-
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${netSalary>=baseSalary?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1.5px solid ${netSalary>=baseSalary?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};border-radius:14px">
         <div style="font-size:14px;font-weight:700;color:var(--text)">💰 ${lang==='ar'?'الصافي':'Net Salary'}</div>
         <div style="font-size:22px;font-weight:900;color:${netSalary>=baseSalary?'var(--green)':'var(--red)'}">
@@ -431,7 +432,6 @@ async function renderHRSalaries() {
         </div>
       </div>
     </div>
-
     <div class="card">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">➕ ${lang==='ar'?'إضافة تعديل':'Add Adjustment'}</div>
       <div class="chip-row" style="margin-bottom:12px">
@@ -450,36 +450,28 @@ async function renderHRSalaries() {
           <input class="form-input" type="text" id="adjReason" placeholder="${lang==='ar'?'مثل: 3 أيام غياب':'e.g. 2 days absence'}"/>
         </div>
       </div>
-      <button class="primary-btn" onclick="addAdjustment()">
-        ${lang==='ar'?'إضافة':'Add'} ${adjColors[adjType]?.label}
-      </button>
+      <button class="primary-btn" onclick="addAdjustment()">${lang==='ar'?'إضافة':'Add'} ${adjColors[adjType]?.label}</button>
     </div>
   `;
 }
 
 async function saveBaseSalary() {
-  const val = parseFloat($('baseSalInput')?.value||0);
-  if(isNaN(val)||val<0) return toast('Invalid amount','error');
-  const {data:ex} = await sb.from('salaries').select('id').eq('employee_id',salaryEmpId).limit(1).maybeSingle();
+  const val=parseFloat($('baseSalInput')?.value||0);
+  if(isNaN(val)||val<0) return toast(lang==='ar'?'مبلغ غير صحيح':'Invalid amount','error');
+  const {data:ex}=await sb.from('salaries').select('id').eq('employee_id',salaryEmpId).limit(1).maybeSingle();
   let error;
-  if(ex) {
-    ({error} = await sb.from('salaries').update({base_salary:val,effective_date:nowISO()}).eq('id',ex.id));
-  } else {
-    ({error} = await sb.from('salaries').insert([{employee_id:salaryEmpId,base_salary:val,effective_date:nowISO()}]));
-  }
+  if(ex){({error}=await sb.from('salaries').update({base_salary:val,effective_date:nowISO()}).eq('id',ex.id));}
+  else{({error}=await sb.from('salaries').insert([{employee_id:salaryEmpId,base_salary:val,effective_date:nowISO()}]));}
   if(error) return toast(error.message,'error');
   toast(lang==='ar'?'تم حفظ المرتب ✅':'Salary saved ✅','success');
   renderHRSalaries();
 }
 
 async function addAdjustment() {
-  const amount = parseFloat($('adjAmount')?.value||0);
-  const reason = $('adjReason')?.value?.trim();
+  const amount=parseFloat($('adjAmount')?.value||0);
+  const reason=$('adjReason')?.value?.trim();
   if(!amount||amount<=0) return toast(lang==='ar'?'أدخل مبلغاً':'Enter amount','error');
-  const {error} = await sb.from('salary_adjustments').insert([{
-    employee_id:salaryEmpId, type:adjType, amount, reason,
-    month:salaryMonth+'-01', created_by:currentEmployee.id
-  }]);
+  const {error}=await sb.from('salary_adjustments').insert([{employee_id:salaryEmpId,type:adjType,amount,reason,month:salaryMonth+'-01',created_by:currentEmployee.id}]);
   if(error) return toast(error.message,'error');
   toast(lang==='ar'?'تمت الإضافة ✅':'Added ✅','success');
   renderHRSalaries();
@@ -487,13 +479,11 @@ async function addAdjustment() {
 
 async function deleteAdj(id) {
   showConfirm({
-    icon: '🗑️',
-    title: lang==='ar' ? 'حذف التعديل' : 'Delete Adjustment',
-    msg: lang==='ar' ? 'هل أنت متأكد من حذف هذا التعديل؟' : 'Are you sure you want to delete this adjustment?',
-    okLabel: lang==='ar' ? 'حذف' : 'Delete',
-    okColor: 'var(--red)',
-    onOk: async () => {
-      const {error} = await sb.from('salary_adjustments').delete().eq('id',id);
+    icon:'🗑️', title:lang==='ar'?'حذف التعديل':'Delete Adjustment',
+    msg:lang==='ar'?'هل أنت متأكد من حذف هذا التعديل؟':'Are you sure you want to delete this adjustment?',
+    okLabel:lang==='ar'?'حذف':'Delete', okColor:'var(--red)',
+    onOk:async()=>{
+      const {error}=await sb.from('salary_adjustments').delete().eq('id',id);
       if(error) return toast(error.message,'error');
       toast(lang==='ar'?'تم الحذف':'Deleted','success');
       renderHRSalaries();
@@ -501,9 +491,9 @@ async function deleteAdj(id) {
   });
 }
 
-let notifType = 'announcement';
+let notifType='announcement';
 function renderHRNotifs() {
-  $('hrContent').innerHTML = `
+  $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">${t().send_notif}</div>
     <div class="chip-row" style="margin-bottom:14px">
       <button class="chip ${notifType==='announcement'?'active':''}" onclick="notifType='announcement';renderHRNotifs()">📢 ${t().announcement}</button>
@@ -512,7 +502,7 @@ function renderHRNotifs() {
     </div>
     <div class="form-field">
       <label class="field-label">${t().notif_text}</label>
-      <textarea class="form-input" id="notif_title" placeholder="Title..." style="margin-bottom:10px"></textarea>
+      <textarea class="form-input" id="notif_title" placeholder="${lang==='ar'?'العنوان...':'Title...'}" style="margin-bottom:10px"></textarea>
       <textarea class="form-input" id="notif_msg" placeholder="${t().write_text}"></textarea>
     </div>
     <button class="primary-btn" onclick="sendNotif()" style="width:100%">${t().send_all}</button>
@@ -520,17 +510,16 @@ function renderHRNotifs() {
 }
 
 async function sendNotif() {
-  const title = $('notif_title')?.value?.trim();
-  const msg   = $('notif_msg')?.value?.trim();
-  if(!title||!msg) return toast('Fill all fields','error');
-  const {error} = await sb.from('notifications').insert([{title,message:msg,type:notifType,is_read:false}]);
+  const title=$('notif_title')?.value?.trim(), msg=$('notif_msg')?.value?.trim();
+  if(!title||!msg) return toast(lang==='ar'?'الرجاء ملء جميع الحقول':'Fill all fields','error');
+  const {error}=await sb.from('notifications').insert([{title,message:msg,type:notifType,is_read:false}]);
   if(error) return toast(error.message,'error');
-  toast('Notification sent','success');
+  toast(lang==='ar'?'تم الإرسال ✅':'Notification sent ✅','success');
   renderHRNotifs();
 }
 
 function renderHRExport() {
-  $('hrContent').innerHTML = `
+  $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">${t().export}</div>
     <div class="card">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">📊 ${t().attendance_tab}</div>
@@ -550,61 +539,49 @@ function renderHRExport() {
 }
 
 async function exportAttendance() {
-  const from = $('exp_from')?.value;
-  const to   = $('exp_to')?.value;
+  const from=$('exp_from')?.value, to=$('exp_to')?.value;
   if(!from||!to) return toast(lang==='ar'?'اختر التاريخ':'Select date range','error');
-
   toast(lang==='ar'?'جاري التحضير...':'Preparing...','');
-
-  const {data, error} = await sb.from('attendance_records')
-    .select('*')
-    .gte('attendance_date', from)
-    .lte('attendance_date', to)
-    .order('attendance_date');
-
+  const {data,error}=await sb.from('attendance_records').select('*').gte('attendance_date',from).lte('attendance_date',to).order('attendance_date');
   if(error) return toast(error.message,'error');
-  if(!data || data.length===0) return toast(lang==='ar'?'لا توجد بيانات':'No data found','error');
+  if(!data||data.length===0) return toast(lang==='ar'?'لا توجد بيانات':'No data found','error');
+  const ids=[...new Set(data.map(r=>r.employee_id).filter(Boolean))];
+  const {data:emps}=await sb.from('employees').select('id,first_name,last_name,employee_code').in('id',ids);
+  const empMap={};
+  (emps||[]).forEach(e=>empMap[e.id]=e);
 
-  const ids = [...new Set(data.map(r=>r.employee_id).filter(Boolean))];
-  const {data:emps} = await sb.from('employees').select('id,first_name,last_name,employee_code').in('id',ids);
-  const empMap = {};
-  (emps||[]).forEach(e => empMap[e.id] = e);
-
-  const csv = 'Employee,Code,Date,Check-In,Check-Out\n' +
-    data.map(r => {
-      const emp = empMap[r.employee_id]||{};
-      return `${emp.first_name||''} ${emp.last_name||''},${emp.employee_code||''},${r.attendance_date},${r.check_in_time||''},${r.check_out_time||''}`;
+  // ✅ FIX: escape CSV values properly
+  const esc=v=>`"${String(v||'').replace(/"/g,'""')}"`;
+  const csv='Employee,Code,Date,Check-In,Check-Out\n'+
+    data.map(r=>{
+      const emp=empMap[r.employee_id]||{};
+      return[esc((emp.first_name||'')+' '+(emp.last_name||'')),esc(emp.employee_code||''),esc(r.attendance_date),esc(r.check_in_time||''),esc(r.check_out_time||'')].join(',');
     }).join('\n');
 
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `attendance_${from}_${to}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`attendance_${from}_${to}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
   toast(lang==='ar'?'تم التحميل ✅':'Downloaded ✅','success');
 }
 
 // ═══ TASKS ═══
-let taskEmpId = null;
+let taskEmpId=null;
 
 async function renderHRTasks() {
-  const {data:emps} = await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
-  const items = emps||[];
-  if(!taskEmpId && items.length>0) taskEmpId = items[0].id;
+  const {data:emps}=await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
+  const items=emps||[];
+  if(!taskEmpId&&items.length>0) taskEmpId=items[0].id;
+  const {data:tasks}=await sb.from('tasks').select('*').order('created_at',{ascending:false});
+  const allTasks=tasks||[];
+  const empMap={};
+  items.forEach(e=>empMap[e.id]=`${e.first_name} ${e.last_name}`);
+  const today=nowISO();
 
-  const {data:tasks} = await sb.from('tasks').select('*').order('created_at',{ascending:false});
-  const allTasks = tasks||[];
-
-  const empMap = {};
-  items.forEach(e => empMap[e.id] = `${e.first_name} ${e.last_name}`);
-
-  $('hrContent').innerHTML = `
+  $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">✅ ${lang==='ar'?'التاسكات':'Tasks'}</div>
-
     <div class="card" style="margin-bottom:16px">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">➕ ${lang==='ar'?'تاسك جديد':'New Task'}</div>
       <div class="form-field">
@@ -624,31 +601,29 @@ async function renderHRTasks() {
         </div>
         <div class="form-field" style="margin:0">
           <label class="field-label">${lang==='ar'?'الديد لاين':'Deadline'}</label>
-          <input class="form-input" type="date" id="task_deadline" min="${nowISO()}"/>
+          <input class="form-input" type="date" id="task_deadline" min="${today}"/>
         </div>
       </div>
       <button class="primary-btn" onclick="addTask()" style="width:100%;margin-top:12px">📤 ${lang==='ar'?'إرسال التاسك':'Send Task'}</button>
     </div>
-
     <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'كل التاسكات':'All Tasks'} (${allTasks.length})</div>
-
     ${allTasks.length===0
       ?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">${lang==='ar'?'لا توجد تاسكات':'No tasks yet'}</div></div>`
       :allTasks.map(tk=>{
-        const empName = empMap[tk.assigned_to]||'—';
-        const isDone  = tk.status==='done';
-        const isLate  = tk.deadline && tk.deadline < nowISO() && !isDone;
+        const empName=empMap[tk.assigned_to]||'—';
+        const isDone=tk.status==='done';
+        const isLate=tk.deadline&&tk.deadline<today&&!isDone;
         return `<div class="card-sm" style="border-color:${isLate?'rgba(239,68,68,.4)':isDone?'rgba(34,197,94,.3)':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div style="flex:1">
               <div style="font-size:15px;font-weight:700;color:var(--text);text-decoration:${isDone?'line-through':''}">${tk.title}</div>
               ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
             </div>
-            <button onclick="deleteTask('${tk.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0;margin-left:8px">✕</button>
+            <button onclick="deleteTask('${tk.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0;margin-${lang==='ar'?'right':'left'}:8px">✕</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="badge" style="background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">👤 ${empName}</span>
-            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}</span>`:''}
+            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}${isLate?' ⚠️':''}</span>`:''}
             <span class="badge" style="background:${isDone?'rgba(34,197,94,.1)':'rgba(99,102,241,.1)'};color:${isDone?'var(--green)':'var(--indigo)'};border:1px solid ${isDone?'rgba(34,197,94,.2)':'rgba(99,102,241,.2)'}">
               ${isDone?(lang==='ar'?'✅ منتهي':'✅ Done'):(lang==='ar'?'⏳ قيد التنفيذ':'⏳ Pending')}
             </span>
@@ -659,37 +634,30 @@ async function renderHRTasks() {
 }
 
 async function addTask() {
-  const title    = $('task_title')?.value?.trim();
-  const desc     = $('task_desc')?.value?.trim();
-  const empId    = $('task_emp')?.value;
-  const deadline = $('task_deadline')?.value;
-  if(!title)    return toast(lang==='ar'?'أدخل عنوان التاسك':'Enter task title','error');
-  if(!empId)    return toast(lang==='ar'?'اختر موظفاً':'Select employee','error');
+  const title=$('task_title')?.value?.trim(), desc=$('task_desc')?.value?.trim();
+  const empId=$('task_emp')?.value, deadline=$('task_deadline')?.value;
+  if(!title) return toast(lang==='ar'?'أدخل عنوان التاسك':'Enter task title','error');
+  if(!empId) return toast(lang==='ar'?'اختر موظفاً':'Select employee','error');
   if(!deadline) return toast(lang==='ar'?'اختر ديد لاين':'Select deadline','error');
-  const {error} = await sb.from('tasks').insert([{title, description:desc, assigned_to:empId, deadline, status:'pending'}]);
+  const {error}=await sb.from('tasks').insert([{title,description:desc,assigned_to:empId,deadline,status:'pending'}]);
   if(error) return toast(error.message,'error');
-
   await sb.from('notifications').insert([{
-    employee_id: empId,
-    title: lang==='ar'?`تاسك جديد: ${title}`:`New Task: ${title}`,
-    message: `${lang==='ar'?'الديد لاين:':'Deadline:'} ${fmtDate(deadline)}${desc?' — '+desc:''}`,
-    type: 'reminder',
-    is_read: false
+    employee_id:empId,
+    title:lang==='ar'?`تاسك جديد: ${title}`:`New Task: ${title}`,
+    message:`${lang==='ar'?'الديد لاين:':'Deadline:'} ${fmtDate(deadline)}${desc?' — '+desc:''}`,
+    type:'reminder', is_read:false
   }]);
-
   toast(lang==='ar'?'تم إرسال التاسك ✅':'Task sent ✅','success');
   renderHRTasks();
 }
 
 async function deleteTask(id) {
   showConfirm({
-    icon: '🗑️',
-    title: lang==='ar'?'حذف التاسك':'Delete Task',
-    msg: lang==='ar'?'هل أنت متأكد من حذف هذا التاسك؟':'Are you sure you want to delete this task?',
-    okLabel: lang==='ar'?'حذف':'Delete',
-    okColor: 'var(--red)',
-    onOk: async () => {
-      const {error} = await sb.from('tasks').delete().eq('id',id);
+    icon:'🗑️', title:lang==='ar'?'حذف التاسك':'Delete Task',
+    msg:lang==='ar'?'هل أنت متأكد من حذف هذا التاسك؟':'Are you sure you want to delete this task?',
+    okLabel:lang==='ar'?'حذف':'Delete', okColor:'var(--red)',
+    onOk:async()=>{
+      const {error}=await sb.from('tasks').delete().eq('id',id);
       if(error) return toast(error.message,'error');
       toast(lang==='ar'?'تم الحذف':'Deleted','success');
       renderHRTasks();
@@ -698,26 +666,23 @@ async function deleteTask(id) {
 }
 
 // ═══ EMPLOYEE FILES ═══
-let filesEmpId = null;
+let filesEmpId=null;
 
 async function renderHRFiles() {
-  const {data:emps} = await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
-  const items = emps||[];
-  if(!filesEmpId && items.length>0) filesEmpId = items[0].id;
+  const {data:emps}=await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
+  const items=emps||[];
+  if(!filesEmpId&&items.length>0) filesEmpId=items[0].id;
+  const {data:files}=await sb.from('employee_files').select('*').eq('employee_id',filesEmpId).order('uploaded_at',{ascending:false});
+  const empFiles=files||[];
 
-  const {data:files} = await sb.from('employee_files').select('*').eq('employee_id',filesEmpId).order('uploaded_at',{ascending:false});
-  const empFiles = files||[];
-
-  $('hrContent').innerHTML = `
+  $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">📁 ${lang==='ar'?'ملفات الموظفين':'Employee Files'}</div>
-
     <div class="form-field" style="margin-bottom:16px">
       <label class="field-label">${lang==='ar'?'اختر موظف':'Select Employee'}</label>
       <select class="form-input" onchange="filesEmpId=this.value;renderHRFiles()">
         ${items.map(e=>`<option value="${e.id}" ${e.id===filesEmpId?'selected':''}>${e.first_name} ${e.last_name}</option>`).join('')}
       </select>
     </div>
-
     <div class="card" style="margin-bottom:16px">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">⬆️ ${lang==='ar'?'رفع ملف':'Upload File'}</div>
       <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s" onclick="$('fileInput').click()" id="dropZone">
@@ -728,13 +693,11 @@ async function renderHRFiles() {
       </div>
       <div id="uploadProgress" style="display:none;margin-top:12px;text-align:center;color:var(--sub);font-size:13px">⏳ ${lang==='ar'?'جاري الرفع...':'Uploading...'}</div>
     </div>
-
     <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الملفات':'Files'} (${empFiles.length})</div>
-
     ${empFiles.length===0
       ?`<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${lang==='ar'?'لا توجد ملفات':'No files yet'}</div></div>`
       :empFiles.map(f=>{
-        const icon = f.file_type?.includes('pdf')?'📄':f.file_type?.includes('word')||f.file_type?.includes('doc')?'📝':f.file_type?.includes('sheet')||f.file_type?.includes('xls')?'📊':'📎';
+        const icon=f.file_type?.includes('pdf')?'📄':f.file_type?.includes('word')||f.file_type?.includes('doc')?'📝':f.file_type?.includes('sheet')||f.file_type?.includes('xls')?'📊':'📎';
         return `<div class="card-sm" style="display:flex;align-items:center;gap:12px">
           <div style="font-size:28px;flex-shrink:0">${icon}</div>
           <div style="flex:1;overflow:hidden">
@@ -743,7 +706,7 @@ async function renderHRFiles() {
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
             <a href="${f.file_url}" target="_blank" style="background:rgba(56,189,248,.12);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">👁</a>
-            <button onclick="deleteFile('${f.id}','${f.file_url}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--red);font-size:14px">✕</button>
+            <button onclick="deleteFile('${f.id}','${encodeURIComponent(f.file_url)}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--red);font-size:14px">✕</button>
           </div>
         </div>`;
       }).join('')}
@@ -751,68 +714,51 @@ async function renderHRFiles() {
 }
 
 async function handleFileUpload(input) {
-  const file = input.files[0];
+  const file=input.files[0];
   if(!file) return;
-  if(file.size > 10*1024*1024) return toast(lang==='ar'?'الملف أكبر من 10MB':'File exceeds 10MB','error');
-
-  $('uploadProgress').style.display = 'block';
-  $('dropZone').style.opacity = '0.5';
-
+  if(file.size>10*1024*1024) return toast(lang==='ar'?'الملف أكبر من 10MB':'File exceeds 10MB','error');
+  const dz=$('dropZone'), up=$('uploadProgress');
+  if(up) up.style.display='block';
+  if(dz) dz.style.opacity='0.5';
   try {
-    const ext      = file.name.split('.').pop();
-    const fileName = `${filesEmpId}/${Date.now()}.${ext}`;
-    const {error:upErr} = await sb.storage.from('employee-files').upload(fileName, file, {upsert:true});
+    const ext=file.name.split('.').pop();
+    const fileName=`${filesEmpId}/${Date.now()}.${ext}`;
+    const {error:upErr}=await sb.storage.from('employee-files').upload(fileName,file,{upsert:true});
     if(upErr) throw upErr;
-
-    const {data:urlData} = sb.storage.from('employee-files').getPublicUrl(fileName);
-    const fileUrl = urlData.publicUrl;
-
-    const {error:dbErr} = await sb.from('employee_files').insert([{
-      employee_id: filesEmpId,
-      file_name:   file.name,
-      file_url:    fileUrl,
-      file_type:   file.type
-    }]);
+    const {data:urlData}=sb.storage.from('employee-files').getPublicUrl(fileName);
+    const {error:dbErr}=await sb.from('employee_files').insert([{employee_id:filesEmpId,file_name:file.name,file_url:urlData.publicUrl,file_type:file.type}]);
     if(dbErr) throw dbErr;
-
     toast(lang==='ar'?'تم رفع الملف ✅':'File uploaded ✅','success');
-    renderHRFiles();
+    await renderHRFiles();
   } catch(e) {
     toast(e.message,'error');
-    $('uploadProgress').style.display = 'none';
-    $('dropZone').style.opacity = '1';
+    if(dz) dz.style.opacity='1';
+    if(up) up.style.display='none';
   }
 }
 
-async function deleteFile(id, url) {
+// ✅ FIX: robust delete — storage failure doesn't block DB delete
+async function deleteFile(id, encodedUrl) {
+  const url = decodeURIComponent(encodedUrl);
   showConfirm({
-    icon: '🗑️',
-    title: lang==='ar'?'حذف الملف':'Delete File',
-    msg: lang==='ar'?'هل أنت متأكد من حذف هذا الملف؟':'Are you sure you want to delete this file?',
-    okLabel: lang==='ar'?'حذف':'Delete',
-    okColor: 'var(--red)',
-    onOk: async () => {
+    icon:'🗑️', title:lang==='ar'?'حذف الملف':'Delete File',
+    msg:lang==='ar'?'هل أنت متأكد من حذف هذا الملف؟':'Are you sure you want to delete this file?',
+    okLabel:lang==='ar'?'حذف':'Delete', okColor:'var(--red)',
+    onOk:async()=>{
       try {
-        // حذف من الـ storage (لو فشل مش مشكلة، نكمل)
+        // حذف من الـ storage (لو فشل نكمل)
         try {
-          const urlObj = new URL(url);
-          const parts = urlObj.pathname.split('/employee-files/');
-          if(parts[1]) {
-            await sb.storage.from('employee-files').remove([decodeURIComponent(parts[1])]);
-          }
-        } catch(storageErr) {
-          console.warn('Storage delete failed:', storageErr);
-        }
+          const urlObj=new URL(url);
+          const parts=urlObj.pathname.split('/employee-files/');
+          if(parts[1]) await sb.storage.from('employee-files').remove([decodeURIComponent(parts[1])]);
+        } catch(storageErr){ console.warn('Storage delete failed:',storageErr); }
 
-        // حذف من الـ database دايمًا
-        const {error} = await sb.from('employee_files').delete().eq('id', id);
-        if(error) return toast(error.message, 'error');
-        
-        toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅', 'success');
-        await renderHRFiles();  // ← await مهمة هنا
-      } catch(e) {
-        toast(e.message, 'error');
-      }
+        // حذف من الـ DB دايمًا
+        const {error}=await sb.from('employee_files').delete().eq('id',id);
+        if(error) return toast(error.message,'error');
+        toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅','success');
+        await renderHRFiles();
+      } catch(e){ toast(e.message,'error'); }
     }
   });
 }
