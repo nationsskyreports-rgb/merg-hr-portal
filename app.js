@@ -3,6 +3,7 @@ const sb = window.supabase.createClient(
   'https://wnuzxosjjhucxnlaptbf.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndudXp4b3Nqamh1Y3hubGFwdGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODY5MjgsImV4cCI6MjA4OTg2MjkyOH0.o-3ORuewx9hpgmwiJZMNNBt0LehSmutxVRsPEw-3u58'
 );
+
 function showConfirm({ icon='⚠️', title, msg, okLabel, okColor='var(--red)', onOk }) {
   $('confirmIcon').textContent   = icon;
   $('confirmTitle').textContent  = title;
@@ -13,6 +14,7 @@ function showConfirm({ icon='⚠️', title, msg, okLabel, okColor='var(--red)',
   $('confirmOkBtn').onclick = () => { closeModal('confirmModal'); onOk(); };
   openModal('confirmModal');
 }
+
 // ═══ GLOBALS ═══
 let lang = localStorage.getItem('lang') || 'en';
 let darkMode = localStorage.getItem('dark') === '1';
@@ -96,6 +98,7 @@ const T = {
     cancel: 'Cancel', logout_confirm: 'Confirm Logout',
     logout_msg: 'Are you sure you want to sign out?', sign_out: 'Sign Out',
     no_att_today: 'No attendance recorded today.',
+    my_tasks: 'My Tasks', no_tasks: 'No tasks assigned',
   },
   ar: {
     welcome_back: 'مرحباً بعودتك', sign_in_sub: 'سجّل الدخول إلى حسابك',
@@ -169,6 +172,7 @@ const T = {
     cancel: 'إلغاء', logout_confirm: 'تأكيد تسجيل الخروج',
     logout_msg: 'هل أنت متأكد من تسجيل الخروج؟', sign_out: 'تسجيل الخروج',
     no_att_today: 'لا يوجد حضور مسجل اليوم.',
+    my_tasks: 'تاسكاتي', no_tasks: 'مفيش تاسكات عليك',
   }
 };
 const t = () => T[lang];
@@ -223,7 +227,7 @@ function toggleLang() {
   updateLangBtns();
   if(currentUser) {
     if(isAdmin) renderHR(hrTab);
-    else renderEmp(empTab);
+    else initEmp();
   } else {
     renderLogin();
   }
@@ -233,49 +237,40 @@ function updateLangBtns() {
   const label = lang==='en'?'عربي':'EN';
   ['langBtnTxt','appLangBtn','hrLangBtn'].forEach(id => {
     const el = $(id);
-    if(el) {
-      el.textContent = label;
-      el.style.color = 'var(--green)';
-    }
+    if(el) { el.textContent = label; el.style.color='var(--green)'; }
   });
 }
 
 function updateStaticText() {
   const el = id => $(id);
-  if(el('fm_title')) el('fm_title').textContent = t().reset_title;
-  if(el('fm_sub'))   el('fm_sub').textContent   = t().reset_sub;
-  if(el('fm_label')) el('fm_label').textContent = t().email_lbl;
-  if(el('resetBtnTxt')) el('resetBtnTxt').textContent = t().send_reset;
-  if(el('cpTitle')) el('cpTitle').textContent = t().change_password;
-  if(el('cpBtn'))   el('cpBtn').textContent   = t().update_pw;
-  if(el('addEmpTitle')) el('addEmpTitle').textContent = t().add_employee;
+  if(el('fm_title'))     el('fm_title').textContent     = t().reset_title;
+  if(el('fm_sub'))       el('fm_sub').textContent       = t().reset_sub;
+  if(el('fm_label'))     el('fm_label').textContent     = t().email_lbl;
+  if(el('resetBtnTxt')) el('resetBtnTxt').textContent   = t().send_reset;
+  if(el('cpTitle'))      el('cpTitle').textContent      = t().change_password;
+  if(el('cpBtn'))        el('cpBtn').textContent        = t().update_pw;
+  if(el('addEmpTitle'))  el('addEmpTitle').textContent  = t().add_employee;
   if(el('addEmpBtnTxt')) el('addEmpBtnTxt').textContent = t().add_employee;
 }
 
 function showScreen(screen) {
-  $('root').style.display = screen==='login'?'flex':'none';
-  $('empApp').style.display = screen==='empApp'?'block':'none';
-  $('hrApp').style.display = screen==='hrApp'?'block':'none';
+  $('root').style.display    = screen==='login'  ?'flex'  :'none';
+  $('empApp').style.display  = screen==='empApp' ?'block' :'none';
+  $('hrApp').style.display   = screen==='hrApp'  ?'block' :'none';
 }
 
-function openModal(id) {
-  const modal = $(id);
-  if(modal) modal.style.display = 'flex';
-}
+function openModal(id)  { const m=$(id); if(m) m.style.display='flex'; }
+function closeModal(id) { const m=$(id); if(m) m.style.display='none'; }
 
-function closeModal(id) {
-  const modal = $(id);
-  if(modal) modal.style.display = 'none';
-}
-
+// ═══ LOGIN ═══
 function renderLogin() {
   $('root').innerHTML = `
-    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-      <div style="width:100%;max-width:400px">
-        <div style="text-align:center;margin-bottom:32px">
-          <div style="font-size:32px;font-weight:900;color:var(--sky);margin-bottom:8px">MERGE</div>
-          <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px">${t().welcome_back}</div>
-          <div style="font-size:14px;color:var(--sub)">${t().sign_in_sub}</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:100%;max-width:380px">
+        <div style="text-align:center;margin-bottom:36px">
+          <div style="font-size:36px;font-weight:900;color:var(--indigo);font-family:'Syne',sans-serif;letter-spacing:-1px;margin-bottom:8px">MERGE</div>
+          <div style="font-size:22px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif;margin-bottom:6px">${t().welcome_back}</div>
+          <div style="font-size:14px;color:var(--muted)">${t().sign_in_sub}</div>
         </div>
         <div class="form-field">
           <label class="field-label">${t().email}</label>
@@ -285,15 +280,15 @@ function renderLogin() {
           <label class="field-label">${t().password}</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" type="password" id="li_pw" placeholder="${t().enter_pw}" style="flex:1"/>
-            <button onclick="togglePw('li_pw',this)" style="background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;width:44px;cursor:pointer;font-size:16px">👁</button>
+            <button onclick="togglePw('li_pw',this)" style="background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--r-md);width:44px;cursor:pointer;font-size:16px">👁</button>
           </div>
         </div>
-        <button class="primary-btn" onclick="handleLogin()" style="width:100%;margin-bottom:12px">${t().sign_in}</button>
-        <button class="primary-btn" style="width:100%;background:var(--input-bg);color:var(--text)" onclick="openModal('forgotPwModal')">${t().forgot_pw}</button>
-        <div style="text-align:center;margin-top:20px">
+        <button class="primary-btn" onclick="handleLogin()" style="width:100%;margin-bottom:10px;padding:14px">${t().sign_in}</button>
+        <button class="primary-btn" style="width:100%;background:var(--surface-3);color:var(--sub);box-shadow:none;border:1px solid var(--border)" onclick="openModal('forgotPwModal')">${t().forgot_pw}</button>
+        <div style="text-align:center;margin-top:24px;display:flex;align-items:center;justify-content:center;gap:16px">
           <button onclick="toggleLang()" style="background:none;border:none;color:var(--green);cursor:pointer;font-weight:700;font-size:14px">${lang==='en'?'عربي':'EN'}</button>
-          <span style="color:var(--border);margin:0 8px">•</span>
-          <button onclick="toggleDark()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-weight:700;font-size:16px">${darkMode?'☀️':'🌙'}</button>
+          <div style="width:1px;height:16px;background:var(--border)"></div>
+          <button onclick="toggleDark()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:18px">${darkMode?'☀️':'🌙'}</button>
         </div>
       </div>
     </div>
@@ -303,7 +298,7 @@ function renderLogin() {
 
 async function handleLogin() {
   const email = $('li_email')?.value?.trim();
-  const pw = $('li_pw')?.value;
+  const pw    = $('li_pw')?.value;
   if(!email||!pw) return toast('Enter email and password','error');
   try {
     const {data,error} = await sb.auth.signInWithPassword({email,password:pw});
@@ -330,10 +325,11 @@ async function handleForgotPw() {
 }
 
 async function handleChangePw() {
-  const nw = $('cp_new')?.value, cnf = $('cp_confirm')?.value;
+  const nw  = $('cp_new')?.value;
+  const cnf = $('cp_confirm')?.value;
   if(!nw||!cnf) return toast('Enter new password','error');
   if(nw.length<6) return toast(t().pw_hint,'error');
-  if(nw!==cnf) return toast(t().mismatch,'error');
+  if(nw!==cnf)   return toast(t().mismatch,'error');
   try {
     const {error} = await sb.auth.updateUser({password:nw});
     if(error) return toast(error.message,'error');
@@ -344,122 +340,219 @@ async function handleChangePw() {
 
 function handleLogout() {
   showConfirm({
-    icon: '🚪',
-    title: t().logout_confirm,
-    msg: t().logout_msg,
-    okLabel: t().sign_out,
-    okColor: 'var(--red)',
-    onOk: () => {
+    icon:'🚪', title:t().logout_confirm, msg:t().logout_msg,
+    okLabel:t().sign_out, okColor:'var(--red)',
+    onOk:() => {
       sb.auth.signOut();
-      currentUser = null;
-      currentEmployee = null;
-      isAdmin = false;
+      currentUser=null; currentEmployee=null; isAdmin=false;
       renderLogin();
     }
   });
 }
 
 function toggleDark() {
-  darkMode = !darkMode;
-  applyDark();
+  darkMode=!darkMode; applyDark();
   if(currentUser && !isAdmin) renderEmp(empTab);
   else if(!currentUser) renderLogin();
 }
 
-// ═══ EMPLOYEE FUNCTIONS ═══
+// ═══════════════════════════════════════════
+// EMPLOYEE APP — Full Redesign (Manus style)
+// ═══════════════════════════════════════════
+
+// SVG icons for bottom nav
+const navIcons = {
+  home: `<svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>`,
+  history: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  leave: `<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+  tasks: `<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
+  notifs: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
+  profile: `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+};
+
 async function initEmp() {
   updateLangBtns();
   updateStaticText();
   applyDark();
+
   $('empApp').innerHTML = `
-    <div style="display:flex;flex-direction:column;height:100vh">
-      <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <div style="font-size:18px;font-weight:800;color:var(--sky)">MERGE</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="toggleLang()" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--green)" id="appLangBtn">${lang==='en'?'عربي':'EN'}</button>
-          <button onclick="handleLogout()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700">🚪 ${t().logout}</button>
-        </div>
-      </div>
-      <div style="flex:1;overflow-y:auto;padding:16px" id="empContent"></div>
-      <div style="background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px;flex-shrink:0">
-        <button class="hr-tab active" onclick="showEmpTab('home')" style="padding:8px;font-size:11px">🏠 <span id="navt_home">Home</span></button>
-        <button class="hr-tab" onclick="showEmpTab('history')" style="padding:8px;font-size:11px">📊 <span id="navt_history">${t().history}</span></button>
-        <button class="hr-tab" onclick="showEmpTab('leave')" style="padding:8px;font-size:11px">🌴 <span id="navt_leave">${t().leave}</span></button>
-        <button class="hr-tab" onclick="showEmpTab('tasks')" style="padding:8px;font-size:11px">✅ <span>${lang==='ar'?'تاسكاتي':'Tasks'}</span></button>
-        <button class="hr-tab" onclick="showEmpTab('notifs')" style="padding:8px;font-size:11px">🔔 <span id="navt_notifs">${t().notifications}</span><span id="notifBadge" style="display:none;position:absolute;width:16px;height:16px;background:var(--red);color:#fff;border-radius:50%;font-size:10px;font-weight:700;align-items:center;justify-content:center;margin-left:2px"></span></button>
-        <button class="hr-tab" onclick="showEmpTab('profile')" style="padding:8px;font-size:11px">👤 <span id="navt_profile">${t().profile}</span></button>
+    <!-- Header -->
+    <div class="emp-header">
+      <div style="font-size:20px;font-weight:900;color:var(--indigo);font-family:'Syne',sans-serif;letter-spacing:-0.5px">MERGE</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="toggleLang()" id="appLangBtn"
+          style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-full);padding:5px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--green);font-family:'Syne',sans-serif">
+          ${lang==='en'?'عربي':'EN'}
+        </button>
+        <button onclick="handleLogout()"
+          style="background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-full);padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--red)">
+          🚪
+        </button>
       </div>
     </div>
+
+    <!-- Content -->
+    <div class="emp-content" id="empContent"></div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-home" onclick="showEmpTab('home',this)">
+        ${navIcons.home}
+        <span class="nav-label">${lang==='ar'?'الرئيسية':'Home'}</span>
+      </button>
+      <button class="nav-item" id="nav-history" onclick="showEmpTab('history',this)">
+        ${navIcons.history}
+        <span class="nav-label">${t().history}</span>
+      </button>
+      <button class="nav-item" id="nav-leave" onclick="showEmpTab('leave',this)">
+        ${navIcons.leave}
+        <span class="nav-label">${t().leave}</span>
+      </button>
+      <button class="nav-item" id="nav-tasks" onclick="showEmpTab('tasks',this)">
+        ${navIcons.tasks}
+        <span class="nav-label">${lang==='ar'?'تاسكاتي':'Tasks'}</span>
+      </button>
+      <button class="nav-item" id="nav-notifs" onclick="showEmpTab('notifs',this)" style="position:relative">
+        ${navIcons.notifs}
+        <span class="nav-label">${t().notifications}</span>
+        <span id="notifBadge" class="nav-badge"></span>
+      </button>
+      <button class="nav-item" id="nav-profile" onclick="showEmpTab('profile',this)">
+        ${navIcons.profile}
+        <span class="nav-label">${t().profile}</span>
+      </button>
+    </nav>
   `;
+
   renderEmp('home');
   fetchUnread();
 }
 
-function showEmpTab(tab) {
+function showEmpTab(tab, el) {
   empTab = tab;
-  document.querySelectorAll('.hr-tab').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  else { const nb = $('nav-'+tab); if(nb) nb.classList.add('active'); }
   renderEmp(tab);
 }
 
 async function renderEmp(tab) {
-  if(tab==='home') await renderHome();
+  const el = $('empContent');
+  if(!el) return;
+  if(tab==='home')    await renderHome();
   else if(tab==='history') await renderHistory();
-  else if(tab==='leave') await renderLeave();
-  else if(tab==='notifs') await renderNotifs();
-  else if(tab==='tasks') await renderEmpTasks();
+  else if(tab==='leave')   await renderLeave();
+  else if(tab==='notifs')  await renderNotifs();
+  else if(tab==='tasks')   await renderEmpTasks();
   else if(tab==='profile') await renderProfile();
 }
 
+// ═══ HOME ═══
 async function renderHome() {
   const emp = currentEmployee;
   const initials = (emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
   const {data:rec} = await sb.from('attendance_records').select('*').eq('employee_id',emp.id).eq('attendance_date',nowISO()).maybeSingle();
-  const isClockedIn = !!(rec && rec.check_in_time && !rec.check_out_time);
+  const isClockedIn  = !!(rec && rec.check_in_time && !rec.check_out_time);
   const needsConfirm = rec?.is_mobile && !rec?.is_confirmed;
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString(lang==='ar'?'ar-EG':'en-US',{hour:'2-digit',minute:'2-digit'});
+  const dateStr = now.toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',month:'long',day:'numeric'});
+
   $('empContent').innerHTML = `
-    <div style="margin-bottom:18px">
-      <div class="greeting-name">${getGreeting()} 👋 ${needsConfirm ? `<span style="color:var(--amber);font-size:14px">(${t().pending_confirm})</span>` : ''}</div>
-      <div class="greeting-date">${new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
-    </div>
-    <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;border:1.5px solid rgba(56,189,248,.25)">
-      <div style="width:54px;height:54px;border-radius:27px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0">${initials}</div>
-      <div style="flex:1">
-        <div style="font-size:17px;font-weight:700;color:var(--text)">${emp.first_name} ${emp.last_name}</div>
-        <div style="font-size:12px;color:var(--sub);margin-top:3px">${emp.job_title||emp.position||''} · ${emp.department||''}</div>
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="hero-greeting">${getGreeting()} 👋</div>
+      <div class="hero-name">${emp.first_name} ${emp.last_name}</div>
+      <div class="hero-role">${emp.job_title||''} · ${emp.department||''}</div>
+      <div class="hero-time-row">
+        <div class="hero-time-box">
+          <div class="hero-time-label">${lang==='ar'?'الوقت':'Time'}</div>
+          <div class="hero-time-val">${timeStr}</div>
+        </div>
+        <div class="hero-time-box">
+          <div class="hero-time-label">${lang==='ar'?'التاريخ':'Date'}</div>
+          <div class="hero-time-val" style="font-size:13px;padding-top:2px">${dateStr}</div>
+        </div>
       </div>
     </div>
-    <div class="att-card" style="${needsConfirm ? 'border: 2px dashed var(--amber)' : ''}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="width:10px;height:10px;border-radius:5px;background:${needsConfirm ? 'var(--amber)' : (isClockedIn?'var(--green)':'var(--muted)')}"></div>
-        <span style="font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.7px">${needsConfirm ? t().pending_confirm : (isClockedIn?t().clocked_in:t().todays_att)}</span>
-        ${isClockedIn && !needsConfirm ?`<span class="badge" style="background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)">${t().active}</span>`:''}
+
+    <!-- Status + Attendance -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${lang==='ar'?'الحضور اليوم':'Today\'s Attendance'}</div>
+        <div class="status-pill ${needsConfirm?'pending':isClockedIn?'active':'inactive'}">
+          <span class="status-dot ${isClockedIn&&!needsConfirm?'pulse':''}"></span>
+          ${needsConfirm?t().pending_confirm:isClockedIn?t().clocked_in:t().todays_att}
+        </div>
       </div>
-      ${rec?.check_in_time?`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">${t().check_in_label}: <b>${fmtTime(rec.check_in_time)}</b>${rec.check_out_time?` · ${t().check_out_label}: <b>${fmtTime(rec.check_out_time)}</b>`:''}</div>`:''}
-      
+
+      ${rec?.check_in_time ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:var(--r-lg);padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">${t().check_in_label}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--green);font-family:'Syne',sans-serif">${fmtTime(rec.check_in_time)}</div>
+          </div>
+          <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:var(--r-lg);padding:12px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">${t().check_out_label}</div>
+            <div style="font-size:20px;font-weight:800;color:${rec.check_out_time?'var(--red)':'var(--muted)'};font-family:'Syne',sans-serif">${fmtTime(rec.check_out_time)}</div>
+          </div>
+        </div>
+      ` : ''}
+
       ${needsConfirm && !isMobile ? `
-        <button class="primary-btn" style="margin-bottom:12px;background:var(--sky);padding:10px" onclick="confirmCheckIn('${rec.id}')">💻 ${t().confirm_mobile}</button>
+        <button class="primary-btn" style="width:100%;margin-bottom:10px;background:var(--amber)" onclick="confirmCheckIn('${rec.id}')">
+          💻 ${t().confirm_mobile}
+        </button>
       ` : ''}
 
       <div class="att-btns">
-        <button class="att-btn" style="background:var(--green)" onclick="handleCheckIn()" ${isClockedIn || (needsConfirm && isMobile) ?'disabled':''} id="ciBtn">✅ ${t().check_in}</button>
-        <button class="att-btn" style="background:var(--red)" onclick="handleCheckOut()" ${!isClockedIn || needsConfirm ?'disabled':''} id="coBtn">🚪 ${t().check_out}</button>
+        <button class="att-btn checkin" onclick="handleCheckIn()"
+          ${isClockedIn||(needsConfirm&&isMobile)?'disabled':''} id="ciBtn">
+          <span class="att-btn-icon">✅</span>
+          ${t().check_in}
+        </button>
+        <button class="att-btn checkout" onclick="handleCheckOut()"
+          ${!isClockedIn||needsConfirm?'disabled':''} id="coBtn">
+          <span class="att-btn-icon">🚪</span>
+          ${t().check_out}
+        </button>
       </div>
     </div>
-    <div class="sec-title">${t().quick_actions}</div>
+
+    <!-- Quick Actions -->
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px;font-family:'Syne',sans-serif">${t().quick_actions}</div>
     <div class="action-grid">
-      <button class="action-card" onclick="showEmpTab('history')"><span class="ac-icon">📊</span><span class="ac-label" style="color:var(--green)">${t().history}</span></button>
-      <button class="action-card" onclick="showEmpTab('leave')"><span class="ac-icon">🌴</span><span class="ac-label" style="color:var(--purple)">${t().leave}</span></button>
-      <button class="action-card" onclick="showEmpTab('notifs')"><span class="ac-icon">🔔</span><span class="ac-label" style="color:var(--sky)">${t().notifications}</span></button>
-      <button class="action-card" onclick="showEmpTab('profile')"><span class="ac-icon">👤</span><span class="ac-label" style="color:var(--sub)">${t().profile}</span></button>
-      <button class="action-card" onclick="openModal('changePwModal')"><span class="ac-icon">🔐</span><span class="ac-label" style="color:var(--amber)">${t().change_pw}</span></button>
-      <button class="action-card" onclick="handleLogout()"><span class="ac-icon">🚪</span><span class="ac-label" style="color:var(--red)">${t().logout}</span></button>
+      <button class="action-card" onclick="showEmpTab('history')">
+        <div class="ac-icon" style="background:rgba(16,185,129,.1)">📊</div>
+        <div class="ac-label" style="color:var(--green)">${t().history}</div>
+      </button>
+      <button class="action-card" onclick="showEmpTab('leave')">
+        <div class="ac-icon" style="background:rgba(168,85,247,.1)">🌴</div>
+        <div class="ac-label" style="color:var(--purple)">${t().leave}</div>
+      </button>
+      <button class="action-card" onclick="showEmpTab('tasks')">
+        <div class="ac-icon" style="background:rgba(14,165,233,.1)">✅</div>
+        <div class="ac-label" style="color:var(--sky)">${lang==='ar'?'تاسكاتي':'Tasks'}</div>
+      </button>
+      <button class="action-card" onclick="showEmpTab('notifs')">
+        <div class="ac-icon" style="background:rgba(99,102,241,.1)">🔔</div>
+        <div class="ac-label" style="color:var(--indigo)">${t().notifications}</div>
+      </button>
+      <button class="action-card" onclick="openModal('changePwModal')">
+        <div class="ac-icon" style="background:rgba(245,158,11,.1)">🔐</div>
+        <div class="ac-label" style="color:var(--amber)">${t().change_pw}</div>
+      </button>
+      <button class="action-card" onclick="showEmpTab('profile')">
+        <div class="ac-icon" style="background:rgba(90,100,120,.1)">👤</div>
+        <div class="ac-label" style="color:var(--sub)">${t().profile}</div>
+      </button>
     </div>
   `;
 }
 
+// ═══ CHECK IN / OUT (unchanged logic) ═══
 async function handleCheckIn() {
   const btn = $('ciBtn'); if(btn) btn.disabled=true;
   try {
@@ -474,55 +567,33 @@ async function handleCheckIn() {
         {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
       );
     });
-    const dist = haversine(loc.lat,loc.lng,office.latitude,office.longitude);
+    const dist    = haversine(loc.lat,loc.lng,office.latitude,office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc,50);
     if(dist>allowed) return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error');
     const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
-    
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
     if(ex) {
-      const {error} = await sb.from('attendance_records').update({
-        check_in_time: nowTime(),
-        check_out_time: null,
-        is_mobile: isMobile,
-        is_confirmed: !isMobile
-      }).eq('id', ex.id);
+      const {error} = await sb.from('attendance_records').update({check_in_time:nowTime(),check_out_time:null,is_mobile:isMobile,is_confirmed:!isMobile}).eq('id',ex.id);
       if(error) return toast(error.message,'error');
     } else {
-      const {error} = await sb.from('attendance_records').insert([{
-        employee_id:currentEmployee.id,
-        attendance_date:nowISO(),
-        check_in_time:nowTime(),
-        office_id:office.id,
-        is_mobile: isMobile,
-        is_confirmed: !isMobile
-      }]);
+      const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
       if(error) return toast(error.message,'error');
     }
-    
-    if(isMobile) {
-      toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
-    } else {
-      toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
-    }
+    if(isMobile) toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
+    else toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
     renderEmp('home');
   } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
 }
 
 async function confirmCheckIn(id) {
   if(!id) return toast('Invalid Record ID','error');
-  const btn = event.currentTarget;
-  if(btn) btn.disabled = true;
+  const btn = event.currentTarget; if(btn) btn.disabled=true;
   try {
     const {error} = await sb.from('attendance_records').update({is_confirmed:true}).eq('id',id);
     if(error) throw error;
     toast(t().confirm_success,'success');
     renderEmp('home');
-  } catch(e) { 
-    toast(e.message,'error'); 
-    if(btn) btn.disabled = false;
-  }
+  } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
 }
 
 async function handleCheckOut() {
@@ -540,80 +611,78 @@ async function handleCheckOut() {
   } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
 }
 
+// ═══ HISTORY ═══
 async function renderHistory() {
   const {data:recs} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).order('attendance_date',{ascending:false}).limit(60);
   const records = recs||[];
   $('empContent').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:18px;font-weight:800;color:var(--text)">${t().attendance_history}</div>
-      <span class="badge" style="background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">${records.length} ${t().records}</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif">${t().attendance_history}</div>
+      <span class="badge" style="background:var(--sky-dim);color:var(--sky);border:1px solid rgba(14,165,233,.2)">${records.length} ${t().records}</span>
     </div>
-    ${records.length===0?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${t().no_records}</div><div class="empty-sub">${t().no_records_sub}</div></div>`
-    :records.map(r=>{
-      const ok=r.check_in_time&&r.check_out_time;
-      const late=r.check_in_time&&r.check_in_time>'09:15:00';
-      const badge=ok
-        ?`<span class="badge" style="background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)">${t().complete}</span>`
-        :r.check_in_time
-          ?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)">${t().in_progress}</span>`
-          :`<span class="badge" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)">${t().missing}</span>`;
-      return `<div class="hist-item">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">${fmtDate(r.attendance_date)}</span>${badge}
-        </div>
-        <div class="hist-times">
-          <div><div class="hist-time-label">${t().check_in_label}</div><div class="hist-time-val" style="color:${late?'var(--red)':'var(--text)'}">${fmtTime(r.check_in_time)}</div></div>
-          <div class="hist-divider"></div>
-          <div><div class="hist-time-label">${t().check_out_label}</div><div class="hist-time-val">${fmtTime(r.check_out_time)}</div></div>
-        </div>
-      </div>`;
-    }).join('')}
+    ${records.length===0
+      ?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${t().no_records}</div><div class="empty-sub">${t().no_records_sub}</div></div>`
+      :records.map(r=>{
+        const ok   = r.check_in_time&&r.check_out_time;
+        const late = r.check_in_time&&r.check_in_time>'09:15:00';
+        const badge = ok
+          ?`<span class="badge" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.2)">${t().complete}</span>`
+          :r.check_in_time
+            ?`<span class="badge" style="background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.2)">${t().in_progress}</span>`
+            :`<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">${t().missing}</span>`;
+        return `<div class="hist-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:700;color:var(--text)">${fmtDate(r.attendance_date)}</span>${badge}
+          </div>
+          <div class="hist-times">
+            <div>
+              <div class="hist-time-label">${t().check_in_label}</div>
+              <div class="hist-time-val" style="color:${late?'var(--red)':'var(--text)'}">${fmtTime(r.check_in_time)}</div>
+            </div>
+            <div class="hist-divider"></div>
+            <div>
+              <div class="hist-time-label">${t().check_out_label}</div>
+              <div class="hist-time-val">${fmtTime(r.check_out_time)}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
   `;
 }
 
+// ═══ LEAVE ═══
 let leaveTab='new', leaveType='annual';
-
-// الأنواع اللى بتخصم من الرصيد
 const DEDUCTIBLE_TYPES = ['annual','sick','emergency'];
-
-function calcLeaveDays(start, end) {
-  return Math.ceil((new Date(end) - new Date(start)) / 86400000) + 1;
-}
+function calcLeaveDays(start,end) { return Math.ceil((new Date(end)-new Date(start))/86400000)+1; }
 
 async function renderLeave() {
-  const [leavesRes, empRes] = await Promise.all([
+  const [leavesRes,empRes] = await Promise.all([
     sb.from('leave_requests').select('*').eq('employee_id',currentEmployee.id).order('created_at',{ascending:false}).limit(50),
     sb.from('employees').select('leave_balance').eq('id',currentEmployee.id).single()
   ]);
-  const leaves   = leavesRes.data || [];
-  const balance  = empRes.data?.leave_balance ?? 21;
-  const TOTAL    = 21;
-
-  // الأيام المخصومة = approved فقط من الأنواع القابلة للخصم
-  const usedDays = leaves
-    .filter(lv => lv.status==='approved' && DEDUCTIBLE_TYPES.includes(lv.leave_type?.toLowerCase()))
-    .reduce((sum, lv) => sum + calcLeaveDays(lv.start_date, lv.end_date), 0);
-
+  const leaves    = leavesRes.data||[];
+  const balance   = empRes.data?.leave_balance??21;
+  const TOTAL     = 21;
+  const usedDays  = leaves.filter(lv=>lv.status==='approved'&&DEDUCTIBLE_TYPES.includes(lv.leave_type?.toLowerCase())).reduce((sum,lv)=>sum+calcLeaveDays(lv.start_date,lv.end_date),0);
   const remaining = balance;
-  const pct       = Math.min(100, Math.round((usedDays / TOTAL) * 100));
-  const barColor  = remaining <= 5 ? 'var(--red)' : remaining <= 10 ? 'var(--amber)' : 'var(--green)';
+  const pct       = Math.min(100,Math.round((usedDays/TOTAL)*100));
+  const barColor  = remaining<=5?'var(--red)':remaining<=10?'var(--amber)':'var(--green)';
 
-  const types=[
-    {val:'annual',    label: lang==='ar'?'سنوية 🌴':'Annual 🌴'},
-    {val:'sick',      label: lang==='ar'?'مرضية 🤒':'Sick 🤒'},
-    {val:'emergency', label: lang==='ar'?'عارضة 🚨':'Emergency 🚨'},
-    {val:'unpaid',    label: lang==='ar'?'بدون راتب 💸':'Unpaid 💸'},
+  const types = [
+    {val:'annual',    label:lang==='ar'?'سنوية 🌴':'Annual 🌴'},
+    {val:'sick',      label:lang==='ar'?'مرضية 🤒':'Sick 🤒'},
+    {val:'emergency', label:lang==='ar'?'عارضة 🚨':'Emergency 🚨'},
+    {val:'unpaid',    label:lang==='ar'?'بدون راتب 💸':'Unpaid 💸'},
   ];
 
   $('empContent').innerHTML = `
-    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">${t().leave_request}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif;margin-bottom:14px">${t().leave_request}</div>
 
-    <!-- بطاقة الرصيد -->
     <div class="card" style="background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(16,185,129,.05));border-color:rgba(99,102,241,.15);margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">${lang==='ar'?'رصيد الإجازات':'Leave Balance'}</div>
-          <div style="font-size:32px;font-weight:800;color:${barColor};font-family:'Syne',sans-serif;line-height:1">${remaining}</div>
+          <div style="font-size:34px;font-weight:800;color:${barColor};font-family:'Syne',sans-serif;line-height:1">${remaining}</div>
           <div style="font-size:12px;color:var(--sub);margin-top:4px">${lang==='ar'?`من أصل ${TOTAL} يوم`:`of ${TOTAL} days`}</div>
         </div>
         <div style="text-align:right">
@@ -622,8 +691,7 @@ async function renderLeave() {
           <div style="font-size:12px;color:var(--muted);margin-top:4px">${lang==='ar'?'يوم':'days'}</div>
         </div>
       </div>
-      <!-- Progress bar -->
-      <div style="background:var(--surface-3);border-radius:99px;height:8px;overflow:hidden">
+      <div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
         <div style="background:${barColor};height:100%;width:${pct}%;border-radius:99px;transition:width .5s ease"></div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">${pct}% ${lang==='ar'?'مستخدم':'used'}</div>
@@ -635,28 +703,28 @@ async function renderLeave() {
     </div>
 
     ${leaveTab==='new'?`
-      <div class="sec-title">${t().leave_type}</div>
+      <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px;font-family:'Syne',sans-serif">${t().leave_type}</div>
       <div class="chip-row">${types.map(tp=>`<button class="chip ${leaveType===tp.val?'active':''}" onclick="setLeaveType('${tp.val}')">${tp.label}</button>`).join('')}</div>
-      ${!DEDUCTIBLE_TYPES.includes(leaveType)?`<div style="font-size:12px;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:8px 12px;margin-bottom:12px">⚠️ ${lang==='ar'?'هذا النوع لا يُخصم من رصيدك':'This type does not affect your balance'}</div>`:''}
+      ${!DEDUCTIBLE_TYPES.includes(leaveType)?`<div style="font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);padding:8px 12px;margin-bottom:12px">⚠️ ${lang==='ar'?'هذا النوع لا يُخصم من رصيدك':'This type does not affect your balance'}</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
         <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
         <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
       </div>
       <div id="daysPill"></div>
       <div class="form-field"><label class="field-label">${t().reason}</label><textarea class="form-input" id="lv_reason" placeholder="${t().describe_reason}" style="min-height:80px"></textarea></div>
-      <button class="primary-btn" onclick="submitLeave()" style="width:100%">📤 ${t().submit_request}</button>
+      <button class="primary-btn" onclick="submitLeave()" style="width:100%;padding:14px">📤 ${t().submit_request}</button>
     `:`
       ${!leaves||leaves.length===0
         ?`<div class="empty"><div class="empty-icon">🌴</div><div class="empty-title">${t().no_leaves}</div><div class="empty-sub">${t().no_leaves_sub}</div></div>`
         :leaves.map(lv=>{
-          const days = calcLeaveDays(lv.start_date, lv.end_date);
+          const days = calcLeaveDays(lv.start_date,lv.end_date);
           const deductible = DEDUCTIBLE_TYPES.includes(lv.leave_type?.toLowerCase());
           return `<div class="leave-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span style="font-size:15px;font-weight:700;color:var(--text)">${lv.leave_type}</span>
-                <span style="font-size:12px;font-weight:700;color:${deductible&&lv.status==='approved'?'var(--red)':'var(--muted)'};background:${deductible&&lv.status==='approved'?'rgba(239,68,68,.08)':'var(--surface-3)'};border-radius:8px;padding:2px 8px">
-                  ${deductible && lv.status==='approved' ? `−${days} ${lang==='ar'?'يوم':'d'}` : `${days} ${lang==='ar'?'يوم':'d'}`}
+                <span style="font-size:14px;font-weight:700;color:var(--text)">${lv.leave_type}</span>
+                <span style="font-size:11px;font-weight:700;color:${deductible&&lv.status==='approved'?'var(--red)':'var(--muted)'};background:${deductible&&lv.status==='approved'?'var(--red-dim)':'var(--surface-3)'};border-radius:var(--r-sm);padding:2px 8px">
+                  ${deductible&&lv.status==='approved'?`−${days} ${lang==='ar'?'يوم':'d'}`:`${days} ${lang==='ar'?'يوم':'d'}`}
                 </span>
               </div>
               <span class="badge" style="background:${statusColor(lv.status)}20;color:${statusColor(lv.status)};border:1px solid ${statusColor(lv.status)}30">${lv.status?.toUpperCase()}</span>
@@ -670,12 +738,12 @@ async function renderLeave() {
 }
 
 function setLeaveTab(tab) { leaveTab=tab; renderLeave(); }
-function setLeaveType(tp) { leaveType=tp; renderLeave(); }
+function setLeaveType(tp)  { leaveType=tp; renderLeave(); }
 function updateDays() {
   const s=$('lv_start')?.value, e=$('lv_end')?.value;
   if(!s||!e) return;
-  const days=Math.ceil((new Date(e)-new Date(s))/86400000)+1;
-  const pill=$('daysPill');
+  const days = Math.ceil((new Date(e)-new Date(s))/86400000)+1;
+  const pill = $('daysPill');
   if(pill&&days>0) pill.innerHTML=`<div class="days-pill"><div class="days-pill-val">📅 ${days} ${days>1?t().days:t().day}</div></div>`;
 }
 
@@ -683,48 +751,45 @@ async function submitLeave() {
   const start=$('lv_start')?.value, end=$('lv_end')?.value, reason=$('lv_reason')?.value?.trim();
   if(!start||!end) return toast(t().missing_dates,'error');
   if(start<nowISO()) return toast(t().past_date,'error');
-  if(end<start) return toast(t().invalid_dates,'error');
-  if(!reason) return toast(t().missing_reason,'error');
-  const days = calcLeaveDays(start, end);
-
-  // لو النوع بيخصم من الرصيد، نتأكد إن الرصيد كافي
+  if(end<start)      return toast(t().invalid_dates,'error');
+  if(!reason)        return toast(t().missing_reason,'error');
+  const days = calcLeaveDays(start,end);
   if(DEDUCTIBLE_TYPES.includes(leaveType?.toLowerCase())) {
     const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',currentEmployee.id).single();
-    const bal = emp?.leave_balance ?? 21;
-    if(days > bal) {
-      return toast(lang==='ar'?`رصيدك ${bal} يوم فقط، والطلب ${days} يوم`:`You only have ${bal} days left, request is ${days} days`,'error');
-    }
+    const bal = emp?.leave_balance??21;
+    if(days>bal) return toast(lang==='ar'?`رصيدك ${bal} يوم فقط، والطلب ${days} يوم`:`You only have ${bal} days left, request is ${days} days`,'error');
   }
-
-  const {error}=await sb.from('leave_requests').insert([{employee_id:currentEmployee.id,leave_type:leaveType,start_date:start,end_date:end,reason,status:'pending'}]);
+  const {error} = await sb.from('leave_requests').insert([{employee_id:currentEmployee.id,leave_type:leaveType,start_date:start,end_date:end,reason,status:'pending'}]);
   if(error) return toast(error.message,'error');
   toast(lang==='ar'?'تم إرسال الطلب ✅':'Request submitted ✅','success');
   leaveTab='history'; renderLeave();
 }
 
+// ═══ NOTIFICATIONS ═══
 async function renderNotifs() {
-  const {data:notifs}=await sb.from('notifications').select('*').or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).order('created_at',{ascending:false}).limit(50);
-  const items=notifs||[];
-  $('empContent').innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:18px;font-weight:800;color:var(--text)">${t().notifications}</div>
-      ${items.some(n=>!n.is_read)?`<button onclick="markAllRead()" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:var(--sky);padding:7px 12px;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">${t().mark_all_read}</button>`:''}
+  const {data:notifs} = await sb.from('notifications').select('*').or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).order('created_at',{ascending:false}).limit(50);
+  const items = notifs||[];
+  $('empContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif">${t().notifications}</div>
+      ${items.some(n=>!n.is_read)?`<button onclick="markAllRead()" style="background:var(--sky-dim);border:1px solid rgba(14,165,233,.2);color:var(--sky);padding:6px 12px;border-radius:var(--r-full);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">${t().mark_all_read}</button>`:''}
     </div>
     ${items.length===0
       ?`<div class="empty"><div class="empty-icon">🔕</div><div class="empty-title">${t().no_notifs}</div><div class="empty-sub">${t().no_notifs_sub}</div></div>`
-      :items.map(n=>`<div class="notif-item ${!n.is_read?'notif-unread':''}" onclick="markRead(${n.id})" style="cursor:pointer;opacity:${n.is_read?.78:1}">
-        ${!n.is_read?'<div class="notif-dot"></div>':''}
-        <div style="flex:1">
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-            <span class="badge" style="background:rgba(99,102,241,.12);color:var(--indigo);border:1px solid rgba(99,102,241,.2)">${(n.type||'info').toUpperCase()}</span>
-            <span style="font-size:11px;color:var(--muted)">${n.created_at?new Date(n.created_at).toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{month:'short',day:'numeric'}):''}</span>
+      :items.map(n=>`
+        <div class="notif-item ${!n.is_read?'notif-unread':''}" onclick="markRead(${n.id})" style="opacity:${n.is_read?.75:1}">
+          ${!n.is_read?'<div class="notif-dot"></div>':''}
+          <div style="flex:1">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap">
+              <span class="badge" style="background:var(--indigo-dim);color:var(--indigo);border:1px solid var(--indigo-mid)">${(n.type||'info').toUpperCase()}</span>
+              <span style="font-size:11px;color:var(--muted)">${n.created_at?new Date(n.created_at).toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{month:'short',day:'numeric'}):''}</span>
+            </div>
+            <div style="font-size:14px;font-weight:${n.is_read?500:600};color:var(--text);line-height:1.5">${n.title||n.message||'Notification'}</div>
+            ${n.message&&n.title?`<div style="font-size:13px;color:var(--sub);margin-top:4px;line-height:1.5">${n.message}</div>`:''}
           </div>
-          <div style="font-size:14px;font-weight:${n.is_read?500:600};color:var(--text);line-height:1.5">${n.title||n.message||'Notification'}</div>
-          ${n.message&&n.title?`<div style="font-size:13px;color:var(--sub);margin-top:4px;line-height:1.5">${n.message}</div>`:''}
-        </div>
-      </div>`).join('')}
+        </div>`).join('')}
   `;
-  unreadCount=items.filter(n=>!n.is_read).length;
+  unreadCount = items.filter(n=>!n.is_read).length;
   updateNotifBadge();
 }
 
@@ -733,7 +798,7 @@ async function markRead(id) {
   fetchUnread(); renderNotifs();
 }
 async function markAllRead() {
-  const {data:notifs}=await sb.from('notifications').select('id').or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
+  const {data:notifs} = await sb.from('notifications').select('id').or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
   if(notifs?.length) await Promise.all(notifs.map(n=>sb.from('notifications').update({is_read:true}).eq('id',n.id)));
   fetchUnread(); renderNotifs();
 }
@@ -747,29 +812,25 @@ async function fetchUnread() {
 function startRealtimeNotifs() {
   if(!currentEmployee) return;
   sb.channel('notifs_'+currentEmployee.id)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'notifications'
-    }, payload => {
-      console.log('Realtime payload:', payload.new); // ← ضيف السطر ده
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications'}, payload => {
       const n = payload.new;
-      if(!n.employee_id || n.employee_id === currentEmployee.id) { // ← عدل الشرط
+      if(!n.employee_id || n.employee_id===currentEmployee.id) {
         showPushNotif(n.title||n.message||'Notification');
         fetchUnread();
       }
     })
     .subscribe();
 }
+
 function showPushNotif(msg) {
   const el = document.createElement('div');
   el.style.cssText = `
-    position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);
+    position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
     background:var(--surface);color:var(--text);
-    padding:14px 20px;border-radius:var(--r-xl);
+    padding:14px 18px;border-radius:var(--r-xl);
     box-shadow:var(--shadow-lg);z-index:9999;
     border:1px solid var(--border);border-left:4px solid var(--indigo);
-    font-size:14px;font-weight:600;max-width:min(340px,90vw);
+    font-size:14px;font-weight:600;max-width:min(320px,88vw);
     display:flex;align-items:center;gap:10px;
     transition:transform .4s cubic-bezier(0.16,1,0.3,1),opacity .4s;
     opacity:0;cursor:pointer;
@@ -777,137 +838,58 @@ function showPushNotif(msg) {
   el.innerHTML = `<span style="font-size:20px">🔔</span><span>${msg}</span>`;
   el.onclick = () => { showEmpTab('notifs'); el.remove(); };
   document.body.appendChild(el);
-  requestAnimationFrame(() => {
-    el.style.transform = 'translateX(-50%) translateY(0)';
-    el.style.opacity = '1';
-  });
-  setTimeout(() => {
-    el.style.transform = 'translateX(-50%) translateY(-80px)';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 400);
-  }, 4000);
+  requestAnimationFrame(()=>{ el.style.transform='translateX(-50%) translateY(0)'; el.style.opacity='1'; });
+  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),400); },4000);
 }
+
 function updateNotifBadge() {
-  const badge=$('notifBadge');
+  const badge = $('notifBadge');
   if(!badge) return;
-  badge.style.display=unreadCount>0?'flex':'none';
-  badge.textContent=unreadCount>9?'9+':unreadCount;
+  if(unreadCount>0) {
+    badge.classList.add('show');
+    badge.textContent = unreadCount>9?'9+':unreadCount;
+  } else {
+    badge.classList.remove('show');
+  }
 }
 
-async function renderProfile() {
-  const emp=currentEmployee;
-  const initials=(emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
-  const {data:recs}=await sb.from('attendance_records').select('*').eq('employee_id',emp.id);
-  const done=(recs||[]).filter(r=>r.check_in_time&&r.check_out_time);
-  const ot=done.filter(r=>r.check_in_time<='09:15:00');
-  const n=new Date();
-  const mo=done.filter(r=>{const d=new Date(r.attendance_date);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();});
-  const pct=done.length>0?Math.round(ot.length/done.length*100):0;
-
-  $('empContent').innerHTML=`
-    <div class="profile-header">
-      <div class="avatar-big">${initials}</div>
-      <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">${emp.first_name} ${emp.last_name}</div>
-      <div style="font-size:14px;color:var(--sub)">${emp.job_title||emp.position||''}</div>
-      <span class="badge" style="margin-top:10px;background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">${emp.department||''}</span>
-    </div>
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-val" style="color:var(--sky)">${done.length}</div><div class="stat-label">${t().total_days}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:var(--green)">${mo.length}</div><div class="stat-label">${t().this_month}</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:var(--amber)">${pct}%</div><div class="stat-label">${t().on_time}</div></div>
-    </div>
-    <div class="card">
-      <div class="info-row"><span class="info-label">${t().email_lbl}</span><span class="info-val">${emp.email||'—'}</span></div>
-      <div class="info-row"><span class="info-label">${t().phone_lbl}</span><span class="info-val">${emp.phone||'—'}</span></div>
-      <div class="info-row"><span class="info-label">${t().position}</span><span class="info-val">${emp.job_title||emp.position||'—'}</span></div>
-      <div class="info-row"><span class="info-label">${t().department}</span><span class="info-val">${emp.department||'—'}</span></div>
-      <div class="info-row" style="border-bottom:none"><span class="info-label">${t().joined}</span><span class="info-val">${fmtDate(emp.hire_date)||'—'}</span></div>
-    </div>
-    <div class="dark-row">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;border-radius:13px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px">${darkMode?'🌙':'☀️'}</div>
-        <span style="font-size:15px;font-weight:600;color:var(--text)">${darkMode?t().dark_mode:t().light_mode}</span>
-      </div>
-      <button class="toggle ${darkMode?'on':''}" onclick="toggleDark()"><div class="toggle-thumb"></div></button>
-    </div>
-    <div class="dark-row" onclick="openModal('changePwModal')" style="cursor:pointer">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;border-radius:13px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px">🔐</div>
-        <span style="font-size:15px;font-weight:600;color:var(--text)">${t().change_password}</span>
-      </div>
-      <span style="font-size:20px;color:var(--sub)">›</span>
-    </div>
-    <button class="primary-btn" style="background:var(--red);box-shadow:0 8px 22px rgba(239,68,68,.25);margin-top:10px" onclick="handleLogout()">🚪 ${t().logout}</button>
-  `;
-}
-
-function toggleDark() { darkMode=!darkMode; applyDark(); renderEmp('profile'); }
-
-// ═══ INIT ═══
-function init() {
-  applyDark();
-  document.documentElement.lang=lang;
-  document.documentElement.dir=lang==='ar'?'rtl':'ltr';
-  updateLangBtns();
-  updateStaticText();
-  renderLogin();
-  sb.auth.getSession().then(({data:{session}})=>{
-    if(session) {
-      currentUser=session.user;
-      sb.from('employees').select('*').eq('email',session.user.email).single().then(({data:emp})=>{
-        if(emp) {
-          currentEmployee=emp;
-          isAdmin=emp.email==='admin@merge.com';
-          if(isAdmin) { showScreen('hrApp'); initHR(); }
-          else { showScreen('empApp'); initEmp(); fetchUnread(); startRealtimeNotifs(); }
-        }
-      });
-    }
-  });
-}
-init();
+// ═══ TASKS ═══
 async function renderEmpTasks() {
-  const {data:tasks} = await sb.from('tasks')
-    .select('*')
-    .eq('assigned_to', currentEmployee.id)
-    .order('deadline', {ascending:true});
-  const items = tasks||[];
-  const pending = items.filter(t=>t.status==='pending');
-  const done    = items.filter(t=>t.status==='done');
+  const {data:tasks} = await sb.from('tasks').select('*').eq('assigned_to',currentEmployee.id).order('deadline',{ascending:true});
+  const items   = tasks||[];
+  const pending = items.filter(tk=>tk.status==='pending');
+  const done    = items.filter(tk=>tk.status==='done');
 
   $('empContent').innerHTML = `
-    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">✅ ${lang==='ar'?'تاسكاتي':'My Tasks'}</div>
-
+    <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif;margin-bottom:16px">✅ ${t().my_tasks}</div>
     ${items.length===0
-      ?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">${lang==='ar'?'مفيش تاسكات عليك':'No tasks assigned'}</div></div>`
+      ?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">${t().no_tasks}</div></div>`
       :`
         ${pending.length>0?`
-          <div class="sec-title">${lang==='ar'?'قيد التنفيذ':'Pending'} (${pending.length})</div>
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px;font-family:'Syne',sans-serif">${lang==='ar'?'قيد التنفيذ':'Pending'} (${pending.length})</div>
           ${pending.map(tk=>{
-            const isLate = tk.deadline && tk.deadline < nowISO();
-            return `<div class="card-sm" style="border-color:${isLate?'rgba(239,68,68,.4)':''}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            const isLate = tk.deadline&&tk.deadline<nowISO();
+            return `<div class="card-sm" style="border-color:${isLate?'rgba(239,68,68,.3)':''}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
                 <div style="flex:1">
                   <div style="font-size:15px;font-weight:700;color:var(--text)">${tk.title}</div>
                   ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
                 </div>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-                ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)} ${isLate?'⚠️':''}</span>`:''}
+                ${tk.deadline?`<span class="badge" style="background:${isLate?'var(--red-dim)':'var(--amber-dim)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)} ${isLate?'⚠️':''}</span>`:''}
                 <button onclick="markTaskDone('${tk.id}')" class="primary-btn" style="padding:7px 14px;font-size:12px;background:var(--green)">✅ ${lang==='ar'?'تم الإنجاز':'Mark Done'}</button>
               </div>
             </div>`;
           }).join('')}
         `:''}
-
         ${done.length>0?`
-          <div class="sec-title" style="margin-top:16px">${lang==='ar'?'المنتهية':'Completed'} (${done.length})</div>
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;margin-top:16px;text-transform:uppercase;letter-spacing:.9px;font-family:'Syne',sans-serif">${lang==='ar'?'المنتهية':'Completed'} (${done.length})</div>
           ${done.map(tk=>`
-            <div class="card-sm" style="opacity:.6;border-color:rgba(34,197,94,.3)">
+            <div class="card-sm" style="opacity:.55;border-color:rgba(16,185,129,.2)">
               <div style="font-size:14px;font-weight:600;color:var(--sub);text-decoration:line-through">${tk.title}</div>
               ${tk.deadline?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📅 ${fmtDate(tk.deadline)}</div>`:''}
-            </div>
-          `).join('')}
+            </div>`).join('')}
         `:''}
       `}
   `;
@@ -919,3 +901,86 @@ async function markTaskDone(id) {
   toast(lang==='ar'?'أحسنت! تم إنجاز التاسك 🎉':'Task completed 🎉','success');
   renderEmpTasks();
 }
+
+// ═══ PROFILE ═══
+async function renderProfile() {
+  const emp = currentEmployee;
+  const initials = (emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
+  const {data:recs} = await sb.from('attendance_records').select('*').eq('employee_id',emp.id);
+  const done = (recs||[]).filter(r=>r.check_in_time&&r.check_out_time);
+  const ot   = done.filter(r=>r.check_in_time<='09:15:00');
+  const n    = new Date();
+  const mo   = done.filter(r=>{ const d=new Date(r.attendance_date); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); });
+  const pct  = done.length>0?Math.round(ot.length/done.length*100):0;
+
+  $('empContent').innerHTML = `
+    <div class="profile-hero">
+      <div class="avatar-big">${initials}</div>
+      <div class="profile-name">${emp.first_name} ${emp.last_name}</div>
+      <div class="profile-role">${emp.job_title||''} · ${emp.department||''}</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" style="color:var(--sky)">${done.length}</div><div class="stat-label">${t().total_days}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--green)">${mo.length}</div><div class="stat-label">${t().this_month}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--amber)">${pct}%</div><div class="stat-label">${t().on_time}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="info-row"><span class="info-label">${t().email_lbl}</span><span class="info-val">${emp.email||'—'}</span></div>
+      <div class="info-row"><span class="info-label">${t().phone_lbl}</span><span class="info-val">${emp.phone||'—'}</span></div>
+      <div class="info-row"><span class="info-label">${t().position}</span><span class="info-val">${emp.job_title||emp.position||'—'}</span></div>
+      <div class="info-row"><span class="info-label">${t().department}</span><span class="info-val">${emp.department||'—'}</span></div>
+      <div class="info-row" style="border-bottom:none"><span class="info-label">${t().joined}</span><span class="info-val">${fmtDate(emp.hire_date)||'—'}</span></div>
+    </div>
+
+    <div class="setting-row" onclick="">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:18px">${darkMode?'🌙':'☀️'}</div>
+        <span style="font-size:15px;font-weight:600;color:var(--text)">${darkMode?t().dark_mode:t().light_mode}</span>
+      </div>
+      <button class="toggle ${darkMode?'on':''}" onclick="toggleDark(event)"><div class="toggle-thumb"></div></button>
+    </div>
+
+    <div class="setting-row" onclick="openModal('changePwModal')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:18px">🔐</div>
+        <span style="font-size:15px;font-weight:600;color:var(--text)">${t().change_password}</span>
+      </div>
+      <span style="font-size:20px;color:var(--muted)">›</span>
+    </div>
+
+    <button class="primary-btn" style="width:100%;background:var(--red);box-shadow:var(--shadow-red);margin-top:8px;padding:14px" onclick="handleLogout()">
+      🚪 ${t().logout}
+    </button>
+  `;
+}
+
+function toggleDark(e) {
+  if(e) e.stopPropagation();
+  darkMode=!darkMode; applyDark(); renderEmp(empTab);
+}
+
+// ═══ INIT ═══
+function init() {
+  applyDark();
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = lang==='ar'?'rtl':'ltr';
+  updateLangBtns();
+  updateStaticText();
+  renderLogin();
+  sb.auth.getSession().then(({data:{session}})=>{
+    if(session) {
+      currentUser = session.user;
+      sb.from('employees').select('*').eq('email',session.user.email).single().then(({data:emp})=>{
+        if(emp) {
+          currentEmployee = emp;
+          isAdmin = emp.email==='admin@merge.com';
+          if(isAdmin) { showScreen('hrApp'); initHR(); }
+          else { showScreen('empApp'); initEmp(); fetchUnread(); startRealtimeNotifs(); }
+        }
+      });
+    }
+  });
+}
+init();
