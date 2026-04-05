@@ -459,13 +459,20 @@ async function addAdjustment() {
 }
 
 async function deleteAdj(id) {
-  if(!confirm(lang==='ar'?'حذف هذا التعديل؟':'Delete this adjustment?')) return;
-  const {error} = await sb.from('salary_adjustments').delete().eq('id',id);
-  if(error) return toast(error.message,'error');
-  toast(lang==='ar'?'تم الحذف':'Deleted','success');
-  renderHRSalaries();
+  showConfirm({
+    icon: '🗑️',
+    title: lang==='ar' ? 'حذف التعديل' : 'Delete Adjustment',
+    msg: lang==='ar' ? 'هل أنت متأكد من حذف هذا التعديل؟' : 'Are you sure you want to delete this adjustment?',
+    okLabel: lang==='ar' ? 'حذف' : 'Delete',
+    okColor: 'var(--red)',
+    onOk: async () => {
+      const {error} = await sb.from('salary_adjustments').delete().eq('id',id);
+      if(error) return toast(error.message,'error');
+      toast(lang==='ar'?'تم الحذف':'Deleted','success');
+      renderHRSalaries();
+    }
+  });
 }
-
 let notifType = 'announcement';
 function renderHRNotifs() {
   $('hrContent').innerHTML = `
