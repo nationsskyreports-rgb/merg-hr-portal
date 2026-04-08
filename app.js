@@ -636,6 +636,11 @@ async function handleCheckOut() {
 async function renderHistory() {
   const {data:recs} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).order('attendance_date',{ascending:false}).limit(60);
   const records = recs||[];
+
+  // ← هنا برة الـ map
+  const {data:shiftSetting} = await sb.from('app_settings').select('value').eq('key','shift_start_time').single();
+  const shiftStart = (shiftSetting?.value || '09:15') + ':00';
+
   $('empContent').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif">${t().attendance_history}</div>
@@ -645,8 +650,6 @@ async function renderHistory() {
       ?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${t().no_records}</div><div class="empty-sub">${t().no_records_sub}</div></div>`
       :records.map(r=>{
         const ok   = r.check_in_time&&r.check_out_time;
-        const {data:shiftSetting} = await sb.from('app_settings').select('value').eq('key','shift_start_time').single();
-        const shiftStart = (shiftSetting?.value || '09:15') + ':00';
         const late = r.check_in_time && r.check_in_time > shiftStart;
         const badge = ok
           ?`<span class="badge" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.2)">${t().complete}</span>`
@@ -672,7 +675,6 @@ async function renderHistory() {
       }).join('')}
   `;
 }
-
 // ═══ LEAVE ═══
 let leaveTab='new', leaveType='annual';
 const DEDUCTIBLE_TYPES = ['annual','sick','emergency'];
