@@ -657,10 +657,10 @@ button:focus:not(:focus-visible) { outline:none; }
       <div class="form-field"><label class="field-label">Last Name</label><input class="form-input" type="text" id="ae_last"/></div>
       <div class="form-field" style="grid-column:1/-1"><label class="field-label">Email</label><input class="form-input" type="email" id="ae_email"/></div>
   <div class="form-field" style="margin:0">
-    <label class="field-label">${lang==='ar'?'المنصب':'Position'}</label>
+    <label class="field-label">Position</label>
     <div style="display:flex;gap:8px">
       <select id="ae_pos_select" class="form-input" style="flex:1">
-        <option value="">${lang==='ar'?'اختر المنصب':'Select Position'}</option>
+        <option value="">Select Position</option>
         <!-- Options will be loaded here -->
       </select>
       <button onclick="openOptionModal('pos')" style="width:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--input-bg);cursor:pointer;font-size:18px">+</button>
@@ -669,10 +669,10 @@ button:focus:not(:focus-visible) { outline:none; }
   
   <!-- حقل القسم (Department) بقائمة ذكية -->
   <div class="form-field" style="margin:0">
-    <label class="field-label">${lang==='ar'?'القسم':'Department'}</label>
+    <label class="field-label">Department</label>
     <div style="display:flex;gap:8px">
       <select id="ae_dept_select" class="form-input" style="flex:1">
-        <option value="">${lang==='ar'?'اختر القسم':'Select Department'}</option>
+        <option value="">Select Department</option>
         <!-- Options will be loaded here -->
       </select>
       <button onclick="openOptionModal('dept')" style="width:40px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--input-bg);cursor:pointer;font-size:18px">+</button>
