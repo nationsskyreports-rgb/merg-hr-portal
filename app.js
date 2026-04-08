@@ -608,9 +608,8 @@ async function handleCheckIn() {
 
     const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if(ex) {
-      const {error} = await sb.from('attendance_records').update({check_in_time:nowTime(),check_out_time:null,is_mobile:isMobile,is_confirmed:!isMobile}).eq('id',ex.id);
-      if(error) { setBtn(btn, false); return toast(error.message,'error'); }
+    if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
+    if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     } else {
       const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
       if(error) { setBtn(btn, false); return toast(error.message,'error'); }
