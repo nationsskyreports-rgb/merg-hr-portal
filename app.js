@@ -611,9 +611,10 @@ async function handleCheckIn() {
     if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
     if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     } else {
-      const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
-      if(error) { setBtn(btn, false); return toast(error.message,'error'); }
-    }
+if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
+const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
+if(error) { setBtn(btn, false); return toast(error.message,'error'); }
+  }
     if(isMobile) toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
     else toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
     renderEmp('home');
