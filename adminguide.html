@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل استخدام لوحة تحكم MERGE HR — للإدمن</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface-2: #1a2236;
+    --surface-3: #243049;
+    --border: #2a3a55;
+    --text: #f1f5f9;
+    --sub: #94a3b8;
+    --muted: #64748b;
+    --sky: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --indigo: #818cf8;
+    --violet: #a78bfa;
+    --r-lg: 16px;
+    --r-xl: 24px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(56,189,248,.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(129,140,248,.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(34,197,94,.03) 0%, transparent 60%);
+    animation: bgDrift 20s ease-in-out infinite alternate;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @keyframes bgDrift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-3%, 2%) rotate(3deg); }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 60px 20px 50px;
+    margin-bottom: 50px;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 3px;
+    background: linear-gradient(90deg, var(--sky), var(--indigo));
+    border-radius: 2px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56,189,248,.1);
+    border: 1px solid rgba(56,189,248,.2);
+    color: var(--sky);
+    padding: 6px 18px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--sky), var(--indigo));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--sub);
+    max-width: 550px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 40px;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp .6s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .section-header .sec-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 24px;
+    margin-bottom: 14px;
+    transition: border-color .3s;
+  }
+
+  .card:hover { border-color: rgba(56,189,248,.2); }
+
+  .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card p, .card li {
+    font-size: 14px;
+    color: var(--sub);
+    line-height: 1.9;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card ul li {
+    padding: 6px 0;
+    padding-right: 24px;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--sky);
+    opacity: .6;
+  }
+
+  .steps { counter-reset: step; }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 19px;
+    top: 44px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--sky);
+    flex-shrink: 0;
+  }
+
+  .step-content { flex: 1; padding-top: 6px; }
+  .step-content h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .step-content p { font-size: 13px; color: var(--sub); line-height: 1.7; }
+
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.7;
+  }
+
+  .alert-warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); color: var(--amber); }
+  .alert-info { background: rgba(56,189,248,.08); border: 1px solid rgba(56,189,248,.2); color: var(--sky); }
+  .alert-danger { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: var(--red); }
+  .alert-success { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2); color: var(--green); }
+
+  .alert i { font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  thead { background: var(--surface-2); }
+
+  th {
+    padding: 12px 16px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--sub);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(56,189,248,.03); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-green { background: rgba(34,197,94,.1); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,.1); color: var(--red); }
+  .badge-sky { background: rgba(56,189,248,.1); color: var(--sky); }
+  .badge-amber { background: rgba(245,158,11,.1); color: var(--amber); }
+  .badge-violet { background: rgba(139,92,246,.1); color: var(--violet); }
+  .badge-indigo { background: rgba(129,140,248,.1); color: var(--indigo); }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--sky);
+  }
+
+  .shot {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin: 16px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shot::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 32px;
+    background: var(--surface-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .shot-dots {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .shot-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .shot-dots span:nth-child(1) { background: var(--red); }
+  .shot-dots span:nth-child(2) { background: var(--amber); }
+  .shot-dots span:nth-child(3) { background: var(--green); }
+
+  .shot-body { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .shot-sidebar {
+    width: 60px;
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .shot-sidebar-item {
+    width: 100%;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+
+  .shot-sidebar-item.active {
+    background: rgba(56,189,248,.15);
+    border: 1px solid rgba(56,189,248,.3);
+  }
+
+  .shot-sidebar-item:not(.active) {
+    background: transparent;
+    border: 1px solid transparent;
+  }
+
+  .shot-main {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shot-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+  .shot-stat {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+
+  .shot-stat-icon { font-size: 16px; margin-bottom: 4px; }
+  .shot-stat-val { font-size: 18px; font-weight: 900; color: var(--sky); }
+  .shot-stat-label { font-size: 8px; color: var(--muted); font-weight: 600; }
+
+  .shot-row {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .shot-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--indigo));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .shot-text-sm { font-size: 11px; color: var(--sub); }
+  .shot-text-xs { font-size: 9px; color: var(--muted); }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 28px;
+    margin-bottom: 50px;
+  }
+
+  .toc h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+  }
+
+  .toc-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--sub);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all .2s;
+    cursor: pointer;
+  }
+
+  .toc-link:hover {
+    background: rgba(56,189,248,.08);
+    color: var(--sky);
+  }
+
+  .toc-link-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+
+  .footer p { font-size: 13px; color: var(--muted); }
+
+  .scroll-top {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--sky);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .3s;
+    box-shadow: 0 4px 20px rgba(56,189,248,.3);
+  }
+
+  .scroll-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .scroll-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(56,189,248,.4);
+  }
+
+  @media (max-width: 640px) {
+    .wrapper { padding: 20px 14px 60px; }
+    .hero { padding: 40px 14px 36px; }
+    .hero h1 { font-size: 28px; }
+    .card { padding: 18px; }
+    .shot-stat-row { grid-template-columns: repeat(2, 1fr); }
+    .step { gap: 12px; }
+    .table-wrap { font-size: 11px; }
+    th, td { padding: 8px 10px; }
+  }
+
+  @media print {
+    body { background: #fff; color: #111; }
+    body::before { display: none; }
+    .scroll-top { display: none; }
+    .card, .toc, .shot { border-color: #ddd; background: #f9f9f9; }
+    .shot::before { background: #eee; }
+    .section { opacity: 1; transform: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="hero">
+    <div class="hero-badge"><i class="fas fa-shield-halved"></i> دليل الإدمن الكامل</div>
+    <h1>لوحة تحكم <span>MERGE HR</span></h1>
+    <p>دليل شامل لكل وظائف لوحة التحكم خطوة بخطوة — مخصص لمسؤولي الموارد البشرية</p>
+  </div>
+
+  <div class="toc">
+    <h3><i class="fas fa-list" style="color:var(--sky)"></i> فهرس المحتويات</h3>
+    <div class="toc-grid">
+      <a class="toc-link" onclick="scrollTo_('sec-overview')"><div class="toc-link-icon" style="background:rgba(56,189,248,.1)">📊</div>نظرة عامة</a>
+      <a class="toc-link" onclick="scrollTo_('sec-attendance')"><div class="toc-link-icon" style="background:rgba(34,197,94,.1)">📍</div>سجل الحضور</a>
+      <a class="toc-link" onclick="scrollTo_('sec-leaves')"><div class="toc-link-icon" style="background:rgba(245,158,11,.1)">🌴</div>إدارة الإجازات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-employees')"><div class="toc-link-icon" style="background:rgba(129,140,248,.1)">👥</div>إدارة الموظفين</a>
+      <a class="toc-link" onclick="scrollTo_('sec-salaries')"><div class="toc-link-icon" style="background:rgba(56,189,248,.1)">💰</div>المرتبات والتعديلات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-notifs')"><div class="toc-link-icon" style="background:rgba(239,68,68,.1)">🔔</div>الإشعارات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-tasks')"><div class="toc-link-icon" style="background:rgba(34,197,94,.1)">✅</div>إدارة التاسكات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-files')"><div class="toc-link-icon" style="background:rgba(139,92,246,.1)">📁</div>ملفات الموظفين</a>
+      <a class="toc-link" onclick="scrollTo_('sec-export')"><div class="toc-link-icon" style="background:rgba(245,158,11,.1)">📤</div>تصدير البيانات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-settings')"><div class="toc-link-icon" style="background:rgba(100,116,139,.1)">⚙️</div>الإعدادات العامة</a>
+      <a class="toc-link" onclick="scrollTo_('sec-pages')"><div class="toc-link-icon" style="background:rgba(56,189,248,.1)">🛠️</div>إدارة الصفحات</a>
+      <a class="toc-link" onclick="scrollTo_('sec-tips')"><div class="toc-link-icon" style="background:rgba(34,197,94,.1)">💡</div>نصائح وملاحظات</a>
+    </div>
+  </div>
+
+  <!-- 1. نظرة عامة -->
+  <div class="section" id="sec-overview">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(56,189,248,.1)">📊</div>
+      <div><h2>نظرة عامة</h2><div class="sec-num">القسم الرئيسي — يظهر تلقائياً عند فتح النظام</div></div>
+    </div>
+    <div class="shot">
+      <div class="shot-dots"><span></span><span></span><span></span></div>
+      <div class="shot-body">
+        <div class="shot-sidebar">
+          <div class="shot-sidebar-item active">📊</div>
+          <div class="shot-sidebar-item">📍</div>
+          <div class="shot-sidebar-item">🌴</div>
+          <div class="shot-sidebar-item">👥</div>
+        </div>
+        <div class="shot-main">
+          <div class="shot-stat-row">
+            <div class="shot-stat"><div class="shot-stat-icon">👥</div><div class="shot-stat-val">24</div><div class="shot-stat-label">إجمالي</div></div>
+            <div class="shot-stat"><div class="shot-stat-icon">✅</div><div class="shot-stat-val">18</div><div class="shot-stat-label">حاضر</div></div>
+            <div class="shot-stat"><div class="shot-stat-icon">❌</div><div class="shot-stat-val">6</div><div class="shot-stat-label">غائب</div></div>
+            <div class="shot-stat"><div class="shot-stat-icon">🌴</div><div class="shot-stat-val">3</div><div class="shot-stat-label">معلق</div></div>
+          </div>
+          <div class="shot-row">
+            <div class="shot-avatar">أم</div>
+            <div style="flex:1"><div class="shot-text-sm">أحمد محمود</div><div class="shot-text-xs">قسم التكنولوجيا</div></div>
+            <div style="text-align:left"><div style="font-size:13px;font-weight:800;color:var(--red)">09:32</div><div style="font-size:9px;color:var(--red)">+17 دقيقة</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-info-circle" style="color:var(--sky)"></i> ما يعرضه هذا القسم</h3>
+      <ul>
+        <li><strong style="color:var(--text)">إجمالي الموظفين النشطين</strong> — عدد كل الموظفين بحالة "نشط"</li>
+        <li><strong style="color:var(--text)">الحاضرون اليوم</strong> — الموظفون الذين سجّلوا حضوراً اليوم</li>
+        <li><strong style="color:var(--text)">الغائبون</strong> = الإجمالي − الحاضرون (حساب تلقائي)</li>
+        <li><strong style="color:var(--text)">طلبات إجازة معلّقة</strong> — الطلبات التي لم يتم الموافقة أو الرفض عليها</li>
+        <li><strong style="color:var(--text)">قائمة المتأخرين</strong> — اسم كل موظف حاضر بعد وقت الشيفت مع عدد دقائق التأخير</li>
+        <li><strong style="color:var(--text)">قائمة في الوقت</strong> — الموظفون الذين حضروا في الوقت أو قبله</li>
+      </ul>
+    </div>
+    <div class="alert alert-info"><i class="fas fa-lightbulb"></i><div><strong>ملاحظة:</strong> وقت بداية الشيفت يُحدد من قسم "الإعدادات" — إذا لم يتم تحديده، النظام يستخدم <strong>09:15</strong> كوقت افتراضي.</div></div>
+  </div>
+
+  <!-- 2. سجل الحضور -->
+  <div class="section" id="sec-attendance">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(34,197,94,.1)">📍</div>
+      <div><h2>سجل الحضور</h2><div class="sec-num">عرض تفاصيل حضور وانصراف الموظفين لأي يوم</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-route" style="color:var(--green)"></i> طريقة الاستخدام</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اختر التاريخ</h4><p>من حقل التاريخ في أعلى الصفحة. افتراضياً يعرض يوم اليوم.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>استعرض السجلات</h4><p>كل سجل يعرض: اسم الموظف، كود الموظف، القسم، وقت الدخول، وقت الخروج، وحالة السجل (نشط/مكتمل).</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>غيّر التاريخ</h4><p>تتحدث القائمة تلقائياً بدون الحاجة لضغط أي زر.</p></div></div>
+      </div>
+    </div>
+    <div class="alert alert-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>تنبيه:</strong> بيانات الحضور تسجّل من تطبيق الموظف (تسجيل دخول GPS)، ولا يمكن إضافتها يدوياً من لوحة HR.</div></div>
+  </div>
+
+  <!-- 3. إدارة الإجازات -->
+  <div class="section" id="sec-leaves">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,.1)">🌴</div>
+      <div><h2>إدارة الإجازات</h2><div class="sec-num">الموافقة والرفض والحذف</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-check-double" style="color:var(--amber)"></i> الوظائف المتاحة</h3>
+      <ul>
+        <li><strong style="color:var(--text)">الموافقة</strong> — يُخصم من رصيد الموظف تلقائياً (للأنواع الخصم)</li>
+        <li><strong style="color:var(--text)">الرفض</strong> — إذا كان موافَقاً عليه سابقاً، يُرجع الأيام للرصيد</li>
+        <li><strong style="color:var(--text)">الحذف</strong> — إذا كان موافَقاً عليه، يُرجع الأيام تلقائياً قبل الحذف</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-layer-group" style="color:var(--indigo)"></i> أنواع الإجازات وتأثيرها على الرصيد</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>نوع الإجازة</th><th>يُخصم من الرصيد؟</th><th>ملاحظة</th></tr></thead>
+          <tbody>
+            <tr><td>سنوية (Annual)</td><td><span class="badge badge-red">نعم</span></td><td>تُخصم من رصيد الإجازات</td></tr>
+            <tr><td>مرضية (Sick)</td><td><span class="badge badge-red">نعم</span></td><td>تُخصم من الرصيد</td></tr>
+            <tr><td>طارئة (Emergency)</td><td><span class="badge badge-red">نعم</span></td><td>تُخصم من الرصيد</td></tr>
+            <tr><td>بدون راتب (Unpaid)</td><td><span class="badge badge-green">لا</span></td><td>لا تأثير على الرصيد</td></tr>
+            <tr><td>أخرى (Other)</td><td><span class="badge badge-green">لا</span></td><td>لا تأثير على الرصيد</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-shoe-prints" style="color:var(--sky)"></i> خطوات الموافقة</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>افتح قسم الإجازات</h4><p>اضغط أيقونة "🌴 الإجازات" من القائمة الجانبية</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>عرّض الطلبات المعلقة</h4><p>طلبات PENDING تظهر بإطار برتقالي مع زرين أخضر وأحمر</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>اضغط "موافقة"</h4><p>يُخصم الأيام فوراً وتظهر رسالة تأكيد</p></div></div>
+      </div>
+    </div>
+    <div class="alert alert-danger"><i class="fas fa-shield-halved"></i><div><strong>تحذير:</strong> عند حذف طلب إجازة موافَق عليه، النظام يُرجع الأيام تلقائياً لرصيد الموظف. لا تقم بالحذف إلا إذا كنت متأكداً.</div></div>
+  </div>
+
+  <!-- 4. إدارة الموظفين -->
+  <div class="section" id="sec-employees">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(129,140,248,.1)">👥</div>
+      <div><h2>إدارة الموظفين</h2><div class="sec-num">إضافة وتعديل والبحث</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-user-plus" style="color:var(--indigo)"></i> إضافة موظف جديد</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اضغط "إضافة موظف"</h4><p>الزر الأخضر في أعلى صفحة الموظفين</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>املأ البيانات</h4><p>الاسم الأول (مطلوب) — الاسم الأخير (مطلوب) — البريد (مطلوب) — الهاتف — تاريخ التعيين — القسم — المنصب</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>إضافة قسم أو منصب جديد</h4><p>أسفل القائمة المنسدلة اضغط "+" — اكتب الاسم — اضغط "إضافة". يتم إضافته فوراً.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اضغط "إضافة موظف"</h4><p>يُضاف بحالة "نشط" تلقائياً</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-pen-to-square" style="color:var(--sky)"></i> تعديل بيانات موظف</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>ابحث عن الموظف</h4><p>استخدم حقل البحث (بالاسم أو الكود)</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اضغط "تعديل"</h4><p>الزر البنفسجي بجانب بيانات الموظف</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>عدّل واضغط "حفظ التعديلات"</h4><p>تتحدث البيانات فوراً</p></div></div>
+      </div>
+    </div>
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i><div><strong>ملاحظة:</strong> رصيد الإجازات الافتراضي للموظف الجديد هو <strong>21 يوماً</strong>.</div></div>
+  </div>
+
+  <!-- 5. المرتبات -->
+  <div class="section" id="sec-salaries">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(56,189,248,.1)">💰</div>
+      <div><h2>المرتبات والتعديلات</h2><div class="sec-num">الراتب الأساسي + الحوافز والخصومات</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-coins" style="color:var(--sky)"></i> تحديد الراتب الأساسي</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اختر الموظف والشهر</h4><p>من القائمة المنسدلة في أعلى الصفحة</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أدخل المبلغ في حقل "المرتب الأساسي"</h4><p>إذا كان هناك مرتب مسجل مسبقاً سيظهر تلقائياً</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>اضغط "حفظ"</h4><p>المرتب يُحفظ ويمكن تعديله في أي وقت</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-sliders" style="color:var(--amber)"></i> أنواع التعديلات</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>النوع</th><th>الإشارة</th><th>التأثير</th><th>مثال</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-green">Bonus</span></td><td style="color:var(--green);font-weight:800">+</td><td style="color:var(--green)">زيادة</td><td>مكافأة أداء</td></tr>
+            <tr><td><span class="badge badge-sky">Allowance</span></td><td style="color:var(--sky);font-weight:800">+</td><td style="color:var(--green)">زيادة</td><td>بدل نقل / سكن</td></tr>
+            <tr><td><span class="badge badge-amber">Overtime</span></td><td style="color:var(--amber);font-weight:800">+</td><td style="color:var(--green)">زيادة</td><td>ساعات إضافية</td></tr>
+            <tr><td><span class="badge badge-red">Absence</span></td><td style="color:var(--red);font-weight:800">-</td><td style="color:var(--red)">خصم</td><td>خصم أيام غياب</td></tr>
+            <tr><td><span class="badge badge-violet">Deduction</span></td><td style="color:var(--violet);font-weight:800">-</td><td style="color:var(--red)">خصم</td><td>تأمينات / جزاء / سلفة</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-calculator" style="color:var(--green)"></i> معادلة حساب الصافي</h3>
+      <div style="background:var(--surface-2);border-radius:12px;padding:16px;text-align:center;font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;border:1px solid var(--border)">
+        الصافي = الأساسي <span style="color:var(--green)">+ بونص + بدل + أوفرتايم</span> <span style="color:var(--red)">- غياب - خصومات</span>
+      </div>
+      <p>لون الصافي: <span style="color:var(--green);font-weight:700">أخضر</span> إذا كان ≥ الأساسي، <span style="color:var(--red);font-weight:700">أحمر</span> إذا كان أقل.</p>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-plus-circle" style="color:var(--indigo)"></i> إضافة تعديل</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اختر نوع التعديل</h4><p>اضغط على أحد الأزرار الملونة</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أدخل المبلغ والسبب</h4><p>المبلغ (مطلوب) — السبب (اختياري)</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>اضغط "إضافة"</h4><p>يظهر في بطاقة الموظف والصافي يُحدّث تلقائياً</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>حذف تعديل</h4><p>اضغط ✕ الحمراء بجانبه (يظهر تأكيد)</p></div></div>
+      </div>
+    </div>
+    <div class="alert alert-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>مهم:</strong> التعديلات مرتبطة بالشهر. عند تغيير الشهر سترى تعديلات مختلفة. تأكد من اختيار الشهر الصحيح.</div></div>
+  </div>
+
+  <!-- 6. الإشعارات -->
+  <div class="section" id="sec-notifs">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(239,68,68,.1)">🔔</div>
+      <div><h2>الإشعارات</h2><div class="sec-num">إرسال إعلانات وتذكيرات وتنبيهات</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-bell" style="color:var(--red)"></i> أنواع الإشعارات</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>النوع</th><th>الاستخدام</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-sky">📢 إعلان</span></td><td>إجازات رسمية، فعاليات</td></tr>
+            <tr><td><span class="badge badge-amber">⏰ تذكير</span></td><td>تسليم تقرير، اجتماع</td></tr>
+            <tr><td><span class="badge badge-red">🚨 تنبيه</span></td><td>أمور عاجلة</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-paper-plane" style="color:var(--sky)"></i> طريقة الإرسال</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اختر نوع الإشعار</h4><p>إعلان / تذكير / تنبيه</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اكتب العنوان والنص</h4><p>كلاهما مطلوب</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>اضغط "إرسال للجميع"</h4><p>يصل لجميع الموظفين فوراً في تطبيقهم</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. التاسكات -->
+  <div class="section" id="sec-tasks">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(34,197,94,.1)">✅</div>
+      <div><h2>إدارة التاسكات</h2><div class="sec-num">إنشاء مهام وتكليفها للموظفين</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-list-check" style="color:var(--green)"></i> إنشاء تاسك جديد</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>العنوان (مطلوب)</h4><p>مثل "تسليم تقرير المبيعات"</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>التفاصيل (اختياري)</h4><p>وصف إضافي</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>اختر الموظف</h4><p>من القائمة المنسدلة</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>حدد الديد لاين</h4><p>لا يمكن أن يكون في الماضي</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>اضغط "إرسال التاسك"</h4><p>يُرسل + إشعار تلقائي للموظف</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-eye" style="color:var(--indigo)"></i> قراءة حالة التاسك</h3>
+      <ul>
+        <li><span class="badge badge-indigo" style="background:rgba(129,140,248,.1);color:var(--indigo)">قيد الانتظار</span> — لم يُنفّذ بعد</li>
+        <li><span class="badge badge-green">مكتمل</span> — نفّذه الموظف (يظهر خط فوق العنوان)</li>
+        <li><span class="badge badge-red">⚠️ متأخر</span> — الديد لاين مرّ ولم يُنفّذ (إطار أحمر)</li>
+      </ul>
+    </div>
+    <div class="alert alert-success"><i class="fas fa-check-circle"></i><div><strong>تلقائي:</strong> عند إرسال تاسك، النظام يرسل إشعار للموظف فيه العنوان والديد لاين والتفاصيل.</div></div>
+  </div>
+
+  <!-- 8. ملفات الموظفين -->
+  <div class="section" id="sec-files">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(139,92,246,.1)">📁</div>
+      <div><h2>ملفات الموظفين</h2><div class="sec-num">رفع وتحميل وحذف الملفات</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-file-arrow-up" style="color:var(--violet)"></i> رفع ملف</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>اختر الموظف</h4><p>من القائمة المنسدلة</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اضغط على منطقة الرفع أو اسحب الملف</h4><p>Drag & Drop مدعوم</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>انتظر شريط التقدم</h4><p>عند 100% تظهر "تم الرفع بنجاح"</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-filter" style="color:var(--amber)"></i> الملفات المسموح بها</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>نوع الملف</th><th>الامتدادات</th><th>الحد الأقصى</th></tr></thead>
+          <tbody>
+            <tr><td>📄 PDF</td><td>.pdf</td><td rowspan="4" style="vertical-align:middle;text-align:center"><span class="badge badge-sky">10 MB</span></td></tr>
+            <tr><td>📝 Word</td><td>.doc, .docx</td></tr>
+            <tr><td>📊 Excel</td><td>.xls, .xlsx</td></tr>
+            <tr><td>🖼️ صور</td><td>.jpg, .jpeg, .png</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-download" style="color:var(--green)"></i> تحميل ملف</h3>
+      <p>اضغط <strong style="color:var(--sky)">👁</strong> — يتم إنشاء رابط مؤقت (60 ثانية) لتحميل الملف بأمان.</p>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-trash" style="color:var(--red)"></i> حذف ملف</h3>
+      <p>اضغط <strong style="color:var(--red)">✕</strong> — يظهر تأكيد — يتم الحذف من التخزين وقاعدة البيانات.</p>
+    </div>
+    <div class="alert alert-danger"><i class="fas fa-triangle-exclamation"></i><div><strong>تحذير:</strong> الحذف نهائي ولا يمكن استرجاعه.</div></div>
+  </div>
+
+  <!-- 9. تصدير البيانات -->
+  <div class="section" id="sec-export">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,.1)">📤</div>
+      <div><h2>تصدير البيانات</h2><div class="sec-num">تحميل سجل الحضور كملف CSV</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-file-csv" style="color:var(--amber)"></i> خطوات التصدير</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>حدد فترة التاريخ</h4><p>"من تاريخ" و"إلى تاريخ" — كلاهما مطلوب</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اضغط "إنشاء وتحميل"</h4><p>يُحمّل تلقائياً باسم <kbd>attendance_من_إلى.csv</kbd></p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>افتح في Excel أو Google Sheets</h4><p>يحتوي: اسم الموظف، الكود، التاريخ، وقت الدخول، وقت الخروج</p></div></div>
+      </div>
+    </div>
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i><div><strong>ملاحظة:</strong> الملف بصيغة UTF-8 مع BOM لضمان ظهور الأسماء العربية بشكل صحيح في Excel.</div></div>
+  </div>
+
+  <!-- 10. الإعدادات -->
+  <div class="section" id="sec-settings">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(100,116,139,.1)">⚙️</div>
+      <div><h2>الإعدادات العامة</h2><div class="sec-num">وقت الشيفت وموقع المكتب والنطاق</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-clock" style="color:var(--sky)"></i> وقت بداية الشيفت</h3>
+      <p>يُستخدم لحساب التأخير في "نظرة عامة".</p>
+      <ul>
+        <li>حضور <strong style="color:var(--green)">في الوقت أو قبله</strong> = في الوقت</li>
+        <li>حضور <strong style="color:var(--red)">بعد هذا الوقت</strong> = متأخر (تظهر دقائق التأخير)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-location-dot" style="color:var(--green)"></i> إعدادات الموقع (GPS)</h3>
+      <ul>
+        <li><strong style="color:var(--text)">Latitude</strong> — خط عرض المكتب</li>
+        <li><strong style="color:var(--text)">Longitude</strong> — خط طول المكتب</li>
+        <li><strong style="color:var(--text)">النطاق (بالمتر)</strong> — المسافة القصوى لتسجيل الحضور (الافتراضي 200م)</li>
+      </ul>
+    </div>
+    <div class="alert alert-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>تنبيه:</strong> إذا كانت الإحداثيات غير صحيحة، الموظفون لن يستطيعوا تسجيل الحضور. احصل على الإحداثيات من Google Maps بدقة.</div></div>
+    <div class="card">
+      <h3><i class="fas fa-language" style="color:var(--violet)"></i> تغيير اللغة</h3>
+      <p>اضغط <kbd>عربي / EN</kbd> في أعلى الصفحة. الإعداد يُحفظ تلقائياً.</p>
+    </div>
+  </div>
+
+  <!-- 11. إدارة الصفحات -->
+  <div class="section" id="sec-pages">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(56,189,248,.1)">🛠️</div>
+      <div><h2>إدارة الصفحات المخصصة</h2><div class="sec-num">إنشاء صفحات محتوى</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-file-pen" style="color:var(--sky)"></i> إنشاء صفحة</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>عنوان الصفحة</h4><p>مثال: "سياسات الشركة" — يظهر كاسم التبويب</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>الرابط (Slug)</h4><p>مثال: <kbd>policies</kbd> — بالإنجليزية وبدون مسافات</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>المحتوى</h4><p>يدعم <strong>HTML</strong> — عناوين، فقرات، جداول</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اضغط "حفظ الصفحة"</h4><p>تظهر كتبويب جديد في القائمة الجانبية</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-code" style="color:var(--green)"></i> مثال محتوى HTML</h3>
+      <div style="background:var(--surface-2);border-radius:10px;padding:14px;font-family:monospace;font-size:12px;color:var(--sky);line-height:1.8;direction:ltr;text-align:left;margin-bottom:8px">
+        &lt;h2&gt;سياسة الإجازات&lt;/h2&gt;<br>
+        &lt;p&gt;كل موظف يستحق &lt;strong&gt;21 يوم&lt;/strong&gt; سنوياً.&lt;/p&gt;<br>
+        &lt;ul&gt;<br>
+        &nbsp;&nbsp;&lt;li&gt;الإجازة تتراكم&lt;/li&gt;<br>
+        &nbsp;&nbsp;&lt;li&gt;قدّم الطلب قبل 3 أيام&lt;/li&gt;<br>
+        &lt;/ul&gt;
+      </div>
+    </div>
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i><div><strong>ملاحظة:</strong> الصفحات تظهر لك وللموظفين في التطبيق.</div></div>
+  </div>
+
+  <!-- 12. نصائح -->
+  <div class="section" id="sec-tips">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(34,197,94,.1)">💡</div>
+      <div><h2>نصائح وملاحظات عامة</h2><div class="sec-num">معلومات مهمة للاستخدام الأمثل</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-shield-halved" style="color:var(--green)"></i> الأمان</h3>
+      <ul>
+        <li>روابط تحميل الملفات مؤقتة (60 ثانية فقط)</li>
+        <li>الموظف لا يرى بيانات زملائه</li>
+        <li>كلمة المرور لا تظهر لأي شخص بما فيهم الإدمن</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-rotate" style="color:var(--sky)"></i> التحديثات التلقائية</h3>
+      <ul>
+        <li>كل البيانات تتحدث تلقائياً — لا حاجة لتحديث الصفحة</li>
+        <li>موظف جديد يظهر فوراً في كل القوائم</li>
+        <li>الإشعارات تصل فوراً بدون تأخير</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-mobile-screen" style="color:var(--indigo)"></i> الفرق بين لوحة HR وتطبيق الموظف</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>الوظيفة</th><th>لوحة HR</th><th>تطبيق الموظف</th></tr></thead>
+          <tbody>
+            <tr><td>تسجيل الحضور</td><td><span class="badge badge-red">عرض فقط</span></td><td><span class="badge badge-green">تسجيل GPS</span></td></tr>
+            <tr><td>طلب إجازة</td><td><span class="badge badge-red">عرض + موافقة/رفض</span></td><td><span class="badge badge-green">إنشاء طلب</span></td></tr>
+            <tr><td>إدارة المرتبات</td><td><span class="badge badge-green">كاملة</span></td><td><span class="badge badge-red">لا يوجد</span></td></tr>
+            <tr><td>التاسكات</td><td><span class="badge badge-green">إنشاء + عرض</span></td><td><span class="badge badge-sky">عرض + تنفيذ</span></td></tr>
+            <tr><td>الإشعارات</td><td><span class="badge badge-green">إرسال</span></td><td><span class="badge badge-sky">استقبال</span></td></tr>
+            <tr><td>الملفات</td><td><span class="badge badge-green">رفع + حذف</span></td><td><span class="badge badge-sky">عرض + تحميل</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-triangle-exclamation" style="color:var(--amber)"></i> مشاكل شائعة وحلولها</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المشكلة</th><th>السبب</th><th>الحل</th></tr></thead>
+          <tbody>
+            <tr><td>الموظف لا يسجّل حضوراً</td><td>خارج النطاق</td><td>تحقق من الإحداثيات والنطاق</td></tr>
+            <tr><td>موظف لا يظهر في المرتبات</td><td>حالته "غير نشط"</td><td>عدّل حالته لـ "نشط"</td></tr>
+            <tr><td>خطأ عند رفع ملف</td><td>نوع غير مدعوم أو أكبر من 10MB</td><td>تحقق من النوع والحجم</td></tr>
+            <tr><td>الرصيد لا يتغير بعد الموافقة</td><td>نوع إجازة لا يخصم</td><td>طبيعي — راجع جدول الأنواع</td></tr>
+            <tr><td>الصافي أحمر</td><td>الخصومات > الإضافات</td><td>طبيعي — صافي أقل من الأساسي</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>نظام MERGE HR — دليل الإدمن v1.0</p>
+    <p style="margin-top:4px;font-size:11px">يُرجى الاحتفاظ بهذا الدليل كمرجع لفريق الموارد البشرية</p>
+  </div>
+
+</div>
+
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+  const scrollBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    scrollBtn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  function scrollTo_(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.pageYOffset - 20;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.style.animationPlayState = 'running';
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.section').forEach((sec, i) => {
+    sec.style.animationDelay = (i * 0.05) + 's';
+    sec.style.animationPlayState = 'paused';
+    observer.observe(sec);
+  });
+  const first = document.querySelector('.section');
+  if (first) first.style.animationPlayState = 'running';
+</script>
+</body>
+</html>
