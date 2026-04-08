@@ -1081,21 +1081,43 @@ async function deleteCustomPage(id) {
   });
 }
 
+// ═══ CUSTOM PAGE VIEW (UNIVERSAL FIX) ═══
 async function renderCustomPage(slug) {
-  const {data:page} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
+  // نحدد الـ container الصح تلقائياً (أي واجهة مفتوحة)
+  // لو hrContent موجود (أدمن) ناخده، وإلا ناخذ empContent (موظف)
+  const target = $('hrContent') || $('empContent');
   
-  if(!page) {
-    $('hrContent').innerHTML = `<div class="empty"><div class="empty-title">Page not found</div></div>`;
-    return;
-  }
+  if(!target) return console.error('Content container not found');
 
-  $('hrContent').innerHTML = `
-    <div style="margin-bottom:16px">
-      <h1 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
-      <div style="height:4px;width:60px;background:var(--indigo);border-radius:2px"></div>
-    </div>
-    <div class="card" style="padding:24px;line-height:1.6;color:var(--text)">
-      ${page.content || '<span style="color:var(--muted)">No content yet.</span>'}
-    </div>
-  `;
+  try {
+    console.log("Loading custom page:", slug);
+    const {data:page, error} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
+
+    if(error) {
+      throw new Error("Database Error: " + error.message);
+    }
+
+    if(!page) {
+      target.innerHTML = `<div class="empty"><div class="empty-title">Page not found (${slug})</div></div>`;
+      return;
+    }
+
+    target.innerHTML = `
+      <div style="margin-bottom:20px">
+        <h1 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
+        <div style="height:4px;width:50px;background:var(--indigo);border-radius:2px"></div>
+      </div>
+      <div class="card" style="padding:20px;line-height:1.7;color:var(--text);font-size:15px">
+        ${page.content ? page.content : '<span style="color:var(--muted)">No content yet.</span>'}
+      </div>
+    `;
+  } catch(e) {
+    console.error("Custom Page Error:", e);
+    target.innerHTML = `
+      <div style="padding:20px;text-align:center;border:1px solid var(--red);border-radius:12px;color:var(--red)">
+        <h3 style="margin-bottom:10px">⚠️ Error</h3>
+        <p>${e.message}</p>
+      </div>
+    `;
+  }
 }
