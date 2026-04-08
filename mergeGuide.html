@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل مشروع MERGE HR Portal - النسخة الكاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #a855f7;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding-bottom: 50px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 60px 20px;
+            border-radius: 0 0 30px 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+        header p { font-size: 1.1rem; opacity: 0.9; }
+
+        .section {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 10px;
+        }
+
+        h3 { margin: 20px 0 10px; color: var(--primary-dark); font-size: 1.2rem; }
+        p { margin-bottom: 15px; }
+        ul, ol { margin-right: 25px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+
+        .guide-box {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-right: 5px solid;
+        }
+        .user-guide { background: #f0f9ff; border-color: var(--secondary); }
+        .admin-guide { background: #f5f3ff; border-color: var(--primary); }
+        .advanced-guide { background: #faf5ff; border-color: var(--purple); }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+        .badge-user { background: var(--secondary); color: white; }
+        .badge-admin { background: var(--primary); color: white; }
+
+        .footer { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 40px; }
+        
+        .highlight { color: var(--primary-dark); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>MERGE HR Portal</h1>
+            <p>التوثيق الشامل للنظام: دليل المطور، المستخدم، والمدير</p>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- دليل الموظف -->
+        <div class="section">
+            <div class="section-title"><span>👤</span> دليل الموظف (User Guide)</div>
+            <div class="guide-box user-guide">
+                <ol>
+                    <li><strong>تسجيل الحضور:</strong> من الصفحة الرئيسية، اضغط <code>Check In</code> عند الوصول و <code>Check Out</code> عند المغادرة.</li>
+                    <li><strong>طلب إجازة:</strong> تبويب <code>Leave</code> يسمح لك بتقديم طلبات الإجازة ومتابعة حالتها (مقبولة/مرفوضة).</li>
+                    <li><strong>المهام:</strong> تابع مهامك اليومية من تبويب <code>My Tasks</code>.</li>
+                    <li><strong>الإعدادات الشخصية:</strong> تغيير اللغة، تفعيل الوضع الداكن، وتغيير كلمة المرور من تبويب <code>Profile</code>.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- دليل الأدمن الأساسي -->
+        <div class="section">
+            <div class="section-title"><span>🔑</span> دليل الأدمن (HR Guide)</div>
+            <div class="guide-box admin-guide">
+                <ol>
+                    <li><strong>الإحصائيات:</strong> نظرة سريعة على الحضور اليومي والطلبات المعلقة من <code>Overview</code>.</li>
+                    <li><strong>إدارة الموظفين:</strong> إضافة وتعديل بيانات الموظفين من تبويب <code>Employees</code>.</li>
+                    <li><strong>الرواتب:</strong> حساب الرواتب الشهرية وإضافة البدلات والخصومات من <code>Salaries</code>.</li>
+                    <li><strong>تصدير التقارير:</strong> تحميل كشوف الحضور والرواتب من تبويب <code>Export</code>.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- الإعدادات المتقدمة وإدارة المحتوى -->
+        <div class="section">
+            <div class="section-title"><span>⚙️</span> الإعدادات المتقدمة وإدارة المحتوى</div>
+            <div class="guide-box advanced-guide">
+                <p>هذا القسم يوضح وظائف الأزرار المتقدمة في القائمة الجانبية:</p>
+                
+                <h3>1. Settings (إعدادات النظام العامة)</h3>
+                <p>تسمح للأدمن بالتحكم في البنية الأساسية للشركة:</p>
+                <ul>
+                    <li><span class="highlight">Departments:</span> إضافة أو تعديل الأقسام (مثل: HR, IT, Sales).</li>
+                    <li><span class="highlight">Positions:</span> إدارة المسميات الوظيفية المتاحة للاختيار عند إضافة موظف جديد.</li>
+                </ul>
+
+                <h3>2. Page Manager (مدير الصفحات الديناميكي)</h3>
+                <p>ميزة احترافية تسمح للأدمن بإنشاء محتوى جديد داخل النظام دون الحاجة لكتابة كود:</p>
+                <ul>
+                    <li>إضافة صفحات جديدة بعنوان ورابط (Slug) مخصص.</li>
+                    <li>تظهر هذه الصفحات تلقائياً في القائمة الجانبية لجميع المستخدمين.</li>
+                    <li>تستخدم لعرض معلومات ثابتة أو متغيرة يحتاجها الموظفون.</li>
+                </ul>
+
+                <h3>3. Company Policies (مثال للصفحات الديناميكية)</h3>
+                <p>هي صفحة تم إنشاؤها عبر "Page Manager" لعرض لوائح الشركة:</p>
+                <ul>
+                    <li>تعرض القوانين الداخلية، ساعات العمل، وقواعد السلوك.</li>
+                    <li>يمكن للأدمن تحديث محتواها في أي وقت لتظهر التعديلات فوراً للموظفين.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- هيكلية الكود للمطور -->
+        <div class="section">
+            <div class="section-title"><span>📂</span> الهيكل البرمجي (للمطورين)</div>
+            <ul>
+                <li><code>index.html</code>: يحتوي على الواجهات وتنسيقات CSS المتطورة.</li>
+                <li><code>app.js</code>: يعالج منطق الـ HR، الرواتب، والصفحات الديناميكية.</li>
+                <li><code>admin.js</code>: يعالج تسجيل الدخول، واجهة الموظف، والترجمة.</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>تم تحديث هذا التوثيق ليشمل كافة مميزات MERGE HR Portal &copy; 2024</p>
+        </div>
+    </div>
+
+</body>
+</html>
