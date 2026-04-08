@@ -6,7 +6,7 @@ let baseSalary = 0;
 let adjustments = [];
 let salaryMonth = new Date().toISOString().slice(0,7);
 let adjType = 'bonus';
-let editingEmpId = null; // متغير لتتبع الموظف اللي بنعدله
+let editingEmpId = null; // Variable to track the employee being edited
 
 const adjColors = {
   bonus:     {label:'Bonus',     color:'#22c55e', bg:'rgba(34,197,94,.08)',   sign:'+'},
@@ -44,9 +44,9 @@ async function initHR() {
   updateStaticText();
   applyDark();
   
-  // جلب الصفحات المخصصة من قاعدة البيانات
+  // Fetch custom pages from the database
   const { data: customPages } = await sb.from('custom_pages').select('id,title,slug').order('title');
-  const customTabs = customPages || [];
+  const dynamicTabs = (customPages || []).map(p => ({id: p.slug, icon: '📄', label: p.title}));
 
   const tabs = [
     {id:'overview',   icon:'📊', label:t().overview},
@@ -58,8 +58,9 @@ async function initHR() {
     {id:'tasks',      icon:'✅', label:lang==='ar'?'التاسكات':'Tasks'},
     {id:'empfiles',   icon:'📁', label:lang==='ar'?'ملفات':'Files'},
     {id:'export',     icon:'📤', label:t().export_tab},
-    {id:'settings',   icon:'⚙️', label:lang==='ar'?'الإعدادات':'Settings'}, // الجديد
+    {id:'settings',   icon:'⚙️', label:lang==='ar'?'الإعدادات':'Settings'}, 
     {id:'pagemanager',icon:'🛠️', label:lang==='ar'?'إدارة الصفحات':'Page Manager'},
+    ...dynamicTabs, // Add custom pages to the tabs
   ];
   
   $('hrApp').innerHTML = `
@@ -110,7 +111,7 @@ async function renderHR(tab) {
   else if(tab==='tasks')      await renderHRTasks();
   else if(tab==='empfiles')   await renderHRFiles();
   else if(tab==='export')     renderHRExport();
-  else if(tab==='settings')    await renderHRSettings(); // الجديد
+  else if(tab==='settings')    await renderHRSettings(); 
   else if(tab==='pagemanager') await renderPageManager();
   else {
     await renderCustomPage(tab);
@@ -183,7 +184,7 @@ async function renderHROverview() {
           </div>
         </div>`;
       }).join('')}
-    `:''}
+    `:'''}
 
     ${onTime.length>0?`
       <div class="sec-title" style="color:var(--green)">✅ ${lang==='ar'?'في الوقت':'On Time'} (${onTime.length})</div>
@@ -198,14 +199,14 @@ async function renderHROverview() {
           </div>
         </div>`;
       }).join('')}
-    `:''}
+    `:'''}
 
     ${att.length===0?`
       <div class="card" style="text-align:center;padding:32px">
         <div style="font-size:44px;margin-bottom:8px">📭</div>
         <div style="color:var(--sub)">${t().no_att_today}</div>
       </div>
-    `:''}
+    `:'''}
   `;
 }
 
@@ -285,7 +286,7 @@ async function renderHRLeaves() {
     </div>
     ${items.length===0
       ?`<div class="empty"><div class="empty-icon">🌴</div><div class="empty-title">${lang==='ar'?'لا توجد طلبات':'No leave requests'}</div></div>`
-      :items.map(lv=>`<div class="leave-card" style="border-color:${lv.status==='pending'?'rgba(245,158,11,.35)':''}">
+      :items.map(lv=>`<div class="leave-card" style="border-color:${lv.status==='pending'?'rgba(245,158,11,.35)':'';}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
             <div>
               <div style="font-weight:700;color:var(--text);font-size:15px">${lv.employees?.first_name||''} ${lv.employees?.last_name||''}</div>
@@ -300,7 +301,7 @@ async function renderHRLeaves() {
             </span>
           </div>
           <div style="font-size:13px;color:var(--sub);margin-bottom:8px">📅 ${fmtDate(lv.start_date)} — ${fmtDate(lv.end_date)}</div>
-          ${lv.reason?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">"${lv.reason}"</div>`:''}
+          ${lv.reason?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">"${lv.reason}"</div>`:'';}
           ${lv.status==='pending'?`
         <div style="display:flex;gap:8px">
          <button class="primary-btn" style="flex:1;background:var(--green);padding:8px" onclick="approveLeave('${lv.id}')">${t().approve}</button>
@@ -373,7 +374,7 @@ async function renderHREmployees() {
             <div style="display:flex;align-items:center;gap:8px">
               <span class="badge" style="background:${e.status==='active'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${e.status==='active'?'var(--green)':'var(--red)'};border:1px solid ${e.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'}">${e.status==='active'?t().active_st:t().inactive_st}</span>
               
-              <!-- زر التعديل -->
+              <!-- Edit Button -->
               <button onclick="openEditModal('${e.id}')" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:4px 8px;cursor:pointer;color:var(--indigo);font-size:12px;font-weight:600">
                 ${lang==='ar'?'تعديل':'Edit'}
               </button>
@@ -383,18 +384,19 @@ async function renderHREmployees() {
   `;
 }
 
-// دالة فتح المودال فارغ للإضافة
+// Function to open an empty modal for adding
 function resetEmpModal() {
   editingEmpId = null;
+  // Clear all input fields
   if($('ae_first')) $('ae_first').value = '';
   if($('ae_last'))  $('ae_last').value  = '';
   if($('ae_email')) $('ae_email').value = '';
-  if($('ae_position')) $('ae_position').value = '';
-  if($('ae_dept')) $('ae_dept').value = '';
   if($('ae_phone')) $('ae_phone').value = '';
   if($('ae_hire'))  $('ae_hire').value  = '';
+  if($('ae_dept_select')) $('ae_dept_select').value = '';
+  if($('ae_pos_select')) $('ae_pos_select').value = '';
   
-  // إعادة النصوص الأصلية
+  // Restore original texts
   if($('addEmpTitle')) $('addEmpTitle').textContent = t().add_employee;
   if($('saveEmpBtn'))  $('saveEmpBtn').textContent  = t().add_employee;
   
@@ -406,27 +408,27 @@ async function openEditModal(id) {
   const {data:emp, error} = await sb.from('employees').select('*').eq('id', id).single();
   if(error) return toast(error.message, 'error');
   
-  // 1. جلب الإعدادات (القوائم)
+  // 1. Fetch settings (dropdowns)
   const {data:deptSetting} = await sb.from('app_settings').select('value').eq('key', 'departments').single();
   const {data:posSetting}  = await sb.from('app_settings').select('value').eq('key', 'positions').single();
 
-  // تحويل النصوص لمصفوفات
+  // Convert texts to arrays
   const deptList = (deptSetting?.value || '').split(',').map(s=>s.trim()).filter(s=>s);
   const posList  = (posSetting?.value  || '').split(',').map(s=>s.trim()).filter(s=>s);
 
-  // تعبئة الحقول الأساسية
+  // Populate basic fields
   if($('ae_first')) $('ae_first').value = emp.first_name || '';
   if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
   if($('ae_email')) $('ae_email').value = emp.email || '';
   if($('ae_phone')) $('ae_phone').value = emp.phone || '';
   if($('ae_hire'))  $('ae_hire').value  = emp.hire_date ? emp.hire_date.slice(0,10) : '';
 
-  // 2. بناء قوائم الـ Select (المناصب والأقسام)
+  // 2. Build Select dropdowns (Positions and Departments)
   const deptOptions = deptList.map(d => `<option value="${d}" ${emp.department===d?'selected':''}>${d}</option>`).join('');
   const posOptions  = posList.map(p => `<option value="${p}" ${emp.job_title===p?'selected':''}>${p}</option>`).join('');
 
-  // تعديل الـ HTML في الـ Modal مباشرة (بديل بسيط وآمن)
-  // ملاحظة: هنا هنعيد رسم جزء الـ Modal الخاص بالقسم والمنصب فقط
+  // Modify the HTML in the Modal directly (simple and safe alternative)
+  // Note: Here we will re-render only the part of the Modal related to department and position
   const deptField = `
     <div class="form-field" style="margin:0">
       <label class="field-label">${lang==='ar'?'القسم':'Department'}</label>
@@ -445,8 +447,8 @@ async function openEditModal(id) {
       </select>
     </div>`;
 
-  // حقن هذه القوائم في المودال (لأننا بنستخدم نفس الـ Modal للإضافة والتعديل)
-  // لكن بما إننا عايزين بس التعديل هنا، سنستخدم insertAdjacentHTML
+  // Inject these lists into the modal (since we use the same Modal for add and edit)
+  // But since we only want to edit here, we will use insertAdjacentHTML
   const modalContent = `
     <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;font-family:'Syne',sans-serif" id="addEmpTitle">${lang==='ar'?'تعديل بيانات الموظف':'Edit Employee'}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
@@ -463,8 +465,11 @@ async function openEditModal(id) {
     <button class="primary-btn" onclick="handleSaveEmployee()" style="width:100%;margin-bottom:10px;margin-top:6px" id="saveEmpBtn">${lang==='ar'?'حفظ التعديلات':'Save Changes'}</button>
     <button class="primary-btn" style="width:100%;background:var(--surface-3);color:var(--sub);box-shadow:none;border:1px solid var(--border)" onclick="closeModal('addEmpModal')">${t().cancel}</button>
   `;
-    const modalBody = document.querySelector('#addEmpModal > div[style*="font-size:20px"]');
-  if(modalBody) modalBody.innerHTML = modalContent;
+  // Use a unique variable name to avoid redeclaration issues
+  const modalBodyContentArea = document.querySelector('#addEmpModal .modal-body-content-area'); // Assuming a class or ID for the content area
+  if(modalBodyContentArea) modalBodyContentArea.innerHTML = modalContent;
+
+  // Re-populate fields after innerHTML update
   if($('ae_first')) $('ae_first').value = emp.first_name || '';
   if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
   if($('ae_email')) $('ae_email').value = emp.email || '';
@@ -475,7 +480,7 @@ async function openEditModal(id) {
 
   openModal('addEmpModal');
 }
-// دالة مساعدة لفتح مودال إضافة خيار جديد (قسم أو منصب)
+// Helper function to open a modal for adding a new option (department or position)
 function openOptionModal(type) {
   // type: 'dept' or 'pos'
   const title = type === 'dept' ? (lang==='ar'?'إضافة قسم جديد':'Add New Department') : (lang==='ar'?'إضافة منصب جديد':'Add New Position');
@@ -500,7 +505,7 @@ function openOptionModal(type) {
   document.body.appendChild(div);
 }
 
-// دالة حفظ الخيار الجديد في قاعدة البيانات
+// Function to save the new option to the database
 async function saveNewOption(type) {
   const name = $('new_opt_name')?.value?.trim();
   if(!name) return toast(lang==='ar'?'الرجاء كتابة الاسم':'Enter name','error');
@@ -570,7 +575,7 @@ async function renderHRSalaries() {
     </div>
     <div class="card" style="margin-bottom:12px;border:1.5px solid rgba(56,189,248,.2)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]||'?'}${selectedEmp?.last_name?.[0]||''}</div>
+        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]||'?';}${selectedEmp?.last_name?.[0]||''};</div>
         <div>
           <div style="font-size:16px;font-weight:700;color:var(--text)">${selectedEmp?.first_name||''} ${selectedEmp?.last_name||''}</div>
           <div style="font-size:12px;color:var(--sub)">${selectedEmp?.job_title||''} · ${selectedEmp?.department||''}</div>
@@ -600,7 +605,7 @@ async function renderHRSalaries() {
               </div>
             </div>`;
           }).join('')}
-        </div>`:''}
+        </div>`:'';}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${netSalary>=baseSalary?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1.5px solid ${netSalary>=baseSalary?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};border-radius:14px">
         <div style="font-size:14px;font-weight:700;color:var(--text)">💰 ${lang==='ar'?'الصافي':'Net Salary'}</div>
         <div style="font-size:22px;font-weight:900;color:${netSalary>=baseSalary?'var(--green)':'var(--red)'}">
@@ -698,7 +703,6 @@ function renderHRExport() {
   $('hrContent').innerHTML=`
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px">${t().export}</div>
     <div class="card">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">📊 ${t().attendance_tab}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
         <div class="form-field" style="margin:0">
           <label class="field-label">${t().from_date}</label>
@@ -790,15 +794,15 @@ async function renderHRTasks() {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div style="flex:1">
               <div style="font-size:15px;font-weight:700;color:var(--text);text-decoration:${isDone?'line-through':''}">${tk.title}</div>
-              ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
+              ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:'';}
             </div>
             <button onclick="deleteTask('${tk.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0;margin-${lang==='ar'?'right':'left'}:8px">✕</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="badge" style="background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">👤 ${empName}</span>
-            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}${isLate?' ⚠️':''}</span>`:''}
+            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}${isLate?' ⚠️':''};</span>`:'';}
             <span class="badge" style="background:${isDone?'rgba(34,197,94,.1)':'rgba(99,102,241,.1)'};color:${isDone?'var(--green)':'var(--indigo)'};border:1px solid ${isDone?'rgba(34,197,94,.2)':'rgba(99,102,241,.2)'}">
-              ${isDone?(lang==='ar'?'✅ منتهي':'✅ Done'):(lang==='ar'?'⏳ قيد التنفيذ':'⏳ Pending')}
+              ${tk.status==='done'?(lang==='ar'?'مكتمل':'Complete'):(lang==='ar'?'قيد الانتظار':'Pending')}
             </span>
           </div>
         </div>`;
@@ -978,7 +982,7 @@ async function handleFileUpload(input) {
 
     toast(lang === 'ar' ? 'تم رفع الملف ✅' : 'File uploaded ✅', 'success');
     
-    // ✅ FIX: تم حذف await من هنا
+    // ✅ FIX: Removed await from here
     setTimeout(() => { renderHRFiles(); }, 1000);
     
   } catch (e) {
@@ -1105,7 +1109,7 @@ async function renderPageManager() {
       <button class="primary-btn" onclick="saveCustomPage()" style="width:100%">📤 ${lang==='ar'?'حفظ الصفحة':'Save Page'}</button>
     </div>
 
-    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الصففات الحالية':'Existing Pages'}</div>
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الصفحات الحالية':'Existing Pages'}</div>
     
     ${!pages || pages.length===0 
       ? `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">${lang==='ar'?'لا توجد صفحات':'No pages yet'}</div></div>`
@@ -1137,7 +1141,7 @@ async function saveCustomPage() {
   if(error) return toast(error.message,'error');
   
   toast(lang==='ar'?'تم إضافة الصفحة ✅':'Page added ✅','success');
-  // إعادة تحميل القائمة الجانبية لتظهر التاب الجديد
+  // Reload the sidebar to show the new tab
   initHR();
 }
 
@@ -1150,15 +1154,15 @@ async function deleteCustomPage(id) {
       const {error} = await sb.from('custom_pages').delete().eq('id',id);
       if(error) return toast(error.message,'error');
       toast(lang==='ar'?'تم الحذف':'Deleted','success');
-      initHR(); // تحديث القائمة
+      initHR(); // Update the menu
     }
   });
 }
 
 // ═══ CUSTOM PAGE VIEW (UNIVERSAL FIX) ═══
 async function renderCustomPage(slug) {
-  // نحدد الـ container الصح تلقائياً (أي واجهة مفتوحة)
-  // لو hrContent موجود (أدمن) ناخده، وإلا ناخذ empContent (موظف)
+  // Automatically determine the correct container (any open interface)
+  // If hrContent exists (admin), take it, otherwise take empContent (employee)
   const target = $('hrContent') || $('empContent');
   
   if(!target) return console.error('Content container not found');
@@ -1195,7 +1199,7 @@ async function renderCustomPage(slug) {
     `;
   }
 }
-// ═══ SETTINGS MANAGER (الصندوق البسيط) ═══
+// ═══ SETTINGS MANAGER (SIMPLE BOX) ═══
 async function renderHRSettings() {
   const {data:deptSetting} = await sb.from('app_settings').select('value').eq('key', 'departments').single();
   const {data:posSetting}  = await sb.from('app_settings').select('value').eq('key', 'positions').single();
