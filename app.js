@@ -645,7 +645,9 @@ async function renderHistory() {
       ?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${t().no_records}</div><div class="empty-sub">${t().no_records_sub}</div></div>`
       :records.map(r=>{
         const ok   = r.check_in_time&&r.check_out_time;
-        const late = r.check_in_time&&r.check_in_time>'09:15:00';
+        const {data:shiftSetting} = await sb.from('app_settings').select('value').eq('key','shift_start_time').single();
+        const shiftStart = (shiftSetting?.value || '09:15') + ':00';
+        const late = r.check_in_time && r.check_in_time > shiftStart;
         const badge = ok
           ?`<span class="badge" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.2)">${t().complete}</span>`
           :r.check_in_time
