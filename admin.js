@@ -402,20 +402,35 @@ function resetEmpModal() {
   openModal('addEmpModal');
 }
 
-// دالة فتح المودال للتعديل
+// دالة فتح المودال للتعديل (نسخة محسنة مع قوائم ذكية)
 async function openEditModal(id) {
   editingEmpId = id;
   const {data:emp, error} = await sb.from('employees').select('*').eq('id', id).single();
   if(error) return toast(error.message, 'error');
   
+  // جلب الأقسام والمناصب من قاعدة البيانات
+  const [deptsRes, posRes] = await Promise.all([
+    sb.from('departments').select('id,name').order('name'),
+    sb.from('positions').select('id,title').order('title')
+  ]);
+  
+  const departments = deptsRes.data || [];
+  const positions   = posRes.data   || [];
+
   // تعبئة الحقول
   if($('ae_first')) $('ae_first').value = emp.first_name || '';
   if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
   if($('ae_email')) $('ae_email').value = emp.email || '';
-  if($('ae_position')) $('ae_position').value = emp.job_title || emp.position || '';
-  if($('ae_dept')) $('ae_dept').value = emp.department || '';
-  if($('ae_phone')) $('ae_phone').value = emp.phone || '';
-  if($('ae_hire'))  $('ae_hire').value  = emp.hire_date || '';
+  // ملاحظة: حقل الرقم السري (hire date) يتطلب تنسيق YYYY-MM-DD للـ input type="date"
+  if($('ae_hire'))  $('ae_hire').value  = emp.hire_date ? emp.hire_date.slice(0,10) : '';
+  
+  // تعبئة حوارات القوائم الذكية
+  if($('ae_dept_select')) {
+    $('ae_dept_select').value = emp.department || ''; 
+  }
+  if($('ae_pos_select')) {
+    $('ae_pos_select').value = emp.job_title || emp.position || '';
+  }
   
   // تغيير النصوص
   if($('addEmpTitle')) $('addEmpTitle').textContent = lang==='ar'?'تعديل بيانات الموظف':'Edit Employee';
@@ -424,37 +439,60 @@ async function openEditModal(id) {
   openModal('addEmpModal');
 }
 
-// دالة الحفظ الموحدة (إضافة أو تعديل)
-async function handleSaveEmployee() {
-  const first=$('ae_first')?.value?.trim(), last=$('ae_last')?.value?.trim(), email=$('ae_email')?.value?.trim();
-  const pos=$('ae_position')?.value?.trim(), dept=$('ae_dept')?.value?.trim();
-  const phone=$('ae_phone')?.value?.trim(), hire=$('ae_hire')?.value;
+// دالة مساعدة لفتح مودال إضافة خيار جديد (قسم أو منصب)
+function openOptionModal(type) {
+  // type: 'dept' or 'pos'
+  const title = type === 'dept' ? (lang==='ar'?'إضافة قسم جديد':'Add New Department') : (lang==='ar'?'إضافة منصب جديد':'Add New Position');
+  const label = type === 'dept' ? (lang==='ar'?'اسم القسم':'Department Name') : (lang==='ar'?'اسم المنصب':'Position Title');
   
-  if(!first||!last||!email) return toast(lang==='ar'?'الرجاء ملء الحقول المطلوبة':'Fill required fields','error');
-
-  try {
-    let error;
-    if(editingEmpId) {
-      // Update
-      ({error} = await sb.from('employees').update({
-        first_name: first, last_name: last, email: email,
-        job_title: pos, department: dept, phone: phone, hire_date: hire
-      }).eq('id', editingEmpId));
-      if(!error) toast(lang==='ar'?'تم تعديل البيانات ✅':'Employee updated ✅','success');
-    } else {
-      // Insert
-      ({error} = await sb.from('employees').insert([{
-        first_name:first,last_name:last,email,job_title:pos,department:dept,phone,hire_date:hire,status:'active'
-      }]));
-      if(!error) toast(lang==='ar'?'تمت إضافة الموظف ✅':'Employee added ✅','success');
-    }
-
-    if(error) return toast(error.message,'error');
-    closeModal('addEmpModal');
-    renderHR('employees');
-  } catch(e) { toast(e.message,'error'); }
+  const html = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--surface);border-radius:var(--r-2xl);padding:28px 24px;width:90%;max-width:400px;border:1px solid var(--border);box-shadow:var(--shadow-lg);animation:scaleIn .25s cubic-bezier(0.16,1,0.3,1)">
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;font-family:'Syne',sans-serif">${title}</div>
+        <div class="form-field"><label class="field-label">${label}</label><input class="form-input" type="text" id="new_opt_name"/></div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button onclick="document.getElementById('tempOptModal').remove()" class="primary-btn" style="background:var(--surface-3);color:var(--sub);box-shadow:none;border:1px solid var(--border)">${t().cancel}</button>
+          <button onclick="saveNewOption('${type}')" class="primary-btn">${t().add_employee}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const div = document.createElement('div');
+  div.id = 'tempOptModal';
+  div.innerHTML = html;
+  document.body.appendChild(div);
 }
 
+// دالة حفظ الخيار الجديد في قاعدة البيانات
+async function saveNewOption(type) {
+  const name = $('new_opt_name')?.value?.trim();
+  if(!name) return toast(lang==='ar'?'الرجاء كتابة الاسم':'Enter name','error');
+  
+  const table = type === 'dept' ? 'departments' : 'positions';
+  const col = type === 'dept' ? 'name' : 'title';
+  
+  const {error} = await sb.from(table).insert([{ [col]: name }]);
+  if(error) return toast(error.message,'error');
+  
+  toast(lang==='ar'?'تمت الإضافة ✅':'Added ✅','success');
+  document.getElementById('tempOptModal').remove();
+  
+  refreshDropdowns(type, name);
+}
+async function refreshDropdowns(type, selectedName) {
+  const table = type === 'dept' ? 'departments' : 'positions';
+  const selectId = type === 'dept' ? 'ae_dept_select' : 'ae_pos_select';
+  const dbCol = type === 'dept' ? 'name' : 'title';
+  
+  const {data} = await sb.from(table).select('*').order(dbCol);
+  const select = $(selectId);
+  if(!select) return;
+    const currentVal = select.value || selectedName;
+    select.innerHTML = `<option value="">${type==='dept'?(lang==='ar'?'اختر القسم':'Select Department'):(lang==='ar'?'اختر المنصب':'Select Position')}</option>` +
+    data.map(item => `<option value="${item[dbCol]}" ${item[dbCol]===currentVal?'selected':''}>${item[dbCol]}</option>`).join('');
+    select.value = currentVal;
+}
 async function renderHRSalaries() {
   const {data:emps} = await sb.from('employees').select('*').eq('status','active').order('first_name');
   const items = emps||[];
