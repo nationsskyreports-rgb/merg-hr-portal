@@ -13,12 +13,9 @@ const adjColors = {
   absence:   {label:'Absence',   color:'#ef4444', bg:'rgba(239,68,68,.08)',   sign:'-'},
   deduction: {label:'Deduction', color:'#8b5cf6', bg:'rgba(139,92,246,.08)', sign:'-'},
 };
-const FILE_CONFIG.STORAGE_BUCKET = 'employee-files';
-const FILE_CONFIG.MAX_SIZE_MB = 10;
-
 // ═══ CONFIGURATION: FILE SETTINGS ═══
 const FILE_CONFIG = {
-  FILE_CONFIG.STORAGE_BUCKET: 'employee-files',
+  STORAGE_BUCKET: 'employee-files',
   MAX_SIZE_MB: 10,
   ALLOWED_MIME_TYPES: [
     // Documents
