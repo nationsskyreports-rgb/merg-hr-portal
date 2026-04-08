@@ -614,30 +614,34 @@ button:focus:not(:focus-visible) { outline:none; }
 .dark-row { }
 .toast {
   visibility: hidden;
-  min-width: 250px;
-  margin-left: -125px;
+  min-width: 280px; 
   background-color: #333;
   color: #fff;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 12px; 
   padding: 16px;
   position: fixed;
   z-index: 9999;
+  
   left: 50%;
-  bottom: 30px;
+  bottom: 40px;
+  transform: translateX(-50%); 
+  
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: visibility 0s, opacity 0.5s linear;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: opacity 0.4s, bottom 0.4s, visibility 0.4s;
   opacity: 0;
 }
 
 .toast.show {
   visibility: visible;
   opacity: 1;
+  bottom: 50px; 
 }
 
-.toast.error { background-color: #ef4444; } /* أحمر للخطأ */
-.toast.success { background-color: #10b981; } /* أخضر للنجاح */
+.toast.error { background-color: #ef4444; border: 1px solid rgba(255,255,255,0.1); }
+.toast.success { background-color: #10b981; border: 1px solid rgba(255,255,255,0.1); }
   
 </style>
 </head>
