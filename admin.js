@@ -6,6 +6,8 @@ let baseSalary = 0;
 let adjustments = [];
 let salaryMonth = new Date().toISOString().slice(0,7);
 let adjType = 'bonus';
+let editingEmpId = null; // متغير لتتبع الموظف اللي بنعدله
+
 const adjColors = {
   bonus:     {label:'Bonus',     color:'#22c55e', bg:'rgba(34,197,94,.08)',   sign:'+'},
   allowance: {label:'Allowance', color:'#3b82f6', bg:'rgba(59,130,246,.08)',  sign:'+'},
@@ -13,6 +15,7 @@ const adjColors = {
   absence:   {label:'Absence',   color:'#ef4444', bg:'rgba(239,68,68,.08)',   sign:'-'},
   deduction: {label:'Deduction', color:'#8b5cf6', bg:'rgba(139,92,246,.08)', sign:'-'},
 };
+
 // ═══ CONFIGURATION: FILE SETTINGS ═══
 const FILE_CONFIG = {
   STORAGE_BUCKET: 'employee-files',
@@ -22,11 +25,9 @@ const FILE_CONFIG = {
     'application/pdf', 
     'application/msword', 
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    
     // Spreadsheets
     'application/vnd.ms-excel', 
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    
     // Images
     'image/jpeg', 
     'image/png'
@@ -343,7 +344,7 @@ async function renderHREmployees() {
   $('hrContent').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:18px;font-weight:800;color:var(--text)">${t().employees_tab}</div>
-      <button class="primary-btn" onclick="openModal('addEmpModal')">${t().add_employee}</button>
+      <button class="primary-btn" onclick="resetEmpModal()">${t().add_employee}</button>
     </div>
     <!-- ✅ FIX: oninput for real-time search -->
     <input class="form-input" type="text" placeholder="${t().search_emp}" value="${empSearchTerm}"
@@ -357,37 +358,97 @@ async function renderHREmployees() {
               <div style="font-size:11px;color:var(--sub);margin-top:2px">${e.employee_code||''} · ${e.job_title||e.position||''}</div>
               <div style="font-size:11px;color:var(--muted);margin-top:4px">${e.email||''}</div>
             </div>
-            <span class="badge" style="background:${e.status==='active'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${e.status==='active'?'var(--green)':'var(--red)'};border:1px solid ${e.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'}">${e.status==='active'?t().active_st:t().inactive_st}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="badge" style="background:${e.status==='active'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${e.status==='active'?'var(--green)':'var(--red)'};border:1px solid ${e.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'}">${e.status==='active'?t().active_st:t().inactive_st}</span>
+              
+              <!-- زر التعديل -->
+              <button onclick="openEditModal('${e.id}')" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:4px 8px;cursor:pointer;color:var(--indigo);font-size:12px;font-weight:600">
+                ${lang==='ar'?'تعديل':'Edit'}
+              </button>
+            </div>
           </div>
         </div>`).join('')}
   `;
 }
 
-async function addEmployee() {
+// دالة فتح المودال فارغ للإضافة
+function resetEmpModal() {
+  editingEmpId = null;
+  if($('ae_first')) $('ae_first').value = '';
+  if($('ae_last'))  $('ae_last').value  = '';
+  if($('ae_email')) $('ae_email').value = '';
+  if($('ae_position')) $('ae_position').value = '';
+  if($('ae_dept')) $('ae_dept').value = '';
+  if($('ae_phone')) $('ae_phone').value = '';
+  if($('ae_hire'))  $('ae_hire').value  = '';
+  
+  // إعادة النصوص الأصلية
+  if($('addEmpTitle')) $('addEmpTitle').textContent = t().add_employee;
+  if($('saveEmpBtn'))  $('saveEmpBtn').textContent  = t().add_employee;
+  
+  openModal('addEmpModal');
+}
+
+// دالة فتح المودال للتعديل
+async function openEditModal(id) {
+  editingEmpId = id;
+  const {data:emp, error} = await sb.from('employees').select('*').eq('id', id).single();
+  if(error) return toast(error.message, 'error');
+  
+  // تعبئة الحقول
+  if($('ae_first')) $('ae_first').value = emp.first_name || '';
+  if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
+  if($('ae_email')) $('ae_email').value = emp.email || '';
+  if($('ae_position')) $('ae_position').value = emp.job_title || emp.position || '';
+  if($('ae_dept')) $('ae_dept').value = emp.department || '';
+  if($('ae_phone')) $('ae_phone').value = emp.phone || '';
+  if($('ae_hire'))  $('ae_hire').value  = emp.hire_date || '';
+  
+  // تغيير النصوص
+  if($('addEmpTitle')) $('addEmpTitle').textContent = lang==='ar'?'تعديل بيانات الموظف':'Edit Employee';
+  if($('saveEmpBtn'))  $('saveEmpBtn').textContent  = lang==='ar'?'حفظ التعديلات':'Save Changes';
+  
+  openModal('addEmpModal');
+}
+
+// دالة الحفظ الموحدة (إضافة أو تعديل)
+async function handleSaveEmployee() {
   const first=$('ae_first')?.value?.trim(), last=$('ae_last')?.value?.trim(), email=$('ae_email')?.value?.trim();
   const pos=$('ae_position')?.value?.trim(), dept=$('ae_dept')?.value?.trim();
   const phone=$('ae_phone')?.value?.trim(), hire=$('ae_hire')?.value;
+  
   if(!first||!last||!email) return toast(lang==='ar'?'الرجاء ملء الحقول المطلوبة':'Fill required fields','error');
+
   try {
-    const {error} = await sb.from('employees').insert([{first_name:first,last_name:last,email,job_title:pos,department:dept,phone,hire_date:hire,status:'active'}]);
+    let error;
+    if(editingEmpId) {
+      // Update
+      ({error} = await sb.from('employees').update({
+        first_name: first, last_name: last, email: email,
+        job_title: pos, department: dept, phone: phone, hire_date: hire
+      }).eq('id', editingEmpId));
+      if(!error) toast(lang==='ar'?'تم تعديل البيانات ✅':'Employee updated ✅','success');
+    } else {
+      // Insert
+      ({error} = await sb.from('employees').insert([{
+        first_name:first,last_name:last,email,job_title:pos,department:dept,phone,hire_date:hire,status:'active'
+      }]));
+      if(!error) toast(lang==='ar'?'تمت إضافة الموظف ✅':'Employee added ✅','success');
+    }
+
     if(error) return toast(error.message,'error');
-    toast(lang==='ar'?'تمت إضافة الموظف ✅':'Employee added ✅','success');
     closeModal('addEmpModal');
     renderHR('employees');
-  } catch(e){toast(e.message,'error');}
+  } catch(e) { toast(e.message,'error'); }
 }
 
 async function renderHRSalaries() {
   const {data:emps} = await sb.from('employees').select('*').eq('status','active').order('first_name');
   const items = emps||[];
-
-  // ✅ FIX: guard empty list
   if(items.length===0) {
     $('hrContent').innerHTML=`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">${lang==='ar'?'لا يوجد موظفون نشطون':'No active employees'}</div></div>`;
     return;
   }
-
-  // ✅ FIX: always sync selectedEmp correctly
   if(!salaryEmpId) {
     salaryEmpId = items[0].id;
     selectedEmp = items[0];
@@ -577,15 +638,12 @@ async function exportAttendance() {
   const {data:emps}=await sb.from('employees').select('id,first_name,last_name,employee_code').in('id',ids);
   const empMap={};
   (emps||[]).forEach(e=>empMap[e.id]=e);
-
-  // ✅ FIX: escape CSV values properly
   const esc=v=>`"${String(v||'').replace(/"/g,'""')}"`;
   const csv='Employee,Code,Date,Check-In,Check-Out\n'+
     data.map(r=>{
       const emp=empMap[r.employee_id]||{};
       return[esc((emp.first_name||'')+' '+(emp.last_name||'')),esc(emp.employee_code||''),esc(r.attendance_date),esc(r.check_in_time||''),esc(r.check_out_time||'')].join(',');
     }).join('\n');
-
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -693,11 +751,6 @@ async function deleteTask(id) {
   });
 }
 
-// ═══ CONSTANTS & CONFIG ═══
-const FILE_CONFIG.STORAGE_BUCKET = 'employee-files';
-const FILE_CONFIG.MAX_SIZE_MB = 10;
-const ALLOWED_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png'];
-
 // ═══ EMPLOYEE FILES (PRO VERSION) ═══
 let filesEmpId = null;
 
@@ -756,7 +809,6 @@ async function renderHRFiles() {
     ${empFiles.length === 0
       ? `<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${lang === 'ar' ? 'لا توجد ملفات' : 'No files yet'}</div></div>`
       : empFiles.map(f => {
-          // Determine Icon based on type
           let icon = '📎';
           if (f.file_type?.includes('pdf')) icon = '📄';
           else if (f.file_type?.includes('word') || f.file_type?.includes('doc')) icon = '📝';
@@ -791,17 +843,13 @@ async function handleFileUpload(input) {
   const file = input.files[0];
   if (!file) return;
 
-  // 1. Validation (Using the new helper)
   if (!FILE_CONFIG.isValid(file.type, file.size)) {
     if (file.size > FILE_CONFIG.MAX_SIZE_MB * 1024 * 1024) {
       return toast(lang === 'ar' ? `الملف أكبر من ${FILE_CONFIG.MAX_SIZE_MB}MB` : `File exceeds ${FILE_CONFIG.MAX_SIZE_MB}MB`, 'error');
     }
     return toast(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Invalid file type', 'error');
   }
-  // Optional: Validate MIME type strictly if needed
-  // if (!ALLOWED_TYPES.includes(file.type)) return toast('Invalid file type', 'error');
 
-  // 2. UI Feedback Start
   const dz = $('dropZone');
   const upCont = $('uploadProgressContainer');
   const upBar = $('uploadBar');
@@ -811,7 +859,6 @@ async function handleFileUpload(input) {
   if (upCont) upCont.style.display = 'block';
   if (dz) dz.style.opacity = '0.5';
   
-  // Simulate progress (Supabase JS client v2 doesn't support upload progress natively in browser easily without XHR, this is visual feedback)
   let progress = 0;
   const progressInterval = setInterval(() => {
     progress += 10;
@@ -822,27 +869,20 @@ async function handleFileUpload(input) {
 
   try {
     const ext = file.name.split('.').pop();
-    // Clean filename to avoid issues
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_'); 
     const fileName = `${filesEmpId}/${Date.now()}_${safeFileName}`;
 
-    // 3. Upload to Storage
     const { error: upErr } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).upload(fileName, file, { upsert: true, cacheControl: '3600' });
-    
     if (upErr) throw upErr;
 
-    // 4. Save ONLY Path to DB (Not the full URL) - This is the Professional Way
-    // Note: If you haven't added 'file_path' column yet, you might need to add it or temporarily use 'file_url' to store path
     const { error: dbErr } = await sb.from('employee_files').insert([{
       employee_id: filesEmpId,
       file_name: file.name,
-      file_path: fileName, // <--- Saving path
+      file_path: fileName, 
       file_type: file.type
     }]);
-
     if (dbErr) throw dbErr;
 
-    // 5. Success UI
     clearInterval(progressInterval);
     if(upBar) upBar.style.width = '100%';
     if(upPct) upPct.textContent = '100%';
@@ -850,11 +890,7 @@ async function handleFileUpload(input) {
     if(upTxt) upTxt.style.color = 'var(--green)';
 
     toast(lang === 'ar' ? 'تم رفع الملف ✅' : 'File uploaded ✅', 'success');
-    
-    setTimeout(() => {
-      await renderHRFiles();
-    }, 1000);
-
+    setTimeout(() => { await renderHRFiles(); }, 1000);
   } catch (e) {
     console.error(e);
     clearInterval(progressInterval);
@@ -864,14 +900,12 @@ async function handleFileUpload(input) {
   }
 }
 
-// Drag and Drop Support
 function handleDrop(e, el) {
   e.preventDefault();
   el.style.borderColor = 'var(--border)';
   const file = e.dataTransfer.files[0];
   if (file) {
     const input = $('fileInput');
-    // Create a fake FileList object or manually handle logic
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     input.files = dataTransfer.files;
@@ -879,12 +913,9 @@ function handleDrop(e, el) {
   }
 }
 
-// ═══ SECURE DOWNLOAD ═══
 async function downloadFileSecurely(id, pathOrUrl) {
   toast(lang === 'ar' ? 'جاري تحضير الرابط...' : 'Generating secure link...', 'info');
-  
   try {
-    // Check if it's an old format (full URL) or new format (path)
     let path = pathOrUrl;
     if (path.startsWith('http')) {
       try {
@@ -892,17 +923,10 @@ async function downloadFileSecurely(id, pathOrUrl) {
         const parts = urlObj.pathname.split('/' + FILE_CONFIG.STORAGE_BUCKET + '/');
         if (parts[1]) path = decodeURIComponent(parts[1]);
         else throw new Error('Invalid URL format');
-      } catch (e) {
-        return toast('Invalid file path', 'error');
-      }
+      } catch (e) { return toast('Invalid file path', 'error'); }
     }
-
-    // Generate a Signed URL valid for 60 seconds
     const { data, error } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).createSignedUrl(path, 60);
-    
     if (error) throw error;
-    
-    // Open in new tab
     window.open(data.signedUrl, '_blank');
   } catch (e) {
     console.error(e);
@@ -910,18 +934,15 @@ async function downloadFileSecurely(id, pathOrUrl) {
   }
 }
 
-// ═══ DELETE LOGIC ═══
 async function deleteFile(id, pathOrUrl) {
-  // Determine path (handle old vs new format)
   let path = pathOrUrl;
   if (path.startsWith('http')) {
     try {
       const urlObj = new URL(path);
       const parts = urlObj.pathname.split('/' + FILE_CONFIG.STORAGE_BUCKET + '/');
       if (parts[1]) path = decodeURIComponent(parts[1]);
-    } catch (e) { /* ignore URL parsing error, proceed to DB delete */ }
+    } catch (e) { }
   }
-
   showConfirm({
     icon: '🗑️',
     title: lang === 'ar' ? 'حذف الملف' : 'Delete File',
@@ -930,25 +951,20 @@ async function deleteFile(id, pathOrUrl) {
     okColor: 'var(--red)',
     onOk: async () => {
       try {
-        // 1. Attempt to delete from Storage
-        // We use a try/catch block specifically for storage so DB delete proceeds even if storage fails
         if (!path.startsWith('http')) {
             const { error: storageErr } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).remove([path]);
             if (storageErr) console.warn('Storage delete warning:', storageErr.message);
         }
-
-        // 2. Always delete from Database
         const { error: dbErr } = await sb.from('employee_files').delete().eq('id', id);
         if (dbErr) throw dbErr;
-
         toast(lang === 'ar' ? 'تم الحذف ✅' : 'Deleted ✅', 'success');
         await renderHRFiles();
-      } catch (e) {
-        toast(e.message, 'error');
-      }
+      } catch (e) { toast(e.message, 'error'); }
     }
   });
 }
+
+// ═══ DELETE LEAVE (FIXED & ENHANCED) ═══
 async function deleteLeave(id, status, empId, startDate, endDate, leaveType) {
   const DEDUCTIBLE = ['annual','sick','emergency'];
   const isDeductible = status==='approved' && DEDUCTIBLE.includes(leaveType?.toLowerCase());
