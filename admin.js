@@ -13,6 +13,33 @@ const adjColors = {
   absence:   {label:'Absence',   color:'#ef4444', bg:'rgba(239,68,68,.08)',   sign:'-'},
   deduction: {label:'Deduction', color:'#8b5cf6', bg:'rgba(139,92,246,.08)', sign:'-'},
 };
+const FILE_CONFIG.STORAGE_BUCKET = 'employee-files';
+const FILE_CONFIG.MAX_SIZE_MB = 10;
+
+// ═══ CONFIGURATION: FILE SETTINGS ═══
+const FILE_CONFIG = {
+  FILE_CONFIG.STORAGE_BUCKET: 'employee-files',
+  MAX_SIZE_MB: 10,
+  ALLOWED_MIME_TYPES: [
+    // Documents
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    
+    // Spreadsheets
+    'application/vnd.ms-excel', 
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    
+    // Images
+    'image/jpeg', 
+    'image/png'
+  ],
+  isValid: function(fileType, fileSizeInBytes) {
+    const isTypeAllowed = this.ALLOWED_MIME_TYPES.includes(fileType);
+    const isSizeAllowed = fileSizeInBytes <= (this.MAX_SIZE_MB * 1024 * 1024);
+    return isTypeAllowed && isSizeAllowed;
+  }
+};
 
 async function initHR() {
   updateLangBtns();
@@ -669,100 +696,259 @@ async function deleteTask(id) {
   });
 }
 
-// ═══ EMPLOYEE FILES ═══
-let filesEmpId=null;
+// ═══ CONSTANTS & CONFIG ═══
+const FILE_CONFIG.STORAGE_BUCKET = 'employee-files';
+const FILE_CONFIG.MAX_SIZE_MB = 10;
+const ALLOWED_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png'];
+
+// ═══ EMPLOYEE FILES (PRO VERSION) ═══
+let filesEmpId = null;
 
 async function renderHRFiles() {
-  const {data:emps}=await sb.from('employees').select('id,first_name,last_name').eq('status','active').order('first_name');
-  const items=emps||[];
-  if(!filesEmpId&&items.length>0) filesEmpId=items[0].id;
-  const {data:files}=await sb.from('employee_files').select('*').eq('employee_id',filesEmpId).order('uploaded_at',{ascending:false});
-  const empFiles=files||[];
+  const { data: emps } = await sb.from('employees').select('id,first_name,last_name').eq('status', 'active').order('first_name');
+  const items = emps || [];
+  if (!filesEmpId && items.length > 0) filesEmpId = items[0].id;
+  
+  const { data: files } = await sb.from('employee_files').select('*').eq('employee_id', filesEmpId).order('uploaded_at', { ascending: false });
+  const empFiles = files || [];
 
-  $('hrContent').innerHTML=`
-    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">📁 ${lang==='ar'?'ملفات الموظفين':'Employee Files'}</div>
+  $('hrContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">📁 ${lang === 'ar' ? 'ملفات الموظفين' : 'Employee Files'}</div>
+    
+    <!-- Employee Selector -->
     <div class="form-field" style="margin-bottom:16px">
-      <label class="field-label">${lang==='ar'?'اختر موظف':'Select Employee'}</label>
+      <label class="field-label">${lang === 'ar' ? 'اختر موظف' : 'Select Employee'}</label>
       <select class="form-input" onchange="filesEmpId=this.value;renderHRFiles()">
-        ${items.map(e=>`<option value="${e.id}" ${e.id===filesEmpId?'selected':''}>${e.first_name} ${e.last_name}</option>`).join('')}
+        ${items.map(e => `<option value="${e.id}" ${e.id === filesEmpId ? 'selected' : ''}>${e.first_name} ${e.last_name}</option>`).join('')}
       </select>
     </div>
+
+    <!-- Upload Card -->
     <div class="card" style="margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">⬆️ ${lang==='ar'?'رفع ملف':'Upload File'}</div>
-      <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s" onclick="$('fileInput').click()" id="dropZone">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">⬆️ ${lang === 'ar' ? 'رفع ملف' : 'Upload File'}</div>
+      
+      <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s" 
+           onclick="$('fileInput').click()" 
+           ondragover="event.preventDefault();this.style.borderColor='var(--indigo)'" 
+           ondragleave="this.style.borderColor='var(--border)'"
+           ondrop="handleDrop(event, this)"
+           id="dropZone">
         <div style="font-size:36px;margin-bottom:8px">📎</div>
-        <div style="font-size:14px;font-weight:600;color:var(--sub)">${lang==='ar'?'اضغط لاختيار ملف':'Click to choose file'}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">PDF, Word, Excel, Images</div>
-        <input type="file" id="fileInput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" onchange="handleFileUpload(this)"/>
+        <div style="font-size:14px;font-weight:600;color:var(--sub)">${lang === 'ar' ? 'اضغط لاختيار أو اسحب الملف هنا' : 'Click or Drag & Drop'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Max ${FILE_CONFIG.MAX_SIZE_MB}MB • PDF, Word, Excel, Images</div>
+        <input type="file" id="fileInput" style="display:none" 
+               accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
+               onchange="handleFileUpload(this)"/>
       </div>
-      <div id="uploadProgress" style="display:none;margin-top:12px;text-align:center;color:var(--sub);font-size:13px">⏳ ${lang==='ar'?'جاري الرفع...':'Uploading...'}</div>
+      
+      <!-- Progress Bar (Hidden by default) -->
+      <div id="uploadProgressContainer" style="display:none;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:4px">
+          <span id="uploadStatus">Uploading...</span>
+          <span id="uploadPercent">0%</span>
+        </div>
+        <div style="background:var(--surface-3);height:6px;border-radius:99px;overflow:hidden">
+          <div id="uploadBar" style="background:var(--sky);height:100%;width:0%;transition:width .2s"></div>
+        </div>
+      </div>
     </div>
-    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الملفات':'Files'} (${empFiles.length})</div>
-    ${empFiles.length===0
-      ?`<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${lang==='ar'?'لا توجد ملفات':'No files yet'}</div></div>`
-      :empFiles.map(f=>{
-        const icon=f.file_type?.includes('pdf')?'📄':f.file_type?.includes('word')||f.file_type?.includes('doc')?'📝':f.file_type?.includes('sheet')||f.file_type?.includes('xls')?'📊':'📎';
-        return `<div class="card-sm" style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:28px;flex-shrink:0">${icon}</div>
-          <div style="flex:1;overflow:hidden">
-            <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.file_name}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(f.uploaded_at).toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <a href="${f.file_url}" target="_blank" style="background:rgba(56,189,248,.12);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">👁</a>
-            <button onclick="deleteFile('${f.id}','${encodeURIComponent(f.file_url)}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--red);font-size:14px">✕</button>
-          </div>
-        </div>`;
-      }).join('')}
+
+    <!-- Files List -->
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang === 'ar' ? 'الملفات' : 'Files'} (${empFiles.length})</div>
+    
+    ${empFiles.length === 0
+      ? `<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${lang === 'ar' ? 'لا توجد ملفات' : 'No files yet'}</div></div>`
+      : empFiles.map(f => {
+          // Determine Icon based on type
+          let icon = '📎';
+          if (f.file_type?.includes('pdf')) icon = '📄';
+          else if (f.file_type?.includes('word') || f.file_type?.includes('doc')) icon = '📝';
+          else if (f.file_type?.includes('sheet') || f.file_type?.includes('xls')) icon = '📊';
+          else if (f.file_type?.includes('image')) icon = '🖼️';
+
+          return `<div class="card-sm" style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:28px;flex-shrink:0">${icon}</div>
+            <div style="flex:1;overflow:hidden">
+              <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.file_name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(f.uploaded_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <!-- Secure Download Button -->
+              <button onclick="downloadFileSecurely('${f.id}', '${f.file_path || f.file_url}')" 
+                      style="background:rgba(56,189,248,.12);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px" title="${lang==='ar'?'تحميل':'Download'}">
+                👁
+              </button>
+              <!-- Delete Button -->
+              <button onclick="deleteFile('${f.id}', '${f.file_path || f.file_url}')" 
+                      style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--red);font-size:14px" title="${lang==='ar'?'حذف':'Delete'}">
+                ✕
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
   `;
 }
 
+// ═══ UPLOAD LOGIC ═══
 async function handleFileUpload(input) {
-  const file=input.files[0];
-  if(!file) return;
-  if(file.size>10*1024*1024) return toast(lang==='ar'?'الملف أكبر من 10MB':'File exceeds 10MB','error');
-  const dz=$('dropZone'), up=$('uploadProgress');
-  if(up) up.style.display='block';
-  if(dz) dz.style.opacity='0.5';
+  const file = input.files[0];
+  if (!file) return;
+
+  // 1. Validation (Using the new helper)
+  if (!FILE_CONFIG.isValid(file.type, file.size)) {
+    if (file.size > FILE_CONFIG.MAX_SIZE_MB * 1024 * 1024) {
+      return toast(lang === 'ar' ? `الملف أكبر من ${FILE_CONFIG.MAX_SIZE_MB}MB` : `File exceeds ${FILE_CONFIG.MAX_SIZE_MB}MB`, 'error');
+    }
+    return toast(lang === 'ar' ? 'نوع الملف غير مدعوم' : 'Invalid file type', 'error');
+  }
+  // Optional: Validate MIME type strictly if needed
+  // if (!ALLOWED_TYPES.includes(file.type)) return toast('Invalid file type', 'error');
+
+  // 2. UI Feedback Start
+  const dz = $('dropZone');
+  const upCont = $('uploadProgressContainer');
+  const upBar = $('uploadBar');
+  const upTxt = $('uploadStatus');
+  const upPct = $('uploadPercent');
+  
+  if (upCont) upCont.style.display = 'block';
+  if (dz) dz.style.opacity = '0.5';
+  
+  // Simulate progress (Supabase JS client v2 doesn't support upload progress natively in browser easily without XHR, this is visual feedback)
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += 10;
+    if(upBar) upBar.style.width = Math.min(progress, 90) + '%';
+    if(upPct) upPct.textContent = Math.min(progress, 90) + '%';
+    if (progress >= 90) clearInterval(progressInterval);
+  }, 200);
+
   try {
-    const ext=file.name.split('.').pop();
-    const fileName=`${filesEmpId}/${Date.now()}.${ext}`;
-    const {error:upErr}=await sb.storage.from('employee-files').upload(fileName,file,{upsert:true});
-    if(upErr) throw upErr;
-    const {data:urlData}=sb.storage.from('employee-files').getPublicUrl(fileName);
-    const {error:dbErr}=await sb.from('employee_files').insert([{employee_id:filesEmpId,file_name:file.name,file_url:urlData.publicUrl,file_type:file.type}]);
-    if(dbErr) throw dbErr;
-    toast(lang==='ar'?'تم رفع الملف ✅':'File uploaded ✅','success');
-    await renderHRFiles();
-  } catch(e) {
-    toast(e.message,'error');
-    if(dz) dz.style.opacity='1';
-    if(up) up.style.display='none';
+    const ext = file.name.split('.').pop();
+    // Clean filename to avoid issues
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_'); 
+    const fileName = `${filesEmpId}/${Date.now()}_${safeFileName}`;
+
+    // 3. Upload to Storage
+    const { error: upErr } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).upload(fileName, file, { upsert: true, cacheControl: '3600' });
+    
+    if (upErr) throw upErr;
+
+    // 4. Save ONLY Path to DB (Not the full URL) - This is the Professional Way
+    // Note: If you haven't added 'file_path' column yet, you might need to add it or temporarily use 'file_url' to store path
+    const { error: dbErr } = await sb.from('employee_files').insert([{
+      employee_id: filesEmpId,
+      file_name: file.name,
+      file_path: fileName, // <--- Saving path
+      file_type: file.type
+    }]);
+
+    if (dbErr) throw dbErr;
+
+    // 5. Success UI
+    clearInterval(progressInterval);
+    if(upBar) upBar.style.width = '100%';
+    if(upPct) upPct.textContent = '100%';
+    if(upTxt) upTxt.textContent = lang === 'ar' ? 'تم الرفع بنجاح' : 'Upload Complete';
+    if(upTxt) upTxt.style.color = 'var(--green)';
+
+    toast(lang === 'ar' ? 'تم رفع الملف ✅' : 'File uploaded ✅', 'success');
+    
+    setTimeout(() => {
+      await renderHRFiles();
+    }, 1000);
+
+  } catch (e) {
+    console.error(e);
+    clearInterval(progressInterval);
+    toast(e.message || (lang === 'ar' ? 'حدث خطأ أثناء الرفع' : 'Upload failed'), 'error');
+    if (dz) dz.style.opacity = '1';
+    if (upCont) upCont.style.display = 'none';
   }
 }
 
-// ✅ FIX: robust delete — storage failure doesn't block DB delete
-async function deleteFile(id, encodedUrl) {
-  const url = decodeURIComponent(encodedUrl);
-  showConfirm({
-    icon:'🗑️', title:lang==='ar'?'حذف الملف':'Delete File',
-    msg:lang==='ar'?'هل أنت متأكد من حذف هذا الملف؟':'Are you sure you want to delete this file?',
-    okLabel:lang==='ar'?'حذف':'Delete', okColor:'var(--red)',
-    onOk:async()=>{
-      try {
-        // حذف من الـ storage (لو فشل نكمل)
-        try {
-          const urlObj=new URL(url);
-          const parts=urlObj.pathname.split('/employee-files/');
-          if(parts[1]) await sb.storage.from('employee-files').remove([decodeURIComponent(parts[1])]);
-        } catch(storageErr){ console.warn('Storage delete failed:',storageErr); }
+// Drag and Drop Support
+function handleDrop(e, el) {
+  e.preventDefault();
+  el.style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const input = $('fileInput');
+    // Create a fake FileList object or manually handle logic
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+    handleFileUpload(input);
+  }
+}
 
-        // حذف من الـ DB دايمًا
-        const {error}=await sb.from('employee_files').delete().eq('id',id);
-        if(error) return toast(error.message,'error');
-        toast(lang==='ar'?'تم الحذف ✅':'Deleted ✅','success');
+// ═══ SECURE DOWNLOAD ═══
+async function downloadFileSecurely(id, pathOrUrl) {
+  toast(lang === 'ar' ? 'جاري تحضير الرابط...' : 'Generating secure link...', 'info');
+  
+  try {
+    // Check if it's an old format (full URL) or new format (path)
+    let path = pathOrUrl;
+    if (path.startsWith('http')) {
+      try {
+        const urlObj = new URL(path);
+        const parts = urlObj.pathname.split('/' + FILE_CONFIG.STORAGE_BUCKET + '/');
+        if (parts[1]) path = decodeURIComponent(parts[1]);
+        else throw new Error('Invalid URL format');
+      } catch (e) {
+        return toast('Invalid file path', 'error');
+      }
+    }
+
+    // Generate a Signed URL valid for 60 seconds
+    const { data, error } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).createSignedUrl(path, 60);
+    
+    if (error) throw error;
+    
+    // Open in new tab
+    window.open(data.signedUrl, '_blank');
+  } catch (e) {
+    console.error(e);
+    toast(lang === 'ar' ? 'فشل تحميل الملف' : 'Failed to download file', 'error');
+  }
+}
+
+// ═══ DELETE LOGIC ═══
+async function deleteFile(id, pathOrUrl) {
+  // Determine path (handle old vs new format)
+  let path = pathOrUrl;
+  if (path.startsWith('http')) {
+    try {
+      const urlObj = new URL(path);
+      const parts = urlObj.pathname.split('/' + FILE_CONFIG.STORAGE_BUCKET + '/');
+      if (parts[1]) path = decodeURIComponent(parts[1]);
+    } catch (e) { /* ignore URL parsing error, proceed to DB delete */ }
+  }
+
+  showConfirm({
+    icon: '🗑️',
+    title: lang === 'ar' ? 'حذف الملف' : 'Delete File',
+    msg: lang === 'ar' ? 'هل أنت متأكد من حذف هذا الملف؟' : 'Are you sure you want to delete this file?',
+    okLabel: lang === 'ar' ? 'حذف' : 'Delete',
+    okColor: 'var(--red)',
+    onOk: async () => {
+      try {
+        // 1. Attempt to delete from Storage
+        // We use a try/catch block specifically for storage so DB delete proceeds even if storage fails
+        if (!path.startsWith('http')) {
+            const { error: storageErr } = await sb.storage.from(FILE_CONFIG.STORAGE_BUCKET).remove([path]);
+            if (storageErr) console.warn('Storage delete warning:', storageErr.message);
+        }
+
+        // 2. Always delete from Database
+        const { error: dbErr } = await sb.from('employee_files').delete().eq('id', id);
+        if (dbErr) throw dbErr;
+
+        toast(lang === 'ar' ? 'تم الحذف ✅' : 'Deleted ✅', 'success');
         await renderHRFiles();
-      } catch(e){ toast(e.message,'error'); }
+      } catch (e) {
+        toast(e.message, 'error');
+      }
     }
   });
 }
