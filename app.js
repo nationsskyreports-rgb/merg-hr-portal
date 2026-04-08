@@ -615,7 +615,6 @@ async function handleCheckIn() {
     renderEmp('home');
   } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
-
 async function confirmCheckIn(id) {
   if(!id) return toast('Invalid Record ID','error');
   const btn = $('confirmBtn');
