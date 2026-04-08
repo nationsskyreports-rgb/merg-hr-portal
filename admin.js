@@ -1122,29 +1122,62 @@ async function renderCustomPage(slug) {
 
 // ═══ SETTINGS ═══
 async function renderHRSettings() {
-  const {data:deptSetting}=await sb.from('app_settings').select('value').eq('key','departments').single();
-  const {data:posSetting} =await sb.from('app_settings').select('value').eq('key','positions').single();
-  $('hrContent').innerHTML=`
+  const {data:office} = await sb.from('office_location').select('*').eq('is_active',true).single();
+
+  $('hrContent').innerHTML = `
     <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">⚙️ ${lang==='ar'?'الإعدادات العامة':'General Settings'}</div>
+
+    <!-- إعدادات الشيفت -->
     <div class="card" style="margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">🏢 ${lang==='ar'?'الأقسام':'Departments'}</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${lang==='ar'?'اكتب الأقسام مفصولة بفاصلة (مثال: HR, IT, Sales)':'Write departments separated by commas (e.g. HR, IT, Sales)'}</div>
-      <textarea id="setting_depts" class="form-input" style="min-height:80px">${deptSetting?.value||''}</textarea>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">⏰ ${lang==='ar'?'وقت بداية الشيفت':'Shift Start Time'}</div>
+      <div class="form-field" style="margin:0">
+        <label class="field-label">${lang==='ar'?'الوقت':'Time'}</label>
+        <input class="form-input" type="time" id="setting_shift" value="${(office?.shift_start_time||'09:00:00').slice(0,5)}"/>
+      </div>
     </div>
+
+    <!-- إعدادات المكتب -->
     <div class="card" style="margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">💼 ${lang==='ar'?'المناصب':'Positions'}</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${lang==='ar'?'اكتب المناصب مفصولة بفاصلة (مثال: Manager, Developer)':'Write positions separated by commas (e.g. Manager, Developer)'}</div>
-      <textarea id="setting_pos" class="form-input" style="min-height:80px">${posSetting?.value||''}</textarea>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">📍 ${lang==='ar'?'إعدادات المكتب':'Office Settings'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-field" style="margin:0">
+          <label class="field-label">Latitude</label>
+          <input class="form-input" type="number" step="any" id="setting_lat" value="${office?.latitude||''}"/>
+        </div>
+        <div class="form-field" style="margin:0">
+          <label class="field-label">Longitude</label>
+          <input class="form-input" type="number" step="any" id="setting_lng" value="${office?.longitude||''}"/>
+        </div>
+        <div class="form-field" style="margin:0;grid-column:1/-1">
+          <label class="field-label">${lang==='ar'?'النطاق المسموح بيه (متر)':'Allowed Radius (meters)'}</label>
+          <input class="form-input" type="number" id="setting_radius" value="${office?.radius_meters||200}"/>
+        </div>
+      </div>
     </div>
+
     <button class="primary-btn" onclick="saveSettings()" style="width:100%">💾 ${lang==='ar'?'حفظ الإعدادات':'Save Settings'}</button>
   `;
 }
 
 async function saveSettings() {
-  const depts=$('setting_depts')?.value.trim();
-  const poss =$('setting_pos')?.value.trim();
-  const {error:err1}=await sb.from('app_settings').upsert({key:'departments',value:depts});
-  const {error:err2}=await sb.from('app_settings').upsert({key:'positions',value:poss});
-  if(err1||err2) return toast(lang==='ar'?'فشل الحفظ':'Save failed','error');
+  const shift  = $('setting_shift')?.value;
+  const lat    = parseFloat($('setting_lat')?.value);
+  const lng    = parseFloat($('setting_lng')?.value);
+  const radius = parseInt($('setting_radius')?.value);
+
+  if(!shift)           return toast(lang==='ar'?'أدخل وقت الشيفت':'Enter shift time','error');
+  if(isNaN(lat)||isNaN(lng)) return toast(lang==='ar'?'أدخل الموقع صح':'Enter valid location','error');
+  if(isNaN(radius)||radius<=0) return toast(lang==='ar'?'أدخل نطاق صحيح':'Enter valid radius','error');
+
+  const {error} = await sb.from('office_location')
+    .update({
+      shift_start_time: shift + ':00',
+      latitude:         lat,
+      longitude:        lng,
+      radius_meters:    radius
+    })
+    .eq('is_active', true);
+
+  if(error) return toast(error.message,'error');
   toast(lang==='ar'?'تم حفظ الإعدادات ✅':'Settings saved ✅','success');
 }
