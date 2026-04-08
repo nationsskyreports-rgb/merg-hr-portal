@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كيف تحصل على حسابك في MERGE HR</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface-2: #1a2236;
+    --surface-3: #243049;
+    --border: #2a3a55;
+    --text: #f1f5f9;
+    --sub: #94a3b8;
+    --muted: #64748b;
+    --sky: #0ea5e9;
+    --green: #10b981;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --indigo: #6366f1;
+    --violet: #a855f7;
+    --r-xl: 24px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Cairo',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.8;
+    min-height:100vh;
+  }
+  body::before {
+    content:''; position:fixed; top:-50%; left:-50%;
+    width:200%; height:200%;
+    background:radial-gradient(ellipse at 30% 20%,rgba(14,165,233,.06) 0%,transparent 50%),
+               radial-gradient(ellipse at 70% 80%,rgba(99,102,241,.05) 0%,transparent 50%);
+    animation:bgDrift 20s ease-in-out infinite alternate;
+    z-index:0; pointer-events:none;
+  }
+  @keyframes bgDrift { 0%{transform:translate(0,0)} 100%{transform:translate(-3%,2%) rotate(3deg)} }
+
+  .wrapper { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:40px 20px 80px; }
+
+  .hero { text-align:center; padding:50px 20px 40px; margin-bottom:40px; position:relative; }
+  .hero::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:100px; height:3px; background:linear-gradient(90deg,var(--green),var(--sky)); border-radius:2px; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2); color:var(--green); padding:6px 18px; border-radius:99px; font-size:13px; font-weight:700; margin-bottom:20px; }
+  .hero h1 { font-size:clamp(28px,5vw,44px); font-weight:900; margin-bottom:10px; }
+  .hero h1 span { background:linear-gradient(135deg,var(--green),var(--sky)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero p { font-size:16px; color:var(--sub); max-width:520px; margin:0 auto; }
+
+  .section { margin-bottom:36px; opacity:0; transform:translateY(30px); animation:fadeUp .6s ease forwards; }
+  @keyframes fadeUp { to{opacity:1;transform:translateY(0)} }
+
+  .section-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .section-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .section-header h2 { font-size:20px; font-weight:800; }
+  .section-header .sec-num { font-size:12px; font-weight:700; color:var(--muted); margin-top:2px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xl); padding:22px; margin-bottom:14px; transition:border-color .3s; }
+  .card:hover { border-color:rgba(14,165,233,.2); }
+  .card h3 { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .card p,.card li { font-size:14px; color:var(--sub); line-height:1.9; }
+  .card ul { list-style:none; padding:0; }
+  .card ul li { padding:5px 0; padding-right:22px; position:relative; }
+  .card ul li::before { content:''; position:absolute; right:0; top:50%; transform:translateY(-50%); width:7px; height:7px; border-radius:50%; background:var(--green); opacity:.6; }
+
+  .steps { counter-reset:step; }
+  .step { display:flex; gap:14px; margin-bottom:14px; position:relative; }
+  .step:not(:last-child)::after { content:''; position:absolute; right:18px; top:42px; bottom:-14px; width:2px; background:var(--border); }
+  .step-num { width:38px; height:38px; border-radius:11px; background:var(--surface-2); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--green); flex-shrink:0; }
+  .step-content { flex:1; padding-top:5px; }
+  .step-content h4 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .step-content p { font-size:13px; color:var(--sub); line-height:1.7; }
+
+  .alert { display:flex; align-items:flex-start; gap:12px; padding:16px 18px; border-radius:14px; margin-bottom:14px; font-size:13px; font-weight:600; line-height:1.7; }
+  .alert-warn { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); color:var(--amber); }
+  .alert-info { background:rgba(14,165,233,.08); border:1px solid rgba(14,165,233,.2); color:var(--sky); }
+  .alert-danger { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:var(--red); }
+  .alert-success { background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); color:var(--green); }
+  .alert i { font-size:16px; margin-top:2px; flex-shrink:0; }
+
+  .table-wrap { overflow-x:auto; border-radius:14px; border:1px solid var(--border); margin-bottom:14px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead { background:var(--surface-2); }
+  th { padding:11px 16px; text-align:right; font-weight:700; color:var(--sub); font-size:11px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:11px 16px; border-bottom:1px solid var(--border); color:var(--text); white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(14,165,233,.03); }
+
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; }
+  .badge-green { background:rgba(16,185,129,.1); color:var(--green); }
+  .badge-red { background:rgba(239,68,68,.1); color:var(--red); }
+  .badge-sky { background:rgba(14,165,233,.1); color:var(--sky); }
+  .badge-amber { background:rgba(245,158,11,.1); color:var(--amber); }
+
+  kbd { display:inline-block; padding:2px 8px; background:var(--surface-3); border:1px solid var(--border); border-radius:6px; font-family:monospace; font-size:12px; color:var(--sky); }
+
+  .flow-diagram { display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; margin:20px 0; }
+  .flow-node { background:var(--surface-2); border:1.5px solid var(--border); border-radius:14px; padding:14px 18px; text-align:center; min-width:110px; }
+  .flow-node .fn-icon { font-size:22px; margin-bottom:4px; }
+  .flow-node .fn-text { font-size:11px; font-weight:700; color:var(--text); }
+  .flow-node .fn-sub { font-size:9px; color:var(--muted); margin-top:2px; }
+  .flow-node.highlight { border-color:rgba(16,185,129,.3); background:rgba(16,185,129,.05); }
+  .flow-arrow { color:var(--indigo); font-size:18px; margin:0 6px; }
+
+  .faq-item { background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:10px; overflow:hidden; }
+  .faq-q { padding:16px 18px; font-size:14px; font-weight:700; color:var(--text); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:background .2s; }
+  .faq-q:hover { background:var(--surface-2); }
+  .faq-q i { color:var(--muted); transition:transform .3s; font-size:12px; }
+  .faq-q.open i { transform:rotate(180deg); }
+  .faq-a { max-height:0; overflow:hidden; transition:max-height .4s ease, padding .3s; padding:0 18px; }
+  .faq-a.open { max-height:500px; padding:0 18px 16px; }
+  .faq-a p { font-size:13px; color:var(--sub); line-height:1.8; }
+
+  .footer { text-align:center; padding:40px 20px; border-top:1px solid var(--border); margin-top:50px; }
+  .footer p { font-size:13px; color:var(--muted); }
+
+  .scroll-top { position:fixed; bottom:30px; left:30px; width:44px; height:44px; border-radius:12px; background:var(--green); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; z-index:100; opacity:0; transform:translateY(20px); transition:all .3s; box-shadow:0 4px 20px rgba(16,185,129,.3); }
+  .scroll-top.visible { opacity:1; transform:translateY(0); }
+
+  @media(max-width:640px) {
+    .wrapper { padding:20px 14px 60px; }
+    .hero h1 { font-size:24px; }
+    .card { padding:16px; }
+    .flow-diagram { flex-direction:column; }
+    .flow-arrow { transform:rotate(90deg); }
+    th,td { padding:8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="hero">
+    <div class="hero-badge"><i class="fas fa-user-check"></i> دليل إنشاء الحساب</div>
+    <h1>إزاي تحصل على <span>حسابك في MERGE HR</span></h1>
+    <p>شرح كامل خطوة بخطوة — من أول ما يتم تعيينك لحد ما تدخل التطبيق</p>
+  </div>
+
+  <!-- الخلاصة -->
+  <div class="section">
+    <div class="card" style="border-color:rgba(16,185,129,.2);background:linear-gradient(135deg,rgba(16,185,129,.04),rgba(14,165,233,.04))">
+      <h3><i class="fas fa-bolt" style="color:var(--green)"></i> الخلاصة السريعة</h3>
+      <p style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:10px">إنت مش بتعمل حاجة — الإدمن هو اللي بيعمل حسابك.</p>
+      <p>فريق الموارد البشرية (HR) هو المسؤول عن إنشاء حسابك بالكامل. إنت بس تستلم البيانات وتدخل. لو لسه ما استلمتش بيانات، تواصل مع HR.</p>
+    </div>
+  </div>
+
+  <!-- رحلة الحساب -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,.1)">🛤️</div>
+      <div><h2>رحلة إنشاء الحساب</h2><div class="sec-num">من التعيين لحد تسجيل الدخول الأول</div></div>
+    </div>
+
+    <div class="flow-diagram">
+      <div class="flow-node highlight"><div class="fn-icon">📝</div><div class="fn-text">التعيين</div><div class="fn-sub">يتم تعيينك في الشركة</div></div>
+      <div class="flow-arrow"><i class="fas fa-arrow-left"></i></div>
+      <div class="flow-node highlight"><div class="fn-icon">👔</div><div class="fn-text">HR يعمل حسابك</div><div class="fn-sub">في لوحة التحكم</div></div>
+      <div class="flow-arrow"><i class="fas fa-arrow-left"></i></div>
+      <div class="flow-node highlight"><div class="fn-icon">📧</div><div class="fn-text">تستلم البيانات</div><div class="fn-sub">بريد + كلمة مرور</div></div>
+      <div class="flow-arrow"><i class="fas fa-arrow-left"></i></div>
+      <div class="flow-node highlight"><div class="fn-icon">🔐</div><div class="fn-text">تسجل دخول</div><div class="fn-sub">أول مرة</div></div>
+      <div class="flow-arrow"><i class="fas fa-arrow-left"></i></div>
+      <div class="flow-node highlight"><div class="fn-icon">🔑</div><div class="fn-text">تغيّر كلمة المرور</div><div class="fn-sub">لأمان أكتر</div></div>
+    </div>
+  </div>
+
+  <!-- خطوة 1: الإدمن -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(99,102,241,.1)">1</div>
+      <div><h2>الخطوة الأولى — الإدمن يعمل حسابك</h2><div class="sec-num">دي حاجة إنت مش شايفها — بتتم ورا الكواليس</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-user-shield" style="color:var(--indigo)"></i> اللي بيحصل فعلياً</h3>
+      <p>مسؤول الموارد البشرية (أو IT) بيدخل لوحة تحكم الإدمن وبيعمل الآتي:</p>
+      <ul>
+        <li><strong style="color:var(--text)">بيضيف بياناتك:</strong> اسمك الأول والأخير، بريدك الإلكتروني، رقم التليفون، القسم، المنصب، تاريخ التعيين</li>
+        <li><strong style="color:var(--text)">بيعمل لك حساب دخول:</strong> بريد إلكتروني + كلمة مرور مؤقتة</li>
+        <li><strong style="color:var(--text)">بيفعّل حسابك:</strong> بحالتك تكون "نشط"</li>
+      </ul>
+    </div>
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i><div><strong>ملاحظة:</strong> كل الخطوات دي بتتم على جهاز الإدمن — إنت مش محتاج تعمل أي حاجة في المرحلة دي.</div></div>
+  </div>
+
+  <!-- خطوة 2: استلام البيانات -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(14,165,233,.1)">2</div>
+      <div><h2>الخطوة التانية — تستلم بيانات الدخول</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-envelope-open-text" style="color:var(--sky)"></i> هتستلم من HR الآتي</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>البيان</th><th>مثال</th><th>مهم؟</th></tr></thead>
+          <tbody>
+            <tr><td>البريد الإلكتروني</td><td style="direction:ltr;text-align:right">ahmed.mahmoud@company.com</td><td><span class="badge badge-red">مطلوب جداً</span></td></tr>
+            <tr><td>كلمة المرور المؤقتة</td><td>Merge@2025</td><td><span class="badge badge-red">مطلوب جداً</span></td></tr>
+            <tr><td>رابط التطبيق</td><td style="direction:ltr;text-align:right">https://your-company.com/merg-hr-portal/</td><td><span class="badge badge-amber">مهم</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="alert alert-danger"><i class="fas fa-triangle-exclamation"></i><div><strong>تحذير:</strong> كلمة المرور المؤقتة دي مش بتاعتك النهائية — لازم تغيّرها فور تسجيل الدخول الأول. لو أي حد عرفها يقدر يدخل حسابك!</div></div>
+  </div>
+
+  <!-- خطوة 3: أول تسجيل دخول -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,.1)">3</div>
+      <div><h2>الخطوة التالتة — أول تسجيل دخول</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-right-to-bracket" style="color:var(--green)"></i> خطوات تسجيل الدخول الأول</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>افتح رابط التطبيق</h4><p>الرابط اللي استلمته من HR في المتصفح (Chrome / Safari)</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أدخل البريد الإلكتروني</h4><p>البريد اللي سجّلك بيه HR — تأكد إنك مكتوبه صح من غير مسافات زيادة</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أدخل كلمة المرور المؤقتة</h4><p>الكلمة اللي استلمتها من HR — لو مش ظاهرة اضغط أيقونة العين 👁 عشان تظهرها</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اضغط "تسجيل الدخول"</h4><p>لو البيانات صح، هتدخل التطبيق مباشرة</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- خطوة 4: تغيير كلمة المرور -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,.1)">4</div>
+      <div><h2>الخطوة الرابعة — غيّر كلمة المرور فوراً</div><div class="sec-num">أهم خطوة للأمان</div></div>
+    </div>
+    <div class="card" style="border-color:rgba(245,158,11,.2)">
+      <h3><i class="fas fa-lock" style="color:var(--amber)"></i> ليه لازم تغيّرها فوراً؟</h3>
+      <ul>
+        <li>كلمة المرور المؤقتة يعرفها الإدمن والـ IT — يعني أي حد فيهم يقدر يدخل حسابك</li>
+        <li>الكلمة المؤقتة بسيطة عشان تتذكرها بسهولة — لكن دي مش آمنة للاستخدام الدائم</li>
+        <li>بعد التغيير، أنت بس اللي تعرف كلمة مرورك — حتى الإدمن مش هيقدر يتصفحها</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-key" style="color:var(--green)"></i> طريقة التغيير</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>من الصفحة الرئيسية</h4><p>اضغط على زر <strong style="color:var(--text)">"🔐 كلمة المرور"</strong> في الإجراءات السريعة</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أو من الملف الشخصي</h4><p>اضغط تبويب <strong style="color:var(--text)">"👤 الملف الشخصي"</strong> ثم <strong style="color:var(--text)">"تغيير كلمة المرور"</strong></p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أدخل كلمة المرور الحالية</h4><p>الكلمة المؤقتة اللي دخل بيها دلوقتي</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>أدخل كلمة المرور الجديدة</h4><p>يجب أن تكون <strong style="color:var(--amber)">6 أحرف على الأقل</strong> — اختار حاجة قوية مش هتعرفها حد</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>أكّد الكلمة الجديدة</h4><p>اكتبها نفسها مرة تانية بالظبط</p></div></div>
+        <div class="step"><div class="step-num">6</div><div class="step-content"><h4>اضغط "تحديث كلمة المرور"</h4><p>تتغير فوراً — استخدم الكلمة الجديدة من دلوقتي</p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-lightbulb" style="color:var(--sky)"></i> نصائح لاختيار كلمة مرور قوية</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="color:var(--red)">❌ ضعيف — متستعملش</th><th style="color:var(--green)">✅ قوي — استعمل كده</th></tr></thead>
+          <tbody>
+            <tr><td>123456</td><td>Ahmed@Merge#2025</td></tr>
+            <tr><td>password</td><td>M@h$m0ud_Sec!</td></tr>
+            <tr><td>اسمك بالكامل</td><td>اعمل جملة تقدر تتذكرها زي: <br><span style="font-size:11px;color:var(--sky)">"عندي 3 أطفال وبتعمل HR من 2020"</span> <br>وتخلّيها: <kbd>3A&HR@2020!</kbd></td></tr>
+            <tr><td>تاريخ ميلادك</td><td>كلمة عربية + أرقام + رموز</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- لو نسيت كلمة المرور -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(239,68,68,.1)">🔑</div>
+      <div><h2>لو نسيت كلمة المرور بعد كده</div></div>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-rotate-right" style="color:var(--red)"></i> إعادة تعيين كلمة المرور</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>افتح صفحة تسجيل الدخول</h4><p>رابط التطبيق في المتصفح</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اضغط "نسيت كلمة المرور؟"</h4><p>الزر الرمادي أسفل زر تسجيل الدخول</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أدخل بريدك الإلكتروني</h4><p>نفس البريد اللي مسجّل بيه في النظام</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>افتح بريدك</h4><p>هيوصلك رسالة من Supabase فيها رابط إعادة التعيين</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>اضغط الرابط في الرسالة</h4><p>يفتح صفحة تقدر تدخل فيها كلمة مرور جديدة (6 أحرف على الأقل)</p></div></div>
+      </div>
+    </div>
+
+    <div class="alert alert-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>ملاحظة:</strong> لو مش لاقي الرسالة في الـ Inbox، افتح مجلد <strong>Spam / Junk</strong>. لو لسه مش لاقيها، تواصل مع HR يبعتهالك تاني أو يعيد تعيين كلمة المرور.</div></div>
+
+    <div class="alert alert-danger"><i class="fas fa-shield-halved"></i><div><strong>تنبيه أمني:</strong> الإدمن مش قادر يشوف كلمة مرورك الحالية ولا القديمة — نظام Supabase بيخزّن كلمات المرور مشفرة (Hashed). حتى لو سألته يقولك "مش عارف — استخدم نسيت كلمة المرور".</div></div>
+  </div>
+
+  <!-- أسئلة شائعة -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(14,165,233,.1)">❓</div>
+      <div><h2>أسئلة شائعة</div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>مفيش حساب — لوحدي أقدر أعمل واحد؟</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p><strong style="color:var(--red)">لا.</strong> الحساب بيتعمل من طرف الإدمن بس. لو مش عندك حساب، كلم HR أو IT يعملوا لك واحد. محاولة تسجيل دخول ببيانات مش مسجلة هتعطيك رسالة "Employee not found".</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>استلمت البيانات بس مش عارف أفتح الرابط</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p>اتأكد إنك بتفتح الرابط في متصفح حديث (Chrome أو Safari). جرّب تقبل الرابط وإنسخه في المتصفح يدوياً. لو لسه مش شغال، كلم HR يتأكد إن الرابط صحيح.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>كتبت البريد والباسورد صح وبيقول "Employee not found"</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p>معناها إن حساب الـ Auth موجود لكن بياناتك مش موجودة في جدول الموظفين. كلم HR يتأكد إنه عمل إضافتك في قسم "إدارة الموظفين" بعد ما عمل حساب الـ Auth.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>كتبت البيانات صح وبيقول "Invalid login credentials"</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p>معناها البريد أو كلمة المرور غلط. اتأكد من حاجات:<br>• البريد مكتوب صح من غير مسافات<br>• كلمة المرور حساسة لحالة الحروف (كابيتال / سمال)<br>• مش لاقي مسافة زيادة بعد نسخ الكلمة<br>لو مش عارف، استخدم "نسيت كلمة المرور؟"</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>دخلت التطبيق وظهرتلوحة تحكم بدل واجهة الموظف!</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p>ده معناه إن بريدك هو <kbd>admin@merge.com</kbd> — وده بريد الإدمن. لو مش مفروض تكون إدمن، كلم HR يغيّر بريدك في النظام. لو فعلاً إدمن، فدي طبيعي.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>عايز أغيّر بريدي الإلكتروني — أقدر؟</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p><strong style="color:var(--red)">لا، مش من التطبيق.</strong> البريد الإلكتروني هو معرّف حسابك. لتغييره، كلم HR يعمل التعديل من لوحة التحكم. بعد التعديل، استخدم البريد الجديد في تسجيل الدخول.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>حابب أضيف التطبيق على شاشة الموبايل الرئيسية</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p><strong>iPhone (Safari):</strong> افتح التطبيق → اضغط أيقونة المشاركة (Square with Arrow) → "إضافة إلى الشاشة الرئيسية"<br><strong>Android (Chrome):</strong> افتح التطبيق → اضغط القائمة (⋮ ثلاث نقاط) → "إضافة إلى الشاشة الرئيسية"<br>التطبيق هيعمل زي الأبليكيشن العادي مع أيقونة خاصة.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>الموظف الجديد لازم يعمل إيه أول ما يجي الشركة؟</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="faq-a"><p>باختصار:<br><strong style="color:var(--text)">1.</strong> HR بيضيف بياناته في النظام وبيعمل حساب Auth<br><strong style="color:var(--text)">2.</strong> الموظف يستلم البريد + كلمة المرور المؤقتة<br><strong style="color:var(--text)">3.</strong> يدخل التطبيق ويسجّل دخول أول مرة<br><strong style="color:var(--text)">4.</strong> يغيّر كلمة المرور فوراً<br><strong style="color:var(--text)">5.</strong> يفعّل إذن الموقع (GPS) عشان يستطيع يسجّل حضوره</p></div>
+    </div>
+  </div>
+
+  <!-- ملخص سريع للطباعة -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,.1)">🖨️</div>
+      <div><h2>بطاقة الموظف الجديد — للطباعة</div><div class="sec-num">اعمل طباعة دي وديها لأي موظف جديد</div></div>
+    </div>
+
+    <div class="card" style="border-color:rgba(16,185,129,.2);padding:28px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:24px;font-weight:900;color:var(--green);margin-bottom:4px">MERGE HR</div>
+        <div style="font-size:13px;color:var(--muted)">بطاقة بيانات الدخول</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">البريد الإلكتروني</div>
+          <div style="background:var(--surface-2);border:1px dashed var(--border);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--sky);min-height:40px;direction:ltr;text-align:right">________________________</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">كلمة المرور المؤقتة</div>
+          <div style="background:var(--surface-2);border:1px dashed var(--border);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--amber);min-height:40px;direction:ltr;text-align:right">________________________</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">رابط التطبيق</div>
+        <div style="background:var(--surface-2);border:1px dashed var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--sky);min-height:40px;direction:ltr;text-align:right">________________________________________________________</div>
+      </div>
+
+      <div style="background:var(--surface-2);border-radius:12px;padding:16px;font-size:12px;color:var(--sub);line-height:2">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px"><i class="fas fa-clipboard-list" style="color:var(--green)"></i> خطوات الدخول الأول:</div>
+        <div>1. افتح الرابط أعلاه في المتصفح (Chrome أو Safari)</div>
+        <div>2. أدخل البريد وكلمة المرور المكتوبين فوق</div>
+        <div>3. اضغط "تسجيل الدخول"</div>
+        <div>4. <span style="color:var(--amber);font-weight:700">غيّر كلمة المرور فوراً</span> من: الملف الشخصي ← تغيير كلمة المرور</div>
+        <div>5. فعّل إذن الموقع (GPS) عشان تسجّل حضورك</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted)">اسم الموظف: _______________________</div>
+        <div style="font-size:11px;color:var(--muted)">التاريخ: _____/_____/______</div>
+      </div>
+    </div>
+
+    <div class="alert alert-info"><i class="fas fa-print"></i><div><strong>للطباعة:</strong> اضغط <kbd>Ctrl + P</kbd> (ويندوز) أو <kbd>Cmd + P</kbd> (ماك). في إعدادات الطباعة اختر "لا توجد هوامش" و"خلفية رسومية" عشان تطلع صح.</div></div>
+  </div>
+
+  <div class="footer">
+    <p>تطبيق MERGE HR — دليل إنشاء الحساب</p>
+    <p style="margin-top:4px;font-size:11px">طبّع البطاقة وديها لأي موظف جديد مع بيانات الدخول</p>
+  </div>
+
+</div>
+
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+  const scrollBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => { scrollBtn.classList.toggle('visible', window.scrollY > 400); });
+
+  function scrollTo_(id) {
+    const el = document.getElementById(id);
+    if (el) { const top = el.getBoundingClientRect().top + window.pageYOffset - 20; window.scrollTo({top,behavior:'smooth'}); }
+  }
+
+  function toggleFaq(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = el.classList.contains('open');
+    // أغلق كل الـ FAQ الأول
+    document.querySelectorAll('.faq-q.open').forEach(q => { q.classList.remove('open'); q.nextElementSibling.classList.remove('open'); });
+    // لو كان مفتوح اقفله، لو مقفول افتحه
+    if (!isOpen) { el.classList.add('open'); answer.classList.add('open'); }
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.style.animationPlayState = 'running'; });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.section').forEach((sec, i) => {
+    sec.style.animationDelay = (i * 0.05) + 's';
+    sec.style.animationPlayState = 'paused';
+    observer.observe(sec);
+  });
+  const first = document.querySelector('.section');
+  if (first) first.style.animationPlayState = 'running';
+</script>
+</body>
+</html>
