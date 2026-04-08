@@ -432,10 +432,11 @@ async function initEmp() {
       const btn = document.createElement('button');
       btn.className = 'nav-item';
       btn.onclick = function() { showEmpTab(p.slug, this); };
-      btn.innerHTML = `
-        📄
-        <span class="nav-label">${p.title}</span>
-      `;
+btn.id = 'nav-' + p.slug;
+btn.innerHTML = `
+    <span style="font-size:22px">📄</span>
+    <span class="nav-label">${p.title}</span>
+  `;
       navContainer.appendChild(btn);
     });
   }
