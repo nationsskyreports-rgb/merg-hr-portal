@@ -58,8 +58,7 @@ async function initHR() {
     {id:'tasks',      icon:'✅', label:lang==='ar'?'التاسكات':'Tasks'},
     {id:'empfiles',   icon:'📁', label:lang==='ar'?'ملفات':'Files'},
     {id:'export',     icon:'📤', label:t().export_tab},
-    // إضافة الصفحات المخصصة للقائمة
-    ...customTabs.map(p => ({ id: p.slug, icon: '📄', label: p.title })),
+    {id:'settings',   icon:'⚙️', label:lang==='ar'?'الإعدادات':'Settings'}, // الجديد
     {id:'pagemanager',icon:'🛠️', label:lang==='ar'?'إدارة الصفحات':'Page Manager'},
   ];
   
@@ -111,9 +110,9 @@ async function renderHR(tab) {
   else if(tab==='tasks')      await renderHRTasks();
   else if(tab==='empfiles')   await renderHRFiles();
   else if(tab==='export')     renderHRExport();
+  else if(tab==='settings')    await renderHRSettings(); // الجديد
   else if(tab==='pagemanager') await renderPageManager();
   else {
-    // لو التاب مش من القوائم الثابتة، نفترض انه صفحة مخصصة
     await renderCustomPage(tab);
   }
 }
@@ -402,43 +401,81 @@ function resetEmpModal() {
   openModal('addEmpModal');
 }
 
-// دالة فتح المودال للتعديل (نسخة محسنة مع قوائم ذكية)
 async function openEditModal(id) {
   editingEmpId = id;
   const {data:emp, error} = await sb.from('employees').select('*').eq('id', id).single();
   if(error) return toast(error.message, 'error');
   
-  // جلب الأقسام والمناصب من قاعدة البيانات
-  const [deptsRes, posRes] = await Promise.all([
-    sb.from('departments').select('id,name').order('name'),
-    sb.from('positions').select('id,title').order('title')
-  ]);
-  
-  const departments = deptsRes.data || [];
-  const positions   = posRes.data   || [];
+  // 1. جلب الإعدادات (القوائم)
+  const {data:deptSetting} = await sb.from('app_settings').select('value').eq('key', 'departments').single();
+  const {data:posSetting}  = await sb.from('app_settings').select('value').eq('key', 'positions').single();
 
-  // تعبئة الحقول
+  // تحويل النصوص لمصفوفات
+  const deptList = (deptSetting?.value || '').split(',').map(s=>s.trim()).filter(s=>s);
+  const posList  = (posSetting?.value  || '').split(',').map(s=>s.trim()).filter(s=>s);
+
+  // تعبئة الحقول الأساسية
   if($('ae_first')) $('ae_first').value = emp.first_name || '';
   if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
   if($('ae_email')) $('ae_email').value = emp.email || '';
-  // ملاحظة: حقل الرقم السري (hire date) يتطلب تنسيق YYYY-MM-DD للـ input type="date"
+  if($('ae_phone')) $('ae_phone').value = emp.phone || '';
   if($('ae_hire'))  $('ae_hire').value  = emp.hire_date ? emp.hire_date.slice(0,10) : '';
-  
-  // تعبئة حوارات القوائم الذكية
-  if($('ae_dept_select')) {
-    $('ae_dept_select').value = emp.department || ''; 
-  }
-  if($('ae_pos_select')) {
-    $('ae_pos_select').value = emp.job_title || emp.position || '';
-  }
-  
-  // تغيير النصوص
-  if($('addEmpTitle')) $('addEmpTitle').textContent = lang==='ar'?'تعديل بيانات الموظف':'Edit Employee';
-  if($('saveEmpBtn'))  $('saveEmpBtn').textContent  = lang==='ar'?'حفظ التعديلات':'Save Changes';
-  
+
+  // 2. بناء قوائم الـ Select (المناصب والأقسام)
+  const deptOptions = deptList.map(d => `<option value="${d}" ${emp.department===d?'selected':''}>${d}</option>`).join('');
+  const posOptions  = posList.map(p => `<option value="${p}" ${emp.job_title===p?'selected':''}>${p}</option>`).join('');
+
+  // تعديل الـ HTML في الـ Modal مباشرة (بديل بسيط وآمن)
+  // ملاحظة: هنا هنعيد رسم جزء الـ Modal الخاص بالقسم والمنصب فقط
+  const deptField = `
+    <div class="form-field" style="margin:0">
+      <label class="field-label">${lang==='ar'?'القسم':'Department'}</label>
+      <select id="ae_dept_select" class="form-input">
+        <option value="">${lang==='ar'?'اختر القسم':'Select Department'}</option>
+        ${deptOptions}
+      </select>
+    </div>`;
+
+  const posField = `
+    <div class="form-field" style="margin:0">
+      <label class="field-label">${lang==='ar'?'المنصب':'Position'}</label>
+      <select id="ae_pos_select" class="form-input">
+        <option value="">${lang==='ar'?'اختر المنصب':'Select Position'}</option>
+        ${posOptions}
+      </select>
+    </div>`;
+
+  // حقن هذه القوائم في المودال (لأننا بنستخدم نفس الـ Modal للإضافة والتعديل)
+  // لكن بما إننا عايزين بس التعديل هنا، سنستخدم insertAdjacentHTML
+  const modalBody = document.querySelector('#addEmpModal div[style*="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px"]');
+  const modalContent = `
+    <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;font-family:'Syne',sans-serif" id="addEmpTitle">${lang==='ar'?'تعديل بيانات الموظف':'Edit Employee'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="form-field"><label class="field-label">${lang==='ar'?'الاسم الأول':'First Name'}</label><input class="form-input" type="text" id="ae_first"/></div>
+      <div class="form-field"><label class="field-label">${lang==='ar'?'اسم العائلة':'Last Name'}</label><input class="form-input" type="text" id="ae_last"/></div>
+      <div class="form-field" style="grid-column:1/-1"><label class="field-label">${lang==='ar'?'البريد الإلكتروني':'Email'}</label><input class="form-input" type="email" id="ae_email"/></div>
+      
+      ${posField}
+      ${deptField}
+
+      <div class="form-field"><label class="field-label">${lang==='ar'?'الهاتف':'Phone'}</label><input class="form-input" type="tel" id="ae_phone"/></div>
+      <div class="form-field"><label class="field-label">${lang==='ar'?'تاريخ التعيين':'Hire Date'}</label><input class="form-input" type="date" id="ae_hire"/></div>
+    </div>
+    <button class="primary-btn" onclick="handleSaveEmployee()" style="width:100%;margin-bottom:10px;margin-top:6px" id="saveEmpBtn">${lang==='ar'?'حفظ التعديلات':'Save Changes'}</button>
+    <button class="primary-btn" style="width:100%;background:var(--surface-3);color:var(--sub);box-shadow:none;border:1px solid var(--border)" onclick="closeModal('addEmpModal')">${t().cancel}</button>
+  `;
+    const modalBody = document.querySelector('#addEmpModal > div[style*="font-size:20px"]');
+  if(modalBody) modalBody.innerHTML = modalContent;
+  if($('ae_first')) $('ae_first').value = emp.first_name || '';
+  if($('ae_last'))  $('ae_last').value  = emp.last_name || '';
+  if($('ae_email')) $('ae_email').value = emp.email || '';
+  if($('ae_phone')) $('ae_phone').value = emp.phone || '';
+  if($('ae_hire'))  $('ae_hire').value  = emp.hire_date ? emp.hire_date.slice(0,10) : '';
+  if($('ae_pos_select')) $('ae_pos_select').value = emp.job_title || emp.position || '';
+  if($('ae_dept_select')) $('ae_dept_select').value = emp.department || '';
+
   openModal('addEmpModal');
 }
-
 // دالة مساعدة لفتح مودال إضافة خيار جديد (قسم أو منصب)
 function openOptionModal(type) {
   // type: 'dept' or 'pos'
@@ -1158,4 +1195,41 @@ async function renderCustomPage(slug) {
       </div>
     `;
   }
+}
+// ═══ SETTINGS MANAGER (الصندوق البسيط) ═══
+async function renderHRSettings() {
+  const {data:deptSetting} = await sb.from('app_settings').select('value').eq('key', 'departments').single();
+  const {data:posSetting}  = await sb.from('app_settings').select('value').eq('key', 'positions').single();
+
+  const depts = deptSetting?.value || '';
+  const poss  = posSetting?.value  || '';
+
+  $('hrContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">⚙️ ${lang==='ar'?'الإعدادات العامة':'General Settings'}</div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">🏢 ${lang==='ar'?'الأقسام (Departments)':'Departments'}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${lang==='ar'?'اكتب الأقسام مفصولة بفاصلة (مثال: HR, IT, Sales)':'Write departments separated by commas (e.g. HR, IT, Sales)'}</div>
+      <textarea id="setting_depts" class="form-input" style="min-height:80px">${depts}</textarea>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">💼 ${lang==='ar'?'المناصب (Positions)':'Positions'}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${lang==='ar'?'اكتب المناصب مفصولة بفاصلة (مثال: Manager, Developer)':'Write positions separated by commas (e.g. Manager, Developer)'}</div>
+      <textarea id="setting_pos" class="form-input" style="min-height:80px">${poss}</textarea>
+    </div>
+
+    <button class="primary-btn" onclick="saveSettings()" style="width:100%">💾 ${lang==='ar'?'حفظ الإعدادات':'Save Settings'}</button>
+  `;
+}
+
+async function saveSettings() {
+  const depts = $('setting_depts')?.value.trim();
+  const poss  = $('setting_pos')?.value.trim();
+
+  const {error:err1} = await sb.from('app_settings').upsert({key:'departments', value:depts});
+  const {error:err2} = await sb.from('app_settings').upsert({key:'positions', value:poss});
+
+  if(err1 || err2) return toast(lang==='ar'?'فشل الحفظ':'Save failed','error');
+  toast(lang==='ar'?'تم حفظ الإعدادات ✅':'Settings saved ✅','success');
 }
