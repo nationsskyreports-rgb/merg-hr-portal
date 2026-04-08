@@ -43,6 +43,11 @@ async function initHR() {
   updateLangBtns();
   updateStaticText();
   applyDark();
+  
+  // جلب الصفحات المخصصة من قاعدة البيانات
+  const { data: customPages } = await sb.from('custom_pages').select('id,title,slug').order('title');
+  const customTabs = customPages || [];
+
   const tabs = [
     {id:'overview',   icon:'📊', label:t().overview},
     {id:'attendance', icon:'📍', label:t().attendance_tab},
@@ -53,7 +58,11 @@ async function initHR() {
     {id:'tasks',      icon:'✅', label:lang==='ar'?'التاسكات':'Tasks'},
     {id:'empfiles',   icon:'📁', label:lang==='ar'?'ملفات':'Files'},
     {id:'export',     icon:'📤', label:t().export_tab},
+    // إضافة الصفحات المخصصة للقائمة
+    ...customTabs.map(p => ({ id: p.slug, icon: '📄', label: p.title })),
+    {id:'pagemanager',icon:'🛠️', label:lang==='ar'?'إدارة الصفحات':'Page Manager'},
   ];
+  
   $('hrApp').innerHTML = `
     <div style="display:flex;flex-direction:column;height:100vh">
       <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
@@ -102,8 +111,12 @@ async function renderHR(tab) {
   else if(tab==='tasks')      await renderHRTasks();
   else if(tab==='empfiles')   await renderHRFiles();
   else if(tab==='export')     renderHRExport();
+  else if(tab==='pagemanager') await renderPageManager();
+  else {
+    // لو التاب مش من القوائم الثابتة، نفترض انه صفحة مخصصة
+    await renderCustomPage(tab);
+  }
 }
-
 async function renderHROverview() {
   const today = nowISO();
   const [{count:total},{data:attRaw},{count:pending}] = await Promise.all([
@@ -992,4 +1005,97 @@ async function deleteLeave(id, status, empId, startDate, endDate, leaveType) {
       renderHR('leaves');
     }
   });
+}
+// ═══ CUSTOM PAGES MANAGER ═══
+async function renderPageManager() {
+  const {data:pages} = await sb.from('custom_pages').select('*').order('created_at',{ascending:false});
+  
+  $('hrContent').innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">🛠️ ${lang==='ar'?'إدارة الصفحات المخصصة':'Custom Pages Manager'}</div>
+    
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">➕ ${lang==='ar'?'إضافة صفحة جديدة':'Add New Page'}</div>
+      <div class="form-field">
+        <label class="field-label">${lang==='ar'?'عنوان الصفحة':'Page Title'}</label>
+        <input class="form-input" type="text" id="cp_title" placeholder="${lang==='ar'?'مثال: سياسات الشركة':'e.g. Company Policies'}"/>
+      </div>
+      <div class="form-field">
+        <label class="field-label">${lang==='ar'?'الرابط (Slug)':'Link (Slug)'}</label>
+        <input class="form-input" type="text" id="cp_slug" placeholder="${lang==='ar'?'مثال: policies':'e.g. policies'}" style="text-transform:lowercase"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${lang==='ar'?'يجب أن بالإنجليزي وبدون مسافات':'Must be english, no spaces'}</div>
+      </div>
+      <div class="form-field">
+        <label class="field-label">${lang==='ar'?'المحتوى (HTML مدعوم)':'Content (HTML Supported)'}</label>
+        <textarea id="cp_content" class="form-input" placeholder="${lang==='ar'?'اكتب المحتوى هنا...':'Write content here...'}" style="min-height:150px"></textarea>
+      </div>
+      <button class="primary-btn" onclick="saveCustomPage()" style="width:100%">📤 ${lang==='ar'?'حفظ الصفحة':'Save Page'}</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px">${lang==='ar'?'الصففات الحالية':'Existing Pages'}</div>
+    
+    ${!pages || pages.length===0 
+      ? `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">${lang==='ar'?'لا توجد صفحات':'No pages yet'}</div></div>`
+      : pages.map(p => `
+        <div class="card-sm">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700;color:var(--text)">${p.title}</div>
+              <div style="font-size:11px;color:var(--muted)">/${p.slug}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="deleteCustomPage('${p.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;padding:4px 8px;cursor:pointer;color:var(--red);font-size:12px">🗑️ ${lang==='ar'?'حذف':'Delete'}</button>
+            </div>
+          </div>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+async function saveCustomPage() {
+  const title = $('cp_title')?.value?.trim();
+  let slug = $('cp_slug')?.value?.trim().toLowerCase().replace(/\s+/g, '-');
+  const content = $('cp_content')?.value;
+
+  if(!title || !slug) return toast(lang==='ar'?'الرجاء إدخال العنوان والرابط':'Fill title and slug','error');
+
+  const {error} = await sb.from('custom_pages').insert([{title, slug, content}]);
+  if(error) return toast(error.message,'error');
+  
+  toast(lang==='ar'?'تم إضافة الصفحة ✅':'Page added ✅','success');
+  // إعادة تحميل القائمة الجانبية لتظهر التاب الجديد
+  initHR();
+}
+
+async function deleteCustomPage(id) {
+  showConfirm({
+    icon:'🗑️', title:lang==='ar'?'حذف الصفحة':'Delete Page',
+    msg:lang==='ar'?'هل أنت متأكد من حذف هذه الصفحة؟':'Are you sure?',
+    okLabel:lang==='ar'?'حذف':'Delete', okColor:'var(--red)',
+    onOk:async()=>{
+      const {error} = await sb.from('custom_pages').delete().eq('id',id);
+      if(error) return toast(error.message,'error');
+      toast(lang==='ar'?'تم الحذف':'Deleted','success');
+      initHR(); // تحديث القائمة
+    }
+  });
+}
+
+async function renderCustomPage(slug) {
+  const {data:page} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
+  
+  if(!page) {
+    $('hrContent').innerHTML = `<div class="empty"><div class="empty-title">Page not found</div></div>`;
+    return;
+  }
+
+  $('hrContent').innerHTML = `
+    <div style="margin-bottom:16px">
+      <h1 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
+      <div style="height:4px;width:60px;background:var(--indigo);border-radius:2px"></div>
+    </div>
+    <div class="card" style="padding:24px;line-height:1.6;color:var(--text)">
+      ${page.content || '<span style="color:var(--muted)">No content yet.</span>'}
+    </div>
+  `;
 }
