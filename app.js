@@ -707,8 +707,8 @@ async function renderLeave() {
       <div class="chip-row">${types.map(tp=>`<button class="chip ${leaveType===tp.val?'active':''}" onclick="setLeaveType('${tp.val}')">${tp.label}</button>`).join('')}</div>
       ${!DEDUCTIBLE_TYPES.includes(leaveType)?`<div style="font-size:12px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);padding:8px 12px;margin-bottom:12px">⚠️ ${lang==='ar'?'هذا النوع لا يُخصم من رصيدك':'This type does not affect your balance'}</div>`:''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
-        <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" min="${nowISO()}" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
+        <div class="form-field"><label class="field-label">${t().start_date}</label><input class="form-input" type="date" id="lv_start" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
+        <div class="form-field"><label class="field-label">${t().end_date}</label><input class="form-input" type="date" id="lv_end" onclick="try{this.showPicker()}catch(e){}" onchange="updateDays()"/></div>
       </div>
       <div id="daysPill"></div>
       <div class="form-field"><label class="field-label">${t().reason}</label><textarea class="form-input" id="lv_reason" placeholder="${t().describe_reason}" style="min-height:80px"></textarea></div>
@@ -750,7 +750,6 @@ function updateDays() {
 async function submitLeave() {
   const start=$('lv_start')?.value, end=$('lv_end')?.value, reason=$('lv_reason')?.value?.trim();
   if(!start||!end) return toast(t().missing_dates,'error');
-  if(start<nowISO()) return toast(t().past_date,'error');
   if(end<start)      return toast(t().invalid_dates,'error');
   if(!reason)        return toast(t().missing_reason,'error');
   const days = calcLeaveDays(start,end);
