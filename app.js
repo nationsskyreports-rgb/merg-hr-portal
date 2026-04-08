@@ -214,10 +214,15 @@ const getGreeting = () => {
 const statusColor = s => s==='approved'?'#22C55E':s==='rejected'?'#EF4444':'#F59E0B';
 
 function toast(msg, type='') {
-  const el = $('toast');
+  const el = document.getElementById('toast'); // بنجيب العنصر بالـ ID
+  if (!el) {
+    // لو العنصر مش موجود، هنستخدم الـ alert العادي عشان الكود ميعلقش
+    alert(msg); 
+    return;
+  }
   el.textContent = msg;
-  el.className = 'show' + (type ? ' '+type : '');
-  setTimeout(()=>el.className='', 3000);
+  el.className = 'toast show' + (type ? ' '+type : '');
+  setTimeout(() => { el.className = 'toast'; }, 3000);
 }
 
 function togglePw(id, btn) {
@@ -613,7 +618,11 @@ async function handleCheckIn() {
     const dist    = haversine(loc.lat, loc.lng, office.latitude, office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc, 100);
     console.log('dist:', dist, 'allowed:', allowed);
-    if(dist > allowed) { setBtn(btn, false); return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error'); }
+   if(dist > allowed) { 
+   setBtn(btn, false); 
+   toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`, 'error'); 
+   return; 
+  }
 
     console.log('Step 5: inserting record...');
     setBtn(btn, true, lang==='ar'?'جاري التسجيل...':'Checking in...');
