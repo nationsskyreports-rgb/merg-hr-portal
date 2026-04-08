@@ -618,14 +618,11 @@ async function handleCheckIn() {
     const dist    = haversine(loc.lat, loc.lng, office.latitude, office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc, 100);
     console.log('dist:', dist, 'allowed:', allowed);
-   if(dist > allowed) { 
-   setBtn(btn, false); 
-   if (dist > allowed) { 
-  setBtn(btn, false); 
-  toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`, 'error'); 
-  return; 
-}
-
+        if(dist > allowed) { 
+      setBtn(btn, false); 
+      toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`, 'error'); 
+      return; 
+    }
     console.log('Step 5: inserting record...');
     setBtn(btn, true, lang==='ar'?'جاري التسجيل...':'Checking in...');
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
