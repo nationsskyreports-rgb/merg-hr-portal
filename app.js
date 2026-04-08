@@ -24,6 +24,19 @@ let isAdmin = false;
 let empTab = 'home';
 let unreadCount = 0;
 
+// ═══ UX FEEDBACK HELPERS ═══
+function setBtn(btn, loading, text) {
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn._orig = btn.innerHTML;
+    btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span class="spinner" style="width:16px;height:16px;border-width:2px;flex-shrink:0"></span>${text||'...'}</span>`;
+  } else {
+    btn.disabled = false;
+    if (btn._orig) btn.innerHTML = btn._orig;
+  }
+}
+
 // ═══ TRANSLATIONS ═══
 const T = {
   en: {
@@ -283,7 +296,7 @@ function renderLogin() {
             <button onclick="togglePw('li_pw',this)" style="background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--r-md);width:44px;cursor:pointer;font-size:16px">👁</button>
           </div>
         </div>
-        <button class="primary-btn" onclick="handleLogin()" style="width:100%;margin-bottom:10px;padding:14px">${t().sign_in}</button>
+        <button class="primary-btn" id="loginBtn" onclick="handleLogin()" style="width:100%;margin-bottom:10px;padding:14px">${t().sign_in}</button>
         <button class="primary-btn" style="width:100%;background:var(--surface-3);color:var(--sub);box-shadow:none;border:1px solid var(--border)" onclick="openModal('forgotPwModal')">${t().forgot_pw}</button>
         <div style="text-align:center;margin-top:24px;display:flex;align-items:center;justify-content:center;gap:16px">
           <button onclick="toggleLang()" style="background:none;border:none;color:var(--green);cursor:pointer;font-weight:700;font-size:14px">${lang==='en'?'عربي':'EN'}</button>
@@ -299,43 +312,56 @@ function renderLogin() {
 async function handleLogin() {
   const email = $('li_email')?.value?.trim();
   const pw    = $('li_pw')?.value;
-  if(!email||!pw) return toast('Enter email and password','error');
+  if(!email||!pw) return toast(lang==='ar'?'أدخل البريد وكلمة المرور':'Enter email and password','error');
+
+  const btn = $('loginBtn');
+  setBtn(btn, true, lang==='ar'?'جاري التحقق...':'Signing in...');
+
   try {
     const {data,error} = await sb.auth.signInWithPassword({email,password:pw});
-    if(error) return toast(error.message,'error');
+    if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     currentUser = data.user;
     const {data:emp} = await sb.from('employees').select('*').eq('email',email).single();
-    if(!emp) return toast('Employee not found','error');
+    if(!emp) { setBtn(btn, false); return toast('Employee not found','error'); }
     currentEmployee = emp;
     isAdmin = emp.email==='admin@merge.com';
     if(isAdmin) { showScreen('hrApp'); initHR(); }
     else { showScreen('empApp'); initEmp(); fetchUnread(); startRealtimeNotifs(); }
-  } catch(e) { toast(e.message,'error'); }
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 async function handleForgotPw() {
   const email = $('fm_email')?.value?.trim();
-  if(!email) return toast('Enter your email','error');
+  if(!email) return toast(lang==='ar'?'أدخل بريدك الإلكتروني':'Enter your email','error');
+
+  const btn = $('resetBtnTxt')?.closest('button') || document.querySelector('#forgotPwModal .primary-btn');
+  setBtn(btn, true, lang==='ar'?'جاري الإرسال...':'Sending...');
+
   try {
     const {error} = await sb.auth.resetPasswordForEmail(email);
-    if(error) return toast(error.message,'error');
+    if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     toast(t().reset_sent_msg,'success');
     closeModal('forgotPwModal');
-  } catch(e) { toast(e.message,'error'); }
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 async function handleChangePw() {
   const nw  = $('cp_new')?.value;
   const cnf = $('cp_confirm')?.value;
-  if(!nw||!cnf) return toast('Enter new password','error');
+  if(!nw||!cnf) return toast(lang==='ar'?'أدخل كلمة المرور الجديدة':'Enter new password','error');
   if(nw.length<6) return toast(t().pw_hint,'error');
   if(nw!==cnf)   return toast(t().mismatch,'error');
+
+  const btn = $('cpBtn');
+  setBtn(btn, true, lang==='ar'?'جاري التحديث...':'Updating...');
+
   try {
     const {error} = await sb.auth.updateUser({password:nw});
-    if(error) return toast(error.message,'error');
+    if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     toast(t().pw_success,'success');
     closeModal('changePwModal');
-  } catch(e) { toast(e.message,'error'); }
+    setBtn(btn, false);
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 function handleLogout() {
@@ -356,11 +382,7 @@ function toggleDark() {
   else if(!currentUser) renderLogin();
 }
 
-// ═══════════════════════════════════════════
-// EMPLOYEE APP — Full Redesign (Manus style)
-// ═══════════════════════════════════════════
-
-// SVG icons for bottom nav
+// ═══ EMPLOYEE APP ═══
 const navIcons = {
   home: `<svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>`,
   history: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
@@ -376,7 +398,6 @@ async function initEmp() {
   applyDark();
 
   $('empApp').innerHTML = `
-    <!-- Header -->
     <div class="emp-header">
       <div style="font-size:20px;font-weight:900;color:var(--indigo);font-family:'Syne',sans-serif;letter-spacing:-0.5px">MERGE</div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -390,11 +411,7 @@ async function initEmp() {
         </button>
       </div>
     </div>
-
-    <!-- Content -->
     <div class="emp-content" id="empContent"></div>
-
-    <!-- Bottom Nav -->
     <nav class="bottom-nav" id="bottomNav">
       <button class="nav-item active" id="nav-home" onclick="showEmpTab('home',this)">
         ${navIcons.home}
@@ -424,19 +441,15 @@ async function initEmp() {
     </nav>
   `;
 
-  // ═══ LOAD CUSTOM PAGES INTO NAV ═══
   const {data:customPages} = await sb.from('custom_pages').select('id,title,slug').order('title');
   if(customPages && customPages.length > 0) {
     const navContainer = $('bottomNav');
     customPages.forEach(p => {
       const btn = document.createElement('button');
       btn.className = 'nav-item';
+      btn.id = 'nav-' + p.slug;
       btn.onclick = function() { showEmpTab(p.slug, this); };
-btn.id = 'nav-' + p.slug;
-btn.innerHTML = `
-    <span style="font-size:22px">📄</span>
-    <span class="nav-label">${p.title}</span>
-  `;
+      btn.innerHTML = `<span style="font-size:22px">📄</span><span class="nav-label">${p.title}</span>`;
       navContainer.appendChild(btn);
     });
   }
@@ -456,22 +469,20 @@ function showEmpTab(tab, el) {
 async function renderEmp(tab) {
   const el = $('empContent');
   if(!el) return;
-  if(tab==='home')    await renderHome();
+  // Show skeleton loader
+  el.innerHTML = `<div style="padding:20px"><div style="height:160px;background:var(--surface);border-radius:var(--r-2xl);margin-bottom:12px;animation:pulse 1.5s infinite;opacity:.5"></div><div style="height:120px;background:var(--surface);border-radius:var(--r-xl);animation:pulse 1.5s infinite;opacity:.4"></div></div>`;
+  if(tab==='home')         await renderHome();
   else if(tab==='history') await renderHistory();
   else if(tab==='leave')   await renderLeave();
   else if(tab==='notifs')  await renderNotifs();
   else if(tab==='tasks')   await renderEmpTasks();
   else if(tab==='profile') await renderProfile();
-  else {
-    // ═══ RENDER CUSTOM PAGE ═══
-    await renderCustomPage(tab);
-  }
+  else                     await renderCustomPage(tab);
 }
 
 // ═══ HOME ═══
 async function renderHome() {
   const emp = currentEmployee;
-  const initials = (emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
   const {data:rec} = await sb.from('attendance_records').select('*').eq('employee_id',emp.id).eq('attendance_date',nowISO()).maybeSingle();
   const isClockedIn  = !!(rec && rec.check_in_time && !rec.check_out_time);
   const needsConfirm = rec?.is_mobile && !rec?.is_confirmed;
@@ -482,7 +493,6 @@ async function renderHome() {
   const dateStr = now.toLocaleDateString(lang==='ar'?'ar-EG':'en-US',{weekday:'long',month:'long',day:'numeric'});
 
   $('empContent').innerHTML = `
-    <!-- Hero Card -->
     <div class="hero-card">
       <div class="hero-greeting">${getGreeting()} 👋</div>
       <div class="hero-name">${emp.first_name} ${emp.last_name}</div>
@@ -499,7 +509,6 @@ async function renderHome() {
       </div>
     </div>
 
-    <!-- Status + Attendance -->
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="font-size:15px;font-weight:700;color:var(--text);font-family:'Syne',sans-serif">${lang==='ar'?'الحضور اليوم':'Today\'s Attendance'}</div>
@@ -523,26 +532,25 @@ async function renderHome() {
       ` : ''}
 
       ${needsConfirm && !isMobile ? `
-        <button class="primary-btn" style="width:100%;margin-bottom:10px;background:var(--amber)" onclick="confirmCheckIn('${rec.id}')">
+        <button class="primary-btn" id="confirmBtn" style="width:100%;margin-bottom:10px;background:var(--amber)" onclick="confirmCheckIn('${rec.id}')">
           💻 ${t().confirm_mobile}
         </button>
       ` : ''}
 
       <div class="att-btns">
-        <button class="att-btn checkin" onclick="handleCheckIn()"
-          ${isClockedIn||(needsConfirm&&isMobile)?'disabled':''} id="ciBtn">
+        <button class="att-btn checkin" id="ciBtn" onclick="handleCheckIn()"
+          ${isClockedIn||(needsConfirm&&isMobile)?'disabled':''}>
           <span class="att-btn-icon">✅</span>
           ${t().check_in}
         </button>
-        <button class="att-btn checkout" onclick="handleCheckOut()"
-          ${!isClockedIn||needsConfirm?'disabled':''} id="coBtn">
+        <button class="att-btn checkout" id="coBtn" onclick="handleCheckOut()"
+          ${!isClockedIn||needsConfirm?'disabled':''}>
           <span class="att-btn-icon">🚪</span>
           ${t().check_out}
         </button>
       </div>
     </div>
 
-    <!-- Quick Actions -->
     <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.9px;font-family:'Syne',sans-serif">${t().quick_actions}</div>
     <div class="action-grid">
       <button class="action-card" onclick="showEmpTab('history')">
@@ -573,13 +581,17 @@ async function renderHome() {
   `;
 }
 
-// ═══ CHECK IN / OUT (unchanged logic) ═══
+// ═══ CHECK IN / OUT ═══
 async function handleCheckIn() {
-  const btn = $('ciBtn'); if(btn) btn.disabled=true;
+  const btn = $('ciBtn');
+  setBtn(btn, true, lang==='ar'?'جاري تحديد موقعك...':'Getting location...');
   try {
-    if(!navigator.onLine) return toast(t().offline,'error');
+    if(!navigator.onLine) { setBtn(btn, false); return toast(t().offline,'error'); }
     const {data:office} = await sb.from('office_location').select('*').eq('is_active',true).single();
-    if(!office) return toast('Office location not configured','error');
+    if(!office) { setBtn(btn, false); return toast('Office location not configured','error'); }
+
+    setBtn(btn, true, lang==='ar'?'جاري التحقق...':'Verifying...');
+
     const loc = await new Promise((res,rej)=>{
       if(!navigator.geolocation) return rej(new Error('unavailable'));
       navigator.geolocation.getCurrentPosition(
@@ -590,57 +602,60 @@ async function handleCheckIn() {
     });
     const dist    = haversine(loc.lat,loc.lng,office.latitude,office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc,50);
-    if(dist>allowed) return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error');
+    if(dist>allowed) { setBtn(btn, false); return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error'); }
+
+    setBtn(btn, true, lang==='ar'?'جاري التسجيل...':'Checking in...');
+
     const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if(ex) {
       const {error} = await sb.from('attendance_records').update({check_in_time:nowTime(),check_out_time:null,is_mobile:isMobile,is_confirmed:!isMobile}).eq('id',ex.id);
-      if(error) return toast(error.message,'error');
+      if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     } else {
       const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
-      if(error) return toast(error.message,'error');
+      if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     }
     if(isMobile) toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
     else toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
     renderEmp('home');
-  } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 async function confirmCheckIn(id) {
   if(!id) return toast('Invalid Record ID','error');
-  const btn = event.currentTarget; if(btn) btn.disabled=true;
+  const btn = $('confirmBtn');
+  setBtn(btn, true, lang==='ar'?'جاري التأكيد...':'Confirming...');
   try {
     const {error} = await sb.from('attendance_records').update({is_confirmed:true}).eq('id',id);
-    if(error) throw error;
+    if(error) { setBtn(btn, false); throw error; }
     toast(t().confirm_success,'success');
     renderEmp('home');
-  } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 async function handleCheckOut() {
-  const btn = $('coBtn'); if(btn) btn.disabled=true;
+  const btn = $('coBtn');
+  setBtn(btn, true, lang==='ar'?'جاري تسجيل الخروج...':'Checking out...');
   try {
-    if(!navigator.onLine) return toast(t().offline,'error');
+    if(!navigator.onLine) { setBtn(btn, false); return toast(t().offline,'error'); }
     const {data:rec} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
-    if(!rec) return toast(t().not_in,'error');
-    if(rec.check_out_time) return toast(t().already_out,'error');
+    if(!rec) { setBtn(btn, false); return toast(t().not_in,'error'); }
+    if(rec.check_out_time) { setBtn(btn, false); return toast(t().already_out,'error'); }
     const time = nowTime();
     const {error} = await sb.from('attendance_records').update({check_out_time:time}).eq('id',rec.id);
-    if(error) return toast(error.message,'error');
+    if(error) { setBtn(btn, false); return toast(error.message,'error'); }
     toast(`${t().checked_out} ${t().time_lbl}: ${fmtTime(time)}`,'success');
     renderEmp('home');
-  } catch(e) { toast(e.message,'error'); if(btn) btn.disabled=false; }
+  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
 }
 
 // ═══ HISTORY ═══
 async function renderHistory() {
   const {data:recs} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).order('attendance_date',{ascending:false}).limit(60);
   const records = recs||[];
+  const {data:officeSetting} = await sb.from('office_location').select('shift_start_time').eq('is_active',true).single();
+  const shiftStart = officeSetting?.shift_start_time || '09:15:00';
 
-  // ← هنا برة الـ map
-const {data:officeSetting} = await sb.from('office_location').select('shift_start_time').eq('is_active',true).single();
-const shiftStart = officeSetting?.shift_start_time || '09:15:00';
-  
   $('empContent').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif">${t().attendance_history}</div>
@@ -675,6 +690,7 @@ const shiftStart = officeSetting?.shift_start_time || '09:15:00';
       }).join('')}
   `;
 }
+
 // ═══ LEAVE ═══
 let leaveTab='new', leaveType='annual';
 const DEDUCTIBLE_TYPES = ['annual','sick','emergency'];
@@ -737,7 +753,7 @@ async function renderLeave() {
       </div>
       <div id="daysPill"></div>
       <div class="form-field"><label class="field-label">${t().reason}</label><textarea class="form-input" id="lv_reason" placeholder="${t().describe_reason}" style="min-height:80px"></textarea></div>
-      <button class="primary-btn" onclick="submitLeave()" style="width:100%;padding:14px">📤 ${t().submit_request}</button>
+      <button class="primary-btn" id="submitLeaveBtn" onclick="submitLeave()" style="width:100%;padding:14px">📤 ${t().submit_request}</button>
     `:`
       ${!leaves||leaves.length===0
         ?`<div class="empty"><div class="empty-icon">🌴</div><div class="empty-title">${t().no_leaves}</div><div class="empty-sub">${t().no_leaves_sub}</div></div>`
@@ -775,16 +791,20 @@ function updateDays() {
 async function submitLeave() {
   const start=$('lv_start')?.value, end=$('lv_end')?.value, reason=$('lv_reason')?.value?.trim();
   if(!start||!end) return toast(t().missing_dates,'error');
-  if(end<start)      return toast(t().invalid_dates,'error');
-  if(!reason)        return toast(t().missing_reason,'error');
+  if(end<start)    return toast(t().invalid_dates,'error');
+  if(!reason)      return toast(t().missing_reason,'error');
+
+  const btn = $('submitLeaveBtn');
+  setBtn(btn, true, lang==='ar'?'جاري الإرسال...':'Submitting...');
+
   const days = calcLeaveDays(start,end);
   if(DEDUCTIBLE_TYPES.includes(leaveType?.toLowerCase())) {
     const {data:emp} = await sb.from('employees').select('leave_balance').eq('id',currentEmployee.id).single();
     const bal = emp?.leave_balance??21;
-    if(days>bal) return toast(lang==='ar'?`رصيدك ${bal} يوم فقط، والطلب ${days} يوم`:`You only have ${bal} days left, request is ${days} days`,'error');
+    if(days>bal) { setBtn(btn, false); return toast(lang==='ar'?`رصيدك ${bal} يوم فقط، والطلب ${days} يوم`:`You only have ${bal} days left, request is ${days} days`,'error'); }
   }
   const {error} = await sb.from('leave_requests').insert([{employee_id:currentEmployee.id,leave_type:leaveType,start_date:start,end_date:end,reason,status:'pending'}]);
-  if(error) return toast(error.message,'error');
+  if(error) { setBtn(btn, false); return toast(error.message,'error'); }
   toast(lang==='ar'?'تم إرسال الطلب ✅':'Request submitted ✅','success');
   leaveTab='history'; renderLeave();
 }
@@ -821,11 +841,15 @@ async function markRead(id) {
   await sb.from('notifications').update({is_read:true}).eq('id',id);
   fetchUnread(); renderNotifs();
 }
+
 async function markAllRead() {
+  const btn = document.querySelector('#empContent button[onclick="markAllRead()"]');
+  setBtn(btn, true, lang==='ar'?'جاري...':'...');
   const {data:notifs} = await sb.from('notifications').select('id').or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
   if(notifs?.length) await Promise.all(notifs.map(n=>sb.from('notifications').update({is_read:true}).eq('id',n.id)));
   fetchUnread(); renderNotifs();
 }
+
 async function fetchUnread() {
   if(!currentEmployee) return;
   const {count} = await sb.from('notifications').select('*',{count:'exact',head:true}).or(`employee_id.eq.${currentEmployee.id},employee_id.is.null`).eq('is_read',false);
@@ -869,12 +893,8 @@ function showPushNotif(msg) {
 function updateNotifBadge() {
   const badge = $('notifBadge');
   if(!badge) return;
-  if(unreadCount>0) {
-    badge.classList.add('show');
-    badge.textContent = unreadCount>9?'9+':unreadCount;
-  } else {
-    badge.classList.remove('show');
-  }
+  if(unreadCount>0) { badge.classList.add('show'); badge.textContent = unreadCount>9?'9+':unreadCount; }
+  else badge.classList.remove('show');
 }
 
 // ═══ TASKS ═══
@@ -902,7 +922,7 @@ async function renderEmpTasks() {
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
                 ${tk.deadline?`<span class="badge" style="background:${isLate?'var(--red-dim)':'var(--amber-dim)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)} ${isLate?'⚠️':''}</span>`:''}
-                <button onclick="markTaskDone('${tk.id}')" class="primary-btn" style="padding:7px 14px;font-size:12px;background:var(--green)">✅ ${lang==='ar'?'تم الإنجاز':'Mark Done'}</button>
+                <button id="doneBtn_${tk.id}" onclick="markTaskDone('${tk.id}')" class="primary-btn" style="padding:7px 14px;font-size:12px;background:var(--green)">✅ ${lang==='ar'?'تم الإنجاز':'Mark Done'}</button>
               </div>
             </div>`;
           }).join('')}
@@ -920,8 +940,10 @@ async function renderEmpTasks() {
 }
 
 async function markTaskDone(id) {
+  const btn = $('doneBtn_'+id);
+  setBtn(btn, true, lang==='ar'?'جاري...':'...');
   const {error} = await sb.from('tasks').update({status:'done'}).eq('id',id);
-  if(error) return toast(error.message,'error');
+  if(error) { setBtn(btn, false); return toast(error.message,'error'); }
   toast(lang==='ar'?'أحسنت! تم إنجاز التاسك 🎉':'Task completed 🎉','success');
   renderEmpTasks();
 }
@@ -932,10 +954,12 @@ async function renderProfile() {
   const initials = (emp.first_name?.[0]||'')+(emp.last_name?.[0]||'');
   const {data:recs} = await sb.from('attendance_records').select('*').eq('employee_id',emp.id);
   const done = (recs||[]).filter(r=>r.check_in_time&&r.check_out_time);
-  const ot   = done.filter(r=>r.check_in_time<='09:15:00');
-  const n    = new Date();
-  const mo   = done.filter(r=>{ const d=new Date(r.attendance_date); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); });
-  const pct  = done.length>0?Math.round(ot.length/done.length*100):0;
+  const {data:officeSetting} = await sb.from('office_location').select('shift_start_time').eq('is_active',true).single();
+  const shiftStart = officeSetting?.shift_start_time || '09:15:00';
+  const ot = done.filter(r=>r.check_in_time<=shiftStart);
+  const n  = new Date();
+  const mo = done.filter(r=>{ const d=new Date(r.attendance_date); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); });
+  const pct = done.length>0?Math.round(ot.length/done.length*100):0;
 
   $('empContent').innerHTML = `
     <div class="profile-hero">
@@ -985,50 +1009,36 @@ function toggleDark(e) {
   darkMode=!darkMode; applyDark(); renderEmp(empTab);
 }
 
-// ═══ CUSTOM PAGE VIEW (EMPLOYEE) ═══
-// ═══ CUSTOM PAGE VIEW (DIAGNOSTIC VERSION) ═══
+// ═══ CUSTOM PAGE VIEW ═══
 async function renderCustomPage(slug) {
-  // 1. نظهر لودينج عشان المستخدم يعرف إنه حصل استجابة
-  $('empContent').innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+  const isAdminMode = $('hrApp') && $('hrApp').style.display !== 'none';
+  const target = isAdminMode ? $('hrContent') : $('empContent');
+  if(!target) return;
 
   try {
-    console.log("Trying to load page with slug:", slug); // سجل الـ slug في الكونسول
-
-    // 2. جلب البيانات
     const {data:page, error} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
-
-    // 3. فحص الأخطاء
-    if(error) {
-      throw new Error("Database Error: " + error.message);
-    }
-    if(!page) {
-      throw new Error("Page not found in database. Slug: " + slug);
-    }
-
-    // 4. عرض الصفحة إذا كل شيء تمام
-    $('empContent').innerHTML = `
+    if(error) throw new Error(error.message);
+    if(!page)  throw new Error('Page not found: ' + slug);
+    target.innerHTML = `
       <div style="margin-bottom:20px">
         <h1 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
         <div style="height:4px;width:50px;background:var(--indigo);border-radius:2px"></div>
       </div>
       <div class="card" style="padding:20px;line-height:1.7;color:var(--text);font-size:15px">
-        ${page.content ? page.content : '<span style="color:var(--muted)">لا يوجد محتوى (No content)</span>'}
+        ${page.content||'<span style="color:var(--muted)">No content yet.</span>'}
       </div>
     `;
-
-  } catch (e) {
-    // 5. عرض الخطأ بوضوح للمستخدم (Root Fix: Transparency)
-    console.error("Custom Page Error:", e);
-    $('empContent').innerHTML = `
+  } catch(e) {
+    target.innerHTML = `
       <div style="padding:20px;text-align:center;border:1px solid var(--red);border-radius:12px;color:var(--red)">
-        <h3 style="margin-bottom:10px">⚠️ Error Loading Page</h3>
-        <p style="margin-bottom:10px">${e.message}</p>
-        <p style="font-size:12px;color:var(--muted)">Slug you tried: ${slug}</p>
-        <button onclick="renderEmp('home')" class="primary-btn">Go Home</button>
+        <h3 style="margin-bottom:10px">⚠️ Error</h3>
+        <p>${e.message}</p>
+        <button onclick="renderEmp('home')" class="primary-btn" style="margin-top:12px">Go Home</button>
       </div>
     `;
   }
 }
+
 // ═══ INIT ═══
 function init() {
   applyDark();
