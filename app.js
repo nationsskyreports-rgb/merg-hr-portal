@@ -28,12 +28,21 @@ let unreadCount = 0;
 function setBtn(btn, loading, text) {
   if (!btn) return;
   if (loading) {
+    // لو الزرار مش بيلود أصلاً، هنخزن النص القديم
+    if (!btn.hasAttribute('data-loading')) {
+      btn.setAttribute('data-orig', btn.innerHTML);
+      btn.setAttribute('data-loading', 'true');
+    }
     btn.disabled = true;
-    btn._orig = btn.innerHTML;
     btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span class="spinner" style="width:16px;height:16px;border-width:2px;flex-shrink:0"></span>${text||'...'}</span>`;
   } else {
     btn.disabled = false;
-    if (btn._orig) btn.innerHTML = btn._orig;
+    const orig = btn.getAttribute('data-orig');
+    if (orig) {
+      btn.innerHTML = orig;
+      btn.removeAttribute('data-loading');
+      btn.removeAttribute('data-orig');
+    }
   }
 }
 
