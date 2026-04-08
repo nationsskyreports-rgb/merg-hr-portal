@@ -589,17 +589,15 @@ async function renderHome() {
 async function handleCheckIn() {
   const btn = $('ciBtn');
   setBtn(btn, true, lang==='ar'?'جاري...':'...');
-  try {
+  try { // القوس ده مهم جداً لبداية الـ try
     if(!navigator.onLine) { setBtn(btn, false); return toast(t().offline,'error'); }
 
     console.log('Step 1: fetching office...');
     const {data:office, error:offErr} = await sb.from('office_location').select('*').eq('is_active',true).single();
-    console.log('office result:', office, offErr);
     if(offErr || !office) { setBtn(btn, false); return toast(offErr?.message || 'Office not found','error'); }
 
     console.log('Step 2: checking existing record...');
     const {data:ex, error:exErr} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
-    console.log('existing record:', ex, exErr);
     if(ex?.check_in_time && !ex?.check_out_time) { setBtn(btn, false); return toast(t().already_in,'error'); }
     if(ex?.check_in_time && ex?.check_out_time)  { setBtn(btn, false); return toast(t().already_out,'error'); }
 
@@ -608,8 +606,8 @@ async function handleCheckIn() {
     const loc = await new Promise((res, rej) => {
       if(!navigator.geolocation) return rej(new Error(t().enable_gps));
       navigator.geolocation.getCurrentPosition(
-        p => { console.log('GPS ok:', p.coords); res({lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy||50}); },
-        err => { console.log('GPS err:', err.code, err.message); rej(new Error(t().enable_gps)); },
+        p => { res({lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy||50}); },
+        err => { rej(new Error(t().enable_gps)); },
         { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
       );
     });
@@ -617,12 +615,13 @@ async function handleCheckIn() {
     console.log('Step 4: checking distance...');
     const dist    = haversine(loc.lat, loc.lng, office.latitude, office.longitude);
     const allowed = office.radius_meters + Math.min(loc.acc, 100);
-    console.log('dist:', dist, 'allowed:', allowed);
-        if(dist > allowed) { 
+    
+    if(dist > allowed) { 
       setBtn(btn, false); 
       toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`, 'error'); 
       return; 
     }
+
     console.log('Step 5: inserting record...');
     setBtn(btn, true, lang==='ar'?'جاري التسجيل...':'Checking in...');
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -634,12 +633,12 @@ async function handleCheckIn() {
       is_mobile: isMobile,
       is_confirmed: !isMobile
     }]);
-    console.log('insert error:', error);
+    
     if(error) { setBtn(btn, false); return toast(error.message,'error'); }
 
     toast(lang==='ar'?'تم تسجيل الدخول ✅':'Checked in ✅','success');
     renderEmp('home');
-  } catch(e) {
+  } catch(e) { // الـ catch دلوقتي هتلاقي الـ try بتاعتها
     console.log('CATCH:', e.message);
     setBtn(btn, false);
     toast(e.message || t().enable_gps,'error');
