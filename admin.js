@@ -890,7 +890,10 @@ async function handleFileUpload(input) {
     if(upTxt) upTxt.style.color = 'var(--green)';
 
     toast(lang === 'ar' ? 'تم رفع الملف ✅' : 'File uploaded ✅', 'success');
-    setTimeout(() => { await renderHRFiles(); }, 1000);
+    
+    // ✅ FIX: تم حذف await من هنا
+    setTimeout(() => { renderHRFiles(); }, 1000);
+    
   } catch (e) {
     console.error(e);
     clearInterval(progressInterval);
@@ -899,7 +902,6 @@ async function handleFileUpload(input) {
     if (upCont) upCont.style.display = 'none';
   }
 }
-
 function handleDrop(e, el) {
   e.preventDefault();
   el.style.borderColor = 'var(--border)';
