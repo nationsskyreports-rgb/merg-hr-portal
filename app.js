@@ -638,9 +638,9 @@ async function renderHistory() {
   const records = recs||[];
 
   // ← هنا برة الـ map
-  const {data:shiftSetting} = await sb.from('app_settings').select('value').eq('key','shift_start_time').single();
-  const shiftStart = (shiftSetting?.value || '09:15') + ':00';
-
+const {data:officeSetting} = await sb.from('office_location').select('shift_start_time').eq('is_active',true).single();
+const shiftStart = officeSetting?.shift_start_time || '09:15:00';
+  
   $('empContent').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-size:18px;font-weight:800;color:var(--text);font-family:'Syne',sans-serif">${t().attendance_history}</div>
