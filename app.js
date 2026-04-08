@@ -583,37 +583,69 @@ async function renderHome() {
 // ═══ CHECK IN / OUT ═══
 async function handleCheckIn() {
   const btn = $('ciBtn');
-  setBtn(btn, true, lang==='ar'?'جاري تحديد موقعك...':'Getting location...');
+  setBtn(btn, true, lang==='ar'?'جاري...':'Getting location...');
   try {
     if(!navigator.onLine) { setBtn(btn, false); return toast(t().offline,'error'); }
+    
+    // ← جيب إعدادات الأوفيس أولاً
     const {data:office} = await sb.from('office_location').select('*').eq('is_active',true).single();
     if(!office) { setBtn(btn, false); return toast('Office location not configured','error'); }
 
-    setBtn(btn, true, lang==='ar'?'جاري التحقق...':'Verifying...');
+    // ← اتحقق من سجل اليوم قبل الـ GPS عشان متضيعش وقت
+    const {data:ex} = await sb.from('attendance_records')
+      .select('*').eq('employee_id',currentEmployee.id)
+      .eq('attendance_date',nowISO()).maybeSingle();
+    if(ex?.check_in_time && !ex?.check_out_time) { setBtn(btn, false); return toast(t().already_in,'error'); }
+    if(ex?.check_in_time && ex?.check_out_time)  { setBtn(btn, false); return toast(t().already_out,'error'); }
 
-    const loc = await new Promise((res,rej)=>{
-      if(!navigator.geolocation) return rej(new Error('unavailable'));
+    setBtn(btn, true, lang==='ar'?'جاري تحديد موقعك...':'Locating...');
+
+    const loc = await new Promise((res, rej) => {
+      if(!navigator.geolocation) return rej(new Error(t().enable_gps));
+      
+      // ← timeout أطول + بدون high accuracy أول ما يجرب
       navigator.geolocation.getCurrentPosition(
-        p=>res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||50}),
-        ()=>rej(new Error(t().enable_gps)),
-        {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+        p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 50 }),
+        err => {
+          if(err.code === 1) return rej(new Error(t().perm_denied));
+          if(err.code === 2) return rej(new Error(t().enable_gps));
+          // timeout → جرب مرة تانية بدون high accuracy
+          navigator.geolocation.getCurrentPosition(
+            p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 100 }),
+            () => rej(new Error(t().enable_gps)),
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 120000 }
+          );
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
       );
     });
-    const dist    = haversine(loc.lat,loc.lng,office.latitude,office.longitude);
-    const allowed = office.radius_meters + Math.min(loc.acc,50);
-    if(dist>allowed) { setBtn(btn, false); return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error'); }
+
+    const dist    = haversine(loc.lat, loc.lng, office.latitude, office.longitude);
+    const allowed = office.radius_meters + Math.min(loc.acc, 100);
+    if(dist > allowed) { 
+      setBtn(btn, false); 
+      return toast(`${t().out_of_range}: ${dist.toFixed(0)}m. Max: ${office.radius_meters}m`,'error'); 
+    }
 
     setBtn(btn, true, lang==='ar'?'جاري التسجيل...':'Checking in...');
 
-    const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
-    const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
+    const {error} = await sb.from('attendance_records').insert([{
+      employee_id: currentEmployee.id,
+      attendance_date: nowISO(),
+      check_in_time: nowTime(),
+      office_id: office.id,
+      is_mobile: isMobile,
+      is_confirmed: !isMobile
+    }]);
     if(error) { setBtn(btn, false); return toast(error.message,'error'); }
-    if(isMobile) toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
-    else toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
+    if(isMobile) toast(lang==='ar'?'تم التسجيل من الموبايل. أكده من الويب.':'Checked in from mobile. Confirm from web.','warning');
+    else toast(`${t().checked_in} — ${dist.toFixed(0)}m`,'success');
     renderEmp('home');
-  } catch(e) { setBtn(btn, false); toast(e.message,'error'); }
+  } catch(e) { 
+    setBtn(btn, false); 
+    toast(e.message || t().enable_gps,'error'); 
+  }
 }
 async function confirmCheckIn(id) {
   if(!id) return toast('Invalid Record ID','error');
