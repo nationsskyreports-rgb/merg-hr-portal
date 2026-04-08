@@ -611,9 +611,34 @@ body {
 
 :focus-visible { outline:2.5px solid var(--indigo); outline-offset:2px; border-radius:var(--r-sm); }
 button:focus:not(:focus-visible) { outline:none; }
-
-/* dark-row alias */
 .dark-row { }
+.toast {
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 16px;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: visibility 0s, opacity 0.5s linear;
+  opacity: 0;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+.toast.error { background-color: #ef4444; } /* أحمر للخطأ */
+.toast.success { background-color: #10b981; } /* أخضر للنجاح */
+  
 </style>
 </head>
 <body>
