@@ -163,13 +163,13 @@ async function renderHROverview() {
       </div>
     </div>
 
-    ${late.length>0?`
-      <div class="sec-title" style="color:var(--red)">⚠️ ${lang==='ar'?'متأخرون اليوم':'Late Today'} (${late.length})</div>
-      ${late.map(a=>{
+    ${late.length > 0 ? `
+      <div class="sec-title" style="color:var(--red)">⚠️ ${lang === 'ar' ? 'متأخرون اليوم' : 'Late Today'} (${late.length})</div>
+      ${late.map(a => {
         const emp = a.employees;
-        const name = emp?`${emp.first_name} ${emp.last_name}`:'—';
-        const dept = emp?.department||'';
-        const mins = Math.round((new Date('1970-01-01T'+a.check_in_time)-new Date('1970-01-01T09:15:00'))/60000);
+        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
+        const dept = emp?.department || '';
+        const mins = Math.round((new Date(`1970-01-01T${a.check_in_time}`) - new Date('1970-01-01T09:15:00')) / 60000);
         return `<div class="card-sm" style="border-color:rgba(239,68,68,.3);margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:40px;height:40px;border-radius:20px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⏰</div>
@@ -179,18 +179,18 @@ async function renderHROverview() {
             </div>
             <div style="text-align:right">
               <div style="font-size:15px;font-weight:800;color:var(--red)">${fmtTime(a.check_in_time)}</div>
-              <div style="font-size:11px;color:var(--red);margin-top:2px">+${mins} ${lang==='ar'?'دقيقة':'min'}</div>
+              <div style="font-size:11px;color:var(--red);margin-top:2px">+${mins} ${lang === 'ar' ? 'دقيقة' : 'min'}</div>
             </div>
           </div>
         </div>`;
       }).join('')}
-    `:'''}
+    ` : ''}
 
-    ${onTime.length>0?`
-      <div class="sec-title" style="color:var(--green)">✅ ${lang==='ar'?'في الوقت':'On Time'} (${onTime.length})</div>
-      ${onTime.map(a=>{
+    ${onTime.length > 0 ? `
+      <div class="sec-title" style="color:var(--green)">✅ ${lang === 'ar' ? 'في الوقت' : 'On Time'} (${onTime.length})</div>
+      ${onTime.map(a => {
         const emp = a.employees;
-        const name = emp?`${emp.first_name} ${emp.last_name}`:'—';
+        const name = emp ? `${emp.first_name} ${emp.last_name}` : '—';
         return `<div class="card-sm" style="border-color:rgba(34,197,94,.2);margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:40px;height:40px;border-radius:20px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✅</div>
@@ -199,14 +199,14 @@ async function renderHROverview() {
           </div>
         </div>`;
       }).join('')}
-    `:'''}
+    ` : ''}
 
-    ${att.length===0?`
+    ${att.length === 0 ? `
       <div class="card" style="text-align:center;padding:32px">
         <div style="font-size:44px;margin-bottom:8px">📭</div>
         <div style="color:var(--sub)">${t().no_att_today}</div>
       </div>
-    `:'''}
+    ` : ''}
   `;
 }
 
@@ -286,7 +286,7 @@ async function renderHRLeaves() {
     </div>
     ${items.length===0
       ?`<div class="empty"><div class="empty-icon">🌴</div><div class="empty-title">${lang==='ar'?'لا توجد طلبات':'No leave requests'}</div></div>`
-      :items.map(lv=>`<div class="leave-card" style="border-color:${lv.status==='pending'?'rgba(245,158,11,.35)':'';}">
+      :items.map(lv=>`<div class="leave-card" style="border-color:${lv.status==='pending'?'rgba(245,158,11,.35)':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
             <div>
               <div style="font-weight:700;color:var(--text);font-size:15px">${lv.employees?.first_name||''} ${lv.employees?.last_name||''}</div>
@@ -301,7 +301,7 @@ async function renderHRLeaves() {
             </span>
           </div>
           <div style="font-size:13px;color:var(--sub);margin-bottom:8px">📅 ${fmtDate(lv.start_date)} — ${fmtDate(lv.end_date)}</div>
-          ${lv.reason?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">"${lv.reason}"</div>`:'';}
+          ${lv.reason?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">"${lv.reason}"</div>`:''}
           ${lv.status==='pending'?`
         <div style="display:flex;gap:8px">
          <button class="primary-btn" style="flex:1;background:var(--green);padding:8px" onclick="approveLeave('${lv.id}')">${t().approve}</button>
@@ -575,7 +575,7 @@ async function renderHRSalaries() {
     </div>
     <div class="card" style="margin-bottom:12px;border:1.5px solid rgba(56,189,248,.2)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${selectedEmp?.first_name?.[0]||'?';}${selectedEmp?.last_name?.[0]||''};</div>
+        <div style="width:48px;height:48px;border-radius:24px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${(selectedEmp?.first_name?.[0]||'?')}${(selectedEmp?.last_name?.[0]||'')}</div>
         <div>
           <div style="font-size:16px;font-weight:700;color:var(--text)">${selectedEmp?.first_name||''} ${selectedEmp?.last_name||''}</div>
           <div style="font-size:12px;color:var(--sub)">${selectedEmp?.job_title||''} · ${selectedEmp?.department||''}</div>
@@ -605,7 +605,7 @@ async function renderHRSalaries() {
               </div>
             </div>`;
           }).join('')}
-        </div>`:'';}
+        </div>`:''}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${netSalary>=baseSalary?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1.5px solid ${netSalary>=baseSalary?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};border-radius:14px">
         <div style="font-size:14px;font-weight:700;color:var(--text)">💰 ${lang==='ar'?'الصافي':'Net Salary'}</div>
         <div style="font-size:22px;font-weight:900;color:${netSalary>=baseSalary?'var(--green)':'var(--red)'}">
@@ -794,13 +794,13 @@ async function renderHRTasks() {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div style="flex:1">
               <div style="font-size:15px;font-weight:700;color:var(--text);text-decoration:${isDone?'line-through':''}">${tk.title}</div>
-              ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:'';}
+              ${tk.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${tk.description}</div>`:''}
             </div>
             <button onclick="deleteTask('${tk.id}')" style="background:rgba(239,68,68,.12);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0;margin-${lang==='ar'?'right':'left'}:8px">✕</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="badge" style="background:rgba(56,189,248,.1);color:var(--sky);border:1px solid rgba(56,189,248,.2)">👤 ${empName}</span>
-            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}${isLate?' ⚠️':''};</span>`:'';}
+            ${tk.deadline?`<span class="badge" style="background:${isLate?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${isLate?'var(--red)':'var(--amber)'};border:1px solid ${isLate?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)'}">📅 ${fmtDate(tk.deadline)}${isLate?' ⚠️':''}</span>`:''}
             <span class="badge" style="background:${isDone?'rgba(34,197,94,.1)':'rgba(99,102,241,.1)'};color:${isDone?'var(--green)':'var(--indigo)'};border:1px solid ${isDone?'rgba(34,197,94,.2)':'rgba(99,102,241,.2)'}">
               ${tk.status==='done'?(lang==='ar'?'مكتمل':'Complete'):(lang==='ar'?'قيد الانتظار':'Pending')}
             </span>
