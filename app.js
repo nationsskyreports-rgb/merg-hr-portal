@@ -469,7 +469,6 @@ function showEmpTab(tab, el) {
 async function renderEmp(tab) {
   const el = $('empContent');
   if(!el) return;
-  // Show skeleton loader
   el.innerHTML = `<div style="padding:20px"><div style="height:160px;background:var(--surface);border-radius:var(--r-2xl);margin-bottom:12px;animation:pulse 1.5s infinite;opacity:.5"></div><div style="height:120px;background:var(--surface);border-radius:var(--r-xl);animation:pulse 1.5s infinite;opacity:.4"></div></div>`;
   if(tab==='home')         await renderHome();
   else if(tab==='history') await renderHistory();
@@ -609,12 +608,8 @@ async function handleCheckIn() {
     const {data:ex} = await sb.from('attendance_records').select('*').eq('employee_id',currentEmployee.id).eq('attendance_date',nowISO()).maybeSingle();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
+    const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
     if(error) { setBtn(btn, false); return toast(error.message,'error'); }
-    } else {
-if(ex) { if(ex.check_in_time && !ex.check_out_time) { setBtn(btn, false); return toast(t().already_in, 'error'); } if(ex.check_in_time && ex.check_out_time) { setBtn(btn, false); return toast(t().already_out, 'error'); } }
-const {error} = await sb.from('attendance_records').insert([{employee_id:currentEmployee.id,attendance_date:nowISO(),check_in_time:nowTime(),office_id:office.id,is_mobile:isMobile,is_confirmed:!isMobile}]);
-if(error) { setBtn(btn, false); return toast(error.message,'error'); }
-  }
     if(isMobile) toast(lang==='ar'?'تم تسجيل الدخول من الموبايل. يرجى التأكيد من الويب.':'Checked in from mobile. Please confirm from web.','warning');
     else toast(`${t().checked_in} ${t().time_lbl}: ${fmtTime(nowTime())}. ${t().distance}: ${dist.toFixed(0)}m`,'success');
     renderEmp('home');
