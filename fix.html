@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل الصيانة الشامل — MERGE HR</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg:#0a0e1a;--surface:#111827;--surface-2:#1a2236;--surface-3:#243049;
+    --border:#2a3a55;--text:#f1f5f9;--sub:#94a3b8;--muted:#64748b;
+    --sky:#0ea5e9;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
+    --indigo:#6366f1;--violet:#a855f7;--cyan:#22d3ee;--r-xl:24px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);line-height:1.8;min-height:100vh}
+  body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 30%,rgba(14,165,233,.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 70%,rgba(99,102,241,.04) 0%,transparent 50%);animation:drift 25s ease-in-out infinite alternate;z-index:0;pointer-events:none}
+  @keyframes drift{0%{transform:translate(0,0)}100%{transform:translate(-2%,1%) rotate(2deg)}}
+  .wrapper{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:40px 20px 100px}
+
+  .hero{text-align:center;padding:50px 20px 40px;margin-bottom:40px;position:relative}
+  .hero::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100px;height:3px;background:linear-gradient(90deg,var(--cyan),var(--indigo));border-radius:2px}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);color:var(--cyan);padding:6px 18px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:20px}
+  .hero h1{font-size:clamp(28px,5vw,46px);font-weight:900;margin-bottom:10px}
+  .hero h1 span{background:linear-gradient(135deg,var(--cyan),var(--indigo));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero p{font-size:16px;color:var(--sub);max-width:560px;margin:0 auto}
+
+  .difficulty-badges{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .diff-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700}
+  .diff-beginner{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+  .diff-mid{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+
+  .section{margin-bottom:36px;opacity:0;transform:translateY(30px);animation:fadeUp .6s ease forwards}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+
+  .section-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .section-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .section-header h2{font-size:20px;font-weight:800}
+  .section-header .sec-num{font-size:12px;font-weight:700;color:var(--muted);margin-top:2px}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;margin-bottom:14px;transition:border-color .3s}
+  .card:hover{border-color:rgba(34,211,238,.15)}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .card p,.card li{font-size:14px;color:var(--sub);line-height:1.9}
+  .card ul{list-style:none;padding:0}
+  .card ul li{padding:5px 0;padding-right:22px;position:relative}
+  .card ul li::before{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:var(--cyan);opacity:.5}
+
+  .steps{counter-reset:step}
+  .step{display:flex;gap:14px;margin-bottom:14px;position:relative}
+  .step:not(:last-child)::after{content:'';position:absolute;right:18px;top:42px;bottom:-14px;width:2px;background:var(--border)}
+  .step-num{width:38px;height:38px;border-radius:11px;background:var(--surface-2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--cyan);flex-shrink:0}
+  .step-content{flex:1;padding-top:5px}
+  .step-content h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+  .step-content p{font-size:13px;color:var(--sub);line-height:1.7}
+
+  .alert{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;border-radius:14px;margin-bottom:14px;font-size:13px;font-weight:600;line-height:1.7}
+  .alert-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
+  .alert-info{background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);color:var(--sky)}
+  .alert-danger{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+  .alert-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green)}
+  .alert i{font-size:16px;margin-top:2px;flex-shrink:0}
+
+  .table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead{background:var(--surface-2)}
+  th{padding:11px 14px;text-align:right;font-weight:700;color:var(--sub);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(34,211,238,.02)}
+
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
+  .badge-green{background:rgba(16,185,129,.1);color:var(--green)}
+  .badge-red{background:rgba(239,68,68,.1);color:var(--red)}
+  .badge-sky{background:rgba(14,165,233,.1);color:var(--sky)}
+  .badge-amber{background:rgba(245,158,11,.1);color:var(--amber)}
+  .badge-violet{background:rgba(168,85,247,.1);color:var(--violet)}
+  .badge-cyan{background:rgba(34,211,238,.1);color:var(--cyan)}
+  .badge-indigo{background:rgba(99,102,241,.1);color:var(--indigo)}
+
+  kbd{display:inline-block;padding:2px 8px;background:var(--surface-3);border:1px solid var(--border);border-radius:6px;font-family:monospace;font-size:12px;color:var(--cyan)}
+
+  .code-block{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;font-family:'Courier New',monospace;font-size:12.5px;line-height:1.8;direction:ltr;text-align:left;margin:12px 0;overflow-x:auto;color:var(--sub)}
+  .code-block .cm{color:var(--muted)}
+  .code-block .cs{color:var(--green)}
+  .code-block .ck{color:var(--cyan)}
+  .code-block .cv{color:var(--amber)}
+  .code-block .ct{color:var(--violet)}
+  .code-label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+
+  .file-tree{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;font-family:'Courier New',monospace;font-size:12.5px;direction:ltr;text-align:left;line-height:2;margin:12px 0}
+  .file-tree .ft-dir{color:var(--cyan);font-weight:700}
+  .file-tree .ft-file{color:var(--sub)}
+  .file-tree .ft-important{color:var(--amber);font-weight:700}
+
+  .faq-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .faq-q{padding:16px 18px;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s}
+  .faq-q:hover{background:var(--surface-2)}
+  .faq-q i{color:var(--muted);transition:transform .3s;font-size:12px}
+  .faq-q.open i{transform:rotate(180deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s;padding:0 18px}
+  .faq-a.open{max-height:600px;padding:0 18px 16px}
+  .faq-a p,.faq-a li{font-size:13px;color:var(--sub);line-height:1.8}
+  .faq-a ul{list-style:none;padding:0}
+  .faq-a ul li{padding:4px 0;padding-right:18px;position:relative}
+  .faq-a ul li::before{content:'→';position:absolute;right:0;color:var(--cyan);font-size:11px}
+
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0;padding-right:30px;position:relative;font-size:14px;color:var(--sub)}
+  .checklist li::before{content:'☐';position:absolute;right:0;font-size:16px;color:var(--cyan)}
+
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px;margin-bottom:50px}
+  .toc h3{font-size:16px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+  .toc-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--sub);font-size:13px;font-weight:600;transition:all .2s;cursor:pointer}
+  .toc-link:hover{background:rgba(34,211,238,.08);color:var(--cyan)}
+  .toc-link-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+  .footer{text-align:center;padding:40px 20px;border-top:1px solid var(--border);margin-top:50px}
+  .footer p{font-size:13px;color:var(--muted)}
+
+  .scroll-top{position:fixed;bottom:30px;left:30px;width:44px;height:44px;border-radius:12px;background:var(--cyan);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:100;opacity:0;transform:translateY(20px);transition:all .3s;box-shadow:0 4px 20px rgba(34,211,238,.3)}
+  .scroll-top.visible{opacity:1;transform:translateY(0)}
+
+  @media(max-width:640px){
+    .wrapper{padding:20px 14px 60px}
+    .hero h1{font-size:24px}
+    .card{padding:16px}
+    th,td{padding:8px 10px}
+    .code-block,.file-tree{font-size:11px}
+  }
+  @media print{
+    body{background:#fff;color:#111}
+    body::before{display:none}
+    .scroll-top{display:none}
+    .section{opacity:1;transform:none;animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<div class="hero">
+  <div class="hero-badge"><i class="fas fa-wrench"></i> دليل الصيانة الشامل</div>
+  <h1>صيانة وتطوير <span>MERGE HR</span></h1>
+  <p>كل ما تحتاجه لفهم النظام، تعديله، إصلاح الأخطاء، وإضافة ميزات جديدة — حتى لو مبتدئ</p>
+  <div class="difficulty-badges">
+    <span class="diff-badge diff-beginner"><i class="fas fa-seedling"></i> أقسام للمبتدئين</span>
+    <span class="diff-badge diff-mid"><i class="fas fa-fire"></i> أقسام متوسطة</span>
+  </div>
+</div>
+
+<div class="toc">
+  <h3><i class="fas fa-map" style="color:var(--cyan)"></i> خريطة الدليل</h3>
+  <div class="toc-grid">
+    <a class="toc-link" onclick="scrollTo_('sec-arch')"><div class="toc-link-icon" style="background:rgba(34,211,238,.1)">🏗️</div>هيكل النظام</a>
+    <a class="toc-link" onclick="scrollTo_('sec-files')"><div class="toc-link-icon" style="background:rgba(99,102,241,.1)">📁</div>ملفات المشروع</a>
+    <a class="toc-link" onclick="scrollTo_('sec-db')"><div class="toc-link-icon" style="background:rgba(16,185,129,.1)">🗄️</div>قاعدة البيانات</a>
+    <a class="toc-link" onclick="scrollTo_('sec-env')"><div class="toc-link-icon" style="background:rgba(245,158,11,.1)">🔑</div>المتغيرات والروابط</a>
+    <a class="toc-link" onclick="scrollTo_('sec-style')"><div class="toc-link-icon" style="background:rgba(168,85,247,.1)">🎨</div>تعديل التصميم</a>
+    <a class="toc-link" onclick="scrollTo_('sec-text')"><div class="toc-link-icon" style="background:rgba(14,165,233,.1)">🔤</div>تعديل النصوص واللغات</a>
+    <a class="toc-link" onclick="scrollTo_('sec-add-feature')"><div class="toc-link-icon" style="background:rgba(16,185,129,.1)">➕</div>إضافة ميزة جديدة</a>
+    <a class="toc-link" onclick="scrollTo_('sec-add-table')"><div class="toc-link-icon" style="background:rgba(34,211,238,.1)">📊</div>إضافة جدول جديد</a>
+    <a class="toc-link" onclick="scrollTo_('sec-fix')"><div class="toc-link-icon" style="background:rgba(239,68,68,.1)">🐛</div>إصلاح الأخطاء</a>
+    <a class="toc-link" onclick="scrollTo_('sec-deploy')"><div class="toc-link-icon" style="background:rgba(99,102,241,.1)">🚀</div>النشر والتحديث</a>
+    <a class="toc-link" onclick="scrollTo_('sec-backup')"><div class="toc-link-icon" style="background:rgba(16,185,129,.1)">💾</div>النسخ الاحتياطي</a>
+    <a class="toc-link" onclick="scrollTo_('sec-security')"><div class="toc-link-icon" style="background:rgba(239,68,68,.1)">🔒</div>الأمان</a>
+    <a class="toc-link" onclick="scrollTo_('sec-checklist')"><div class="toc-link-icon" style="background:rgba(245,158,11,.1)">✅</div>قائمة فحص دورية</a>
+    <a class="toc-link" onclick="scrollTo_('sec-faq')"><div class="toc-link-icon" style="background:rgba(168,85,247,.1)">❓</div>أسئلة شائعة</a>
+  </div>
+</div>
+
+<!-- 1. هيكل النظام -->
+<div class="section" id="sec-arch">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(34,211,238,.1)">🏗️</div>
+    <div><h2>هيكل النظام</h2><div class="sec-num">فهم كيف يتكون النظام قبل أي تعديل</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-cubes" style="color:var(--cyan)"></i> المكونات الثلاثة</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>المكون</th><th>الوظيفة</th><th>أين موجود</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-cyan">Frontend</span></td><td>واجهة المستخدم — الصفحات والأزرار والتصميم</td><td>ملفات HTML + CSS + JS</td></tr>
+          <tr><td><span class="badge badge-green">Backend</span></td><td>قاعدة البيانات والعمليات — بدون سيرفر!</td><td>Supabase (سحابي)</td></tr>
+          <tr><td><span class="badge badge-amber">Auth</span></td><td>تسجيل الدخول والتحقق من الهوية</td><td>Supabase Auth</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-arrows-left-right" style="color:var(--indigo)"></i> كيف البيانات تتحرك</h3>
+    <div class="code-block">
+<span class="cm">// المستخدم يضغط زر → JavaScript يكتب كود → Supabase ينفذ → قاعدة البيانات تتحدث → النتيجة ترجع → الصفحة تتحدث</span>
+
+<span class="ck">الموظف</span> → [تسجيل دخول GPS] → <span class="cv">JavaScript (app.js)</span> → <span class="ct">sb.from('attendance_records').insert()</span> → <span class="cs">Supabase</span> → <span class="ck">PostgreSQL</span>
+
+<span class="ck">الإدمن</span> → [موافقة إجازة]   → <span class="cv">JavaScript (admin.js)</span> → <span class="ct">sb.from('leave_requests').update()</span> → <span class="cs">Supabase</span> → <span class="ck">PostgreSQL</span>
+    </div>
+  </div>
+  <div class="alert alert-success"><i class="fas fa-star"></i><div><strong>أهم نقطة:</strong> النظام مش محتاج سيرفر (Server)! كل العمليات بتتم مباشرة من المتصفح لـ Supabase. يعني أي تعديل في الكود = تعديل في الملفات بس.</div></div>
+</div>
+
+<!-- 2. ملفات المشروع -->
+<div class="section" id="sec-files">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(99,102,241,.1)">📁</div>
+    <div><h2>ملفات المشروع</div><div class="sec-num">كل ملف وظيفته إيه ومين بيتعدّل</div></div>
+  </div>
+  <div class="file-tree">
+<span class="ft-dir">merg-hr-portal/</span>
+├── <span class="ft-important">index.html</span>        ← الصفحة الأساسية + الـ Modals + CSS كله
+├── <span class="ft-important">app.js</span>              ← كود واجهة الموظف (تسجيل دخول، حضور، إجازات...)
+├── <span class="ft-important">admin.js</span>            ← كود لوحة تحكم HR (مرتبات، موظفين، إعدادات...)
+├── <span class="ft-file">manifest.json</span>         ← إعدادات PWA (أيقونة التطبيق، اسمه)
+├── <span class="ft-file">icon-192.png</span>          ← أيقونة التطبيق 192x192
+├── <span class="ft-file">icon-512.png</span>          ← أيقونة التطبيق 512x512
+└── <span class="ft-file">sw.js</span>                ← Service Worker (يعمل التطبيق يشتغل أوفلاين)
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-crosshairs" style="color:var(--amber)"></i> عايز تعدّل حاجة معينة — روح فين؟</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>عايز تعدّل</th><th>الملف</th><th>تبحث عن</th></tr></thead>
+        <tbody>
+          <tr><td>الألوان والخطوط</td><td><kbd>index.html</kbd></td><td><kbd>:root {</kbd> في الـ CSS</td></tr>
+          <tr><td>شكل الأزرار والكروت</td><td><kbd>index.html</kbd></td><td><kbd>.primary-btn</kbd> أو <kbd>.card</kbd></td></tr>
+          <tr><td>نصوص عربية/إنجليزي</td><td><kbd>app.js</kbd></td><td><kbd>const T = {</kbd></td></tr>
+          <tr><td>صفحة تسجيل الدخول</td><td><kbd>app.js</kbd></td><td><kbd>function renderLogin()</kbd></td></tr>
+          <tr><td>واجهة الموظف الرئيسية</td><td><kbd>app.js</kbd></td><td><kbd>function renderHome()</kbd></td></tr>
+          <tr><td>تسجيل الحضور GPS</td><td><kbd>app.js</kbd></td><td><kbd>function handleCheckIn()</kbd></td></tr>
+          <tr><td>طلبات الإجازة</td><td><kbd>app.js</kbd></td><td><kbd>function renderLeave()</kbd></td></tr>
+          <tr><td>نظرة عامة HR</td><td><kbd>admin.js</kbd></td><td><kbd>function renderHROverview()</kbd></td></tr>
+          <tr><td>إدارة الموظفين</td><td><kbd>admin.js</kbd></td><td><kbd>function renderHREmployees()</kbd></td></tr>
+          <tr><td>المرتبات</td><td><kbd>admin.js</kbd></td><td><kbd>function renderHRSalaries()</kbd></td></tr>
+          <tr><td>الإعدادات</td><td><kbd>admin.js</kbd></td><td><kbd>function renderHRSettings()</kbd></td></tr>
+          <tr><td>ربط Supabase</td><td><kbd>app.js</kbd> (أول سطر)</td><td><kbd>createClient(</kbd></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 3. قاعدة البيانات -->
+<div class="section" id="sec-db">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(16,185,129,.1)">🗄️</div>
+    <div><h2>قاعدة البيانات</div><div class="sec-num">الجداول في Supabase — من أين تعدّلها</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-table" style="color:var(--green)"></i> الجداول وأهم الأعمدة</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الجدول</th><th>الوظيفة</th><th>أهم الأعمدة</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-green">employees</span></td><td>بيانات الموظفين</td><td>id, first_name, last_name, email, department, job_title, status, leave_balance</td></tr>
+          <tr><td><span class="badge badge-sky">attendance_records</span></td><td>سجل الحضور</td><td>id, employee_id, attendance_date, check_in_time, check_out_time, is_mobile, is_confirmed</td></tr>
+          <tr><td><span class="badge badge-amber">leave_requests</span></td><td>طلبات الإجازة</td><td>id, employee_id, leave_type, start_date, end_date, reason, status</td></tr>
+          <tr><td><span class="badge badge-violet">salaries</span></td><td>المرتبات الأساسية</td><td>id, employee_id, base_salary, effective_date</td></tr>
+          <tr><td><span class="badge badge-indigo">salary_adjustments</span></td><td>تعديلات المرتب</td><td>id, employee_id, type, amount, reason, month</td></tr>
+          <tr><td><span class="badge badge-cyan">tasks</span></td><td>التاسكات</td><td>id, title, description, assigned_to, deadline, status</td></tr>
+          <tr><td><span class="badge badge-red">notifications</span></td><td>الإشعارات</td><td>id, employee_id, title, message, type, is_read</td></tr>
+          <tr><td><span class="badge badge-amber">office_location</span></td><td>إعدادات المكتب</td><td>id, latitude, longitude, radius_meters, shift_start_time, is_active</td></tr>
+          <tr><td><span class="badge badge-sky">app_settings</span></td><td>إعدادات عامة</td><td>key, value (مثل: departments, positions)</td></tr>
+          <tr><td><span class="badge badge-green">employee_files</span></td><td>ملفات الموظفين</td><td>id, employee_id, file_name, file_path, file_type</td></tr>
+          <tr><td><span class="badge badge-violet">custom_pages</span></td><td>صفحات مخصصة</td><td>id, title, slug, content</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-location-crosshairs" style="color:var(--sky)"></i> عايز تشوف/تعدّل البيانات — منين؟</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>ادخل Supabase</h4><p>افتح <kbd>supabase.com</kbd> وسجّل دخول بحساب المشروع</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اختر المشروع</h4><p>اضغط على اسم المشروع الخاص بك</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>افتح Table Editor</h4><p>من القائمة الجانبية اضغط <strong style="color:var(--cyan)">Table Editor</strong></p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اختر الجدول</h4><p>اضغط على اسم الجدول — هتلاقي كل البيانات جاهزة للتعديل</p></div></div>
+    </div>
+  </div>
+  <div class="alert alert-info"><i class="fas fa-lightbulb"></i><div><strong>نصيحة:</strong> قبل أي تعديل في البيانات، اعمل نسخة احتياطية (Export) من الجدول. في Supabase: Table Editor → اختر الجدول → زر Export → CSV.</div></div>
+</div>
+
+<!-- 4. المتغيرات والروابط -->
+<div class="section" id="sec-env">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(245,158,11,.1)">🔑</div>
+    <div><h2>المتغيرات الحساسة والروابط</div><div class="sec-num">أين توجد وكيف تغيّرها</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-key" style="color:var(--amber)"></i> رابط Supabase و API Key</h3>
+    <p>موجودين في <strong>أول سطر</strong> في ملف <kbd>app.js</kbd>:</p>
+    <div class="code-block">
+<span class="ct">const</span> sb = window.supabase.<span class="cv">createClient</span>(
+  <span class="cs">'https://wnuzxosjjhucxnlaptbf.supabase.co'</span>,  <span class="cm">// ← رابط المشروع (Project URL)</span>
+  <span class="cs">'eyJhbGciOiJIUzI1NiIs...'</span>  <span class="cm">// ← Anon Key (مش Secret Key!)</span>
+);
+    </div>
+    <div class="alert alert-danger"><i class="fas fa-shield-halved"></i><div><strong>تحذير:</strong> الـ <code>Anon Key</code> ده مش سري — هو مصمم يظهر في الكود. الـ <code>Service Role Key</code> هو السري ومش يستخدم هنا أبداً. لو عايز تغيّر المشروع، غيّر الرابطين دول بس.</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-user-shield" style="color:var(--red)"></i> بريد الإدمن</h3>
+    <p>موجود في <kbd>app.js</kbd> في دالة تسجيل الدخول:</p>
+    <div class="code-block">
+isAdmin = emp.email === <span class="cs">'admin@merge.com'</span>;  <span class="cm">// ← غيّر ده لبريد الإدمن بتاعك</span>
+    </div>
+    <p>لو عايز تغيّر بريد الإدمن، غير القيمة بين علامات التنصيص.</p>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-database" style="color:var(--green)"></i> اسم Bucket التخزين</h3>
+    <p>موجود في <kbd>admin.js</kbd>:</p>
+    <div class="code-block">
+<span class="cv">STORAGE_BUCKET</span>: <span class="cs">'employee-files'</span>  <span class="cm">// ← نفس اسم الـ Bucket في Supabase Storage</span>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clock" style="color:var(--sky)"></i> القيم الافتراضية</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>القيمة</th><th>الافتراضي</th><th>أين تغيّرها</th></tr></thead>
+        <tbody>
+          <tr><td>رصيد الإجازات الجديد</td><td><kbd>21</kbd> يوم</td><td>الكود: عند إنشاء موظف جديد — أو يدوياً من Table Editor</td></tr>
+          <tr><td>وقت بداية الشيفت</td><td><kbd>09:15</kbd></td><td>Table Editor → office_location → shift_start_time</td></tr>
+          <tr><td>النطاق المسموح</td><td><kbd>200</kbd> متر</td><td>Table Editor → office_location → radius_meters</td></tr>
+          <tr><td>حد أقصى لحجم الملف</td><td><kbd>10</kbd> MB</td><td>الكود: FILE_CONFIG.MAX_SIZE_MB في admin.js</td></tr>
+          <tr><td>مدة رابط التحميل</td><td><kbd>60</kbd> ثانية</td><td>الكود: createSignedUrl(path, 60) في admin.js</td></tr>
+          <tr><td>حد سجل الحضور</td><td><kbd>60</kbd> يوم</td><td>الكود: .limit(60) في app.js → renderHistory</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 5. تعديل التصميم -->
+<div class="section" id="sec-style">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(168,85,247,.1)">🎨</div>
+    <div><h2>تعديل التصميم والألوان</div><div class="sec-num">كل شيء في ملف index.html — قسم الـ CSS</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-palette" style="color:var(--violet)"></i> تغيير الألوان الرئيسية</h3>
+    <p>ابحث عن <kbd>:root {</kbd> في بداية قسم CSS في <kbd>index.html</kbd>:</p>
+    <div class="code-block">
+<span class="cm">/* الألوان الفاتحة */</span>
+<span class="ck">:root</span> {
+  <span class="cv">--bg</span>:        <span class="cs">#f4f5f9</span>;     <span class="cm">// لون الخلفية</span>
+  <span class="cv">--surface</span>:   <span class="cs">#ffffff</span>;     <span class="cm">// لون الكروت</span>
+  <span class="cv">--text</span>:      <span class="cs">#0d1117</span>;     <span class="cm">// لون النص</span>
+  <span class="cv">--indigo</span>:    <span class="cs">#6366f1</span>;     <span class="cm">// اللون الأساسي (أزرق بنفسجي)</span>
+  <span class="cv">--green</span>:     <span class="cs">#10b981</span>;     <span class="cm">// لون النجاح</span>
+  <span class="cv">--red</span>:       <span class="cs">#ef4444</span>;     <span class="cm">// لون الخطأ</span>
+  <span class="cv">--amber</span>:     <span class="cs">#f59e0b</span>;     <span class="cm">// لون التحذير</span>
+}
+
+<span class="cm">/* الألوان الداكنة */</span>
+<span class="ck">body.dark</span> {
+  <span class="cv">--bg</span>:        <span class="cs">#090e1a</span>;     <span class="cm">// خلفية داكنة</span>
+  <span class="cv">--surface</span>:   <span class="cs">#111827</span>;     <span class="cm">// كروت داكنة</span>
+  <span class="cv">--text</span>:      <span class="cs">#f0f4ff</span>;     <span class="cm">// نص فاتح</span>
+}
+    </div>
+    <div class="alert alert-info"><i class="fas fa-lightbulb"></i><div><strong>طريقة سهلة لاختيار ألوان:</strong> افتح <kbd>coolors.co</kbd> أو <kbd>realtimecolors.com</kbd> — اختار لوحة ألوان — انسخ الكود وبدّل القيم.</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-text-height" style="color:var(--sky)"></i> تغيير الخط</h3>
+    <p>ابحث عن <kbd>@import url</kbd> أو <kbd>font-family</kbd>:</p>
+    <div class="code-block">
+<span class="cm">// 1. غيّر رابط الخط في الـ head</span>
+<span class="cs">@import</span> url(<span class="cs">'https://fonts.googleapis.com/css2?family=</span><span class="cv">Cairo</span><span class="cs">'</span>);
+
+<span class="cm">// 2. غيّر اسم الخط في :root أو body</span>
+<span class="ck">body</span> { <span class="cv">font-family</span>: <span class="cs">'Cairo'</span>, sans-serif; }
+
+<span class="cm">// خطوط عربية ممتازة: Cairo, Tajawal, Noto Kufi, IBM Plex Sans Arabic</span>
+<span class="cm">// خطوط إنجليزية: DM Sans, Inter, Plus Jakarta Sans, Outfit</span>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-square" style="color:var(--green)"></i> تغيير الحواف المستديرة</h3>
+    <div class="code-block">
+<span class="cm"><!-- في :root --></span>
+<span class="cv">--r-sm</span>:  8px;    <span class="cm">// زوايا صغيرة (بادجات)</span>
+<span class="cv">--r-md</span>:  12px;   <span class="cm">// متوسطة (أزرار، حقول)</span>
+<span class="cv">--r-lg</span>:  16px;   <span class="cm">// كبيرة (كروت صغيرة)</span>
+<span class="cv">--r-xl</span>:  20px;   <span class="cm">// كبيرة جداً (كروت)</span>
+<span class="cv">--r-2xl</span>: 24px;   <span class="cm"># أكبر (المودالات)</span>
+    </div>
+  </div>
+</div>
+
+<!-- 6. تعديل النصوص -->
+<div class="section" id="sec-text">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(14,165,233,.1)">🔤</div>
+    <div><h2>تعديل النصوص والترجمة</div><div class="sec-num">إضافة أو تعديل أي نص عربي/إنجليزي</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-language" style="color:var(--sky)"></i> نظام الترجمة</h3>
+    <p>كل النصوص في كائن <kbd>T</kbd> في <kbd>app.js</kbd>:</p>
+    <div class="code-block">
+<span class="ck">const</span> T = {
+  en: {
+    <span class="cv">welcome_back</span>: <span class="cs">'Welcome Back'</span>,
+    <span class="cv">sign_in</span>:      <span class="cs">'Sign In'</span>,
+    <span class="cv">check_in</span>:     <span class="cs">'Check In'</span>,
+    <span class="cm">// ... باقي النصوص</span>
+  },
+  ar: {
+    <span class="cv">welcome_back</span>: <span class="cs">'مرحباً بعودتك'</span>,
+    <span class="cv">sign_in</span>:      <span class="cs">'تسجيل الدخول'</span>,
+    <span class="cv">check_in</span>:     <span class="cs">'تسجيل دخول'</span>,
+    <span class="cm">// ... باقي النصوص</span>
+  }
+};
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-plus" style="color:var(--green)"></i> إضافة نص جديد</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>أضف المفتاح في القسمين</h4><p>نفس المفتاح في <kbd>en</kbd> و <kbd>ar</kbd></p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>استخدمه في الكود</h4><p><kbd>t().new_key</kbd> أو <kbd>t().new_key</kbd></p></div></div>
+    </div>
+    <div class="code-block">
+<span class="cm">// 1. في كائن T:</span>
+en: { ..., <span class="cv">my_new_text</span>: <span class="cs">'Hello World'</span> },
+ar: { ..., <span class="cv">my_new_text</span>: <span class="cs">'مرحباً بالعالم'</span> },
+
+<span class="cm">// 2. في أي مكان في الكود:</span>
+ $(<span class="cs">'someElement'</span>).textContent = <span class="cv">t</span>().my_new_text;
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-exclamation-circle" style="color:var(--amber)"></i> نصوص مش في نظام الترجمة</h3>
+    <p>بعض النصوص مكتوبة مباشرة في الكود (hardcoded) مش في كائن <kbd>T</kbd>. عشان تقلّبها:</p>
+    <div class="code-block">
+<span class="cm">// ❌ قبل (نص مباشر)</span>
+toast(<span class="cs">'تم تسجيل الدخول ✅'</span>, <span class="cs">'success'</span>);
+
+<span class="cm">// ✅ بعد (من الترجمة)</span>
+toast(lang===<span class="cs">'ar'</span>?<span class="cs">'تم تسجيل الدخول ✅'</span>:<span class="cs">'Checked in ✅'</span>,<span class="cs">'success'</span>);
+    </div>
+  </div>
+</div>
+
+<!-- 7. إضافة ميزة جديدة -->
+<div class="section" id="sec-add-feature">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(16,185,129,.1)">➕</div>
+    <div><h2>إضافة ميزة جديدة</div><div class="sec-num">مثال عملي: إضافة صفحة "ملاحظات الأداء"</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-shoe-prints" style="color:var(--green)"></i> الخطوات بالترتيب</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>أنشئ الجدول في Supabase</h4><p>Table Editor → New Table → اسمها <kbd>performance_notes</kbd> → أعمدة: id (uuid), employee_id (uuid), rating (integer), note (text), period (text), created_at (timestamp)</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أضف التبويب في القائمة الجانبية</h4><p>في <kbd>admin.js</kbd> → دالة <kbd>initHR()</kbd> → في مصفوفة <kbd>tabs</kbd> أضف عنصر جديد</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أضف حالة التبويب</h4><p>في <kbd>renderHR()</kbd> أضف <kbd>else if</kbd> للتبويب الجديد</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اكتب دالة العرض</h4><p>أنشئ <kbd>async function renderPerformance()</kbd> فيها جلب البيانات وعرضها</p></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content"><h4>اختبر</h4><p>أعد تحميل الصفحة واضغط التبويب الجديد</p></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-code" style="color:var(--cyan)"></i> مثال الكود</h3>
+    <div class="code-block">
+<span class="cm">// الخطوة 2: أضف في مصفوفة tabs في initHR()</span>
+{ id:<span class="cs">'performance'</span>, icon:<span class="cs">'⭐'</span>, label:lang===<span class="cs">'ar'</span>?<span class="cs">'الأداء'</span>:<span class="cs">'Performance'</span> },
+
+<span class="cm">// الخطوة 3: أضف في renderHR()</span>
+<span class="ck">else if</span>(tab===<span class="cs">'performance'</span>) <span class="ck">await</span> renderPerformance();
+
+<span class="cm">// الخطوة 4: دالة العرض</span>
+<span class="ck">async function</span> <span class="cv">renderPerformance</span>() {
+  <span class="ck">const</span> {data:notes} = <span class="ck">await</span> sb.from(<span class="cs">'performance_notes'</span>)
+    .select(<span class="cs">'*,employees(first_name,last_name)'</span>)
+    .order(<span class="cs">'created_at'</span>,{ascending:<span class="ck">false</span>});
+
+  $(<span class="cs">'hrContent'</span>).innerHTML = <span class="cs">`
+    &lt;h2&gt;⭐ ملاحظات الأداء&lt;/h2&gt;
+    ${(notes||[]).map(n =&gt; <span class="cs">`
+      &lt;div class="card-sm"&gt;
+        &lt;strong&gt;${n.employees?.first_name}&lt;/strong&gt;
+        &lt;span&gt;${n.rating}/10&lt;/span&gt;
+        &lt;p&gt;${n.note}&lt;/p&gt;
+      &lt;/div&gt;
+    `</span>).join(<span class="cs">''</span>)
+  `</span>;
+}
+    </div>
+  </div>
+</div>
+
+<!-- 8. إضافة جدول جديد -->
+<div class="section" id="sec-add-table">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(34,211,238,.1)">📊</div>
+    <div><h2>إنشاء جدول جديد في Supabase</div><div class="sec-num">خطوة بخطوة معRLS</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-database" style="color:var(--cyan)"></i> إنشاء الجدول</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>افتح Supabase → Table Editor → New Table</h4></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أضف الأعمدة</h4><p>كل جدول لازم يكون فيه <kbd>id</kbd> (uuid, default: gen_random_uuid()) و <kbd>created_at</kbd> (timestamp, default: now())</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أضف Foreign Key</h4><p>لو الجدول مرتبط بموظف، أضف عمود <kbd>employee_id</kbd> (uuid) واعمله Foreign Key لجدول <kbd>employees</kbd></p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>فعّل RLS</h4><p>لازم تفعّل Row Level Security — بدونها أي حد يقدر يقرأ كل البيانات!</p></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-shield-halved" style="color:var(--red)"></i> إعداد RLS (مهم جداً)</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>افتح Authentication → Policies</h4><p>من جانب الجدول → RLS → Enable RLS (فعّله)</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>أنشئ Policy للقراءة</h4><p>New Policy → Using custom template → اختر "For authenticated users only" → غير الـ WHERE حسب الحاجة</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>أنشئ Policy للكتابة/التعديل</h4><p>نفس الطريقة — اختار الـ operations المطلوبة</p></div></div>
+    </div>
+    <div class="code-block">
+<span class="cm">// مثال Policy لقراءة ملاحظات الأداء (الموظف يشوف بتاعته بس)</span>
+<span class="ck">CREATE POLICY</span> <span class="cs">"Users can read own notes"</span>
+<span class="ck">ON</span> performance_notes
+<span class="ck">FOR</span> SELECT
+<span class="ck">USING</span> (auth.uid() = employee_id);
+
+<span class="cm">// مثال Policy للإدمن يقرأ الكل</span>
+<span class="ck">CREATE POLICY</span> <span class="cs">"Admin can read all notes"</span>
+<span class="ck">ON</span> performance_notes
+<span class="ck">FOR</span> SELECT
+<span class="ck">USING</span> (<span class="ck">true</span>);
+    </div>
+  </div>
+  <div class="alert alert-danger"><i class="fas fa-triangle-exclamation"></i><div><strong>خطأ شائع:</strong> ناس كتير بتنسى تفعّل RLS! بدون RLS أي حد يقدر يقرأ ويعدّل كل البيانات. تأكد دايماً إن RLS مفعّل لكل جدول فيه بيانات حساسة.</div></div>
+</div>
+
+<!-- 9. إصلاح الأخطاء -->
+<div class="section" id="sec-fix">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(239,68,68,.1)">🐛</div>
+    <div><h2>إصلاح الأخطاء</div><div class="sec-num">كيف تكتشف وتصلح المشاكل</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-magnifying-glass" style="color:var(--red)"></i> أدوات التشخيص</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الأداة</th><th>كيف تفتحها</th><th>بتعمل إيه</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-sky">Console</span></td><td><kbd>F12</kbd> → Console</td><td>تظهر الأخطاء JavaScript بالأحمر + الكود اللي سبّبها</td></tr>
+          <tr><td><span class="badge badge-green">Network</span></td><td><kbd>F12</kbd> → Network</td><td>تظهر كل الطلبات لـ Supabase — لو فيه 4xx أو 5xx فيه مشكلة</td></tr>
+          <tr><td><span class="badge badge-amber">Elements</span></td><td><kbd>F12</kbd> → Elements</td><td>تشوف الـ HTML الفعلي وتعدّل CSS تجريبياً</td></tr>
+          <tr><td><span class="badge badge-violet">Application</span></td><td><kbd>F12</kbd> → Application → Local Storage</td><td>تشوف القيم المحفوظة (lang, dark, session)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-list-check" style="color:var(--amber)"></i> أخطاء شائعة وحلولها</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الخطأ</th><th>السبب</th><th>الحل</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--red)">sb is not defined</td><td>ملف app.js مش متحمّل</td><td>تأكد إن <kbd>&lt;script src="app.js"&gt;</kbd> موجود بعد مكتبة Supabase</td></tr>
+          <tr><td style="color:var(--red)">Cannot read property of null</td><td>العنصر مش موجود في الصفحة</td><td>تأكد إن الـ ID صحيح: <kbd>$('myId')</kbd></td></tr>
+          <tr><td style="color:var(--red)">relation does not exist</td><td>الجدول مش موجود في Supabase</td><td>أنشئ الجدول من Table Editor</td></tr>
+          <tr><td style="color:var(--red)">permission denied</td><td>RLS مش مفعّل أو Policy غلط</td><td>راجع قسم RLS في هذا الدليل</td></tr>
+          <tr><td style="color:var(--red)">new row violates FK constraint</td><td>employee_id مش موجود في جدول employees</td><td>تأكد إن الموظف موجود قبل الإضافة</td></tr>
+          <tr><td style="color:var(--red)">CORS error</td><td>مشكلة في إعدادات Supabase</td><td>في Supabase → Settings → API → أضف دومينك في Allowed CORS</td></tr>
+          <tr><td style="color:var(--red)">Storage bucket not found</td><td>الـ Bucket مش موجود</td><td>في Supabase → Storage → أنشئ Bucket اسمه <kbd>employee-files</kbd></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-wand-magic-sparkles" style="color:var(--violet)"></i> أضف Console.log للتصحيح</h3>
+    <div class="code-block">
+<span class="cm">// أضف console.log في أي دالة عشان تفهم بيحصل إيه</span>
+<span class="ck">async function</span> <span class="cv">handleCheckIn</span>() {
+  console.<span class="cv">log</span>(<span class="cs">'Step 1: Starting check-in...'</span>);  <span class="cm">// ← أضف كده</span>
+
+  <span class="ck">const</span> {data, error} = <span class="ck">await</span> sb.from(<span class="cs">'attendance_records'</span>).select(<span class="cs">'*'</span>)...;
+  console.<span class="cv">log</span>(<span class="cs">'Step 2: Result:'</span>, data, <span class="cs">'Error:'</span>, error);  <span class="cm">// ← وشوف النتيجة</span>
+}
+    </div>
+  </div>
+</div>
+
+<!-- 10. النشر -->
+<div class="section" id="sec-deploy">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(99,102,241,.1)">🚀</div>
+    <div><h2>النشر والتحديث</div><div class="sec-num">رفع التعديلات للموقع الحي</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-upload" style="color:var(--indigo)"></i> خطوات التحديث</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>عدّل الملفات محلياً</h4><p>افتح الملفات في المحرر واعمل تعديلاتك</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اختبر محلياً</h4><p>افتح <kbd>index.html</kbd> في المتصفح مباشرة وتأكد إن كل حاجة شغالة</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>ارفع الملفات</h4><p>ارفع الملفات المعدّلة لنفس المكان على الاستضافة (Netlify/Vercel/GitHub Pages)</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>اختبر الموقع الحي</h4><p>افتح الرابط الحي وتأكد إن التعديلات ظهرت</p></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-hard-drive" style="color:var(--green)"></i> أماكن النشر المجانية</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>المنصة</th><th>الطريقة</th><th>مميزات</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-green">Netlify</span></td><td>اسحب المجلد وارمه على Netlify</td><td>سهل جداً، تلقائي، مجاني</td></tr>
+          <tr><td><span class="badge badge-sky">Vercel</span></td><td>اربط بـ GitHub أو سحب وارمي</td><td>سريع، مجاني</td></tr>
+          <tr><td><span class="badge badge-violet">GitHub Pages</span></td><td>ادفع الكود لـ GitHub وفعّل Pages</td><td>مجاني، git مدمج</td></tr>
+          <tr><td><span class="badge badge-amber">Cloudflare Pages</span></td><td>ربط بـ GitHub</td><td>سريع جداً، مجاني</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="alert alert-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>ملاحظة:</strong> لو المستخدمين عندهم التطبيق مفتوح، بعد التحديث محتاجين يعملوا <kbd>Ctrl + Shift + R</kbd> (Hard Refresh) عشان يشوفوا النسخة الجديدة. المتصفح بيخزّن النسخة القديمة (Cache).</div></div>
+</div>
+
+<!-- 11. النسخ الاحتياطي -->
+<div class="section" id="sec-backup">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(16,185,129,.1)">💾</div>
+    <div><h2>النسخ الاحتياطي</div><div class="sec-num">حماية البيانات من الضياع</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clipboard-list" style="color:var(--green)"></i> لازم تنسخ احتياطي 3 حاجات</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الشيء</th><th>كيف تنسخه</th><th>كل قد إيه؟</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-sky">قاعدة البيانات</span></td><td>Supabase → Table Editor → كل جدول → Export CSV</td><td>أسبوعياً أو قبل أي تعديل كبير</td></tr>
+          <tr><td><span class="badge badge-green">ملفات الكود</span></td><td>انسخ مجلد المشروع كله واحفظه في مكان تاني</td><td>قبل كل تحديث</td></tr>
+          <tr><td><span class="badge badge-amber">الملفات المرفوعة</span></td><td>Supabase → Storage → employee-files → Download كل ملف</td><td>شهرياً</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-rotate-left" style="color:var(--red)"></i> استعادة من نسخة احتياطية</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Supabase → Table Editor → اختر الجدول</h4></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>اضغط Import → اختر ملف CSV</h4></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>تأكد إن الأعمدة متطابقة</h4><p>لو فيه عمود جديد في النسخة القديمة مش موجود في الجدول الحالي، هيتم تجاهله</p></div></div>
+    </div>
+  </div>
+  <div class="alert alert-success"><i class="fas fa-gift"></i><div><strong>بونص — نسخ احتياطي تلقائي:</strong> Supabase المشروع المدفوع فيه نسخ احتياطي تلقائي يومي. المشروع المجاني مش فيه، فلازم تعملها يدوياً.</div></div>
+</div>
+
+<!-- 12. الأمان -->
+<div class="section" id="sec-security">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(239,68,68,.1)">🔒</div>
+    <div><h2>الأمان</div><div class="sec-num">نقاط مهمة تحمي النظام</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-check-circle" style="color:var(--green)"></i> النظام بيعملها صح (محتاج تتأكد بس)</h3>
+    <ul>
+      <li><strong style="color:var(--text)">Anon Key مش سري:</strong> مصمم يظهر في الكود — مش مشكلة</li>
+      <li><strong style="color:var(--text)">Service Role Key:</strong> مش مستخدم في الكود أبداً — تأكد من كده</li>
+      <li><strong style="color:var(--text)">كلمات المرور مشفرة:</strong> Supabase بيخزّنها بـ bcrypt — حتى مدير Supabase مش يشوفها</li>
+      <li><strong style="color:var(--text)">روابط الملفات مؤقتة:</strong> 60 ثانية بس — مش دائمة</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-shield-halved" style="color:var(--red)"></i> لازم تتأكد منها</h3>
+    <ul>
+      <li><strong style="color:var(--text)">RLS مفعّل لكل جدول</strong> — بدون كده أي حد يقدر يقرأ كل البيانات</li>
+      <li><strong style="color:var(--text)">مش بتستخدم service_role في الـ Frontend</strong> — لو لاقيه، احذفه فوراً</li>
+      <li><strong style="color:var(--text)">Email confirmation مفعّل</strong> — في Supabase → Auth → Settings</li>
+      <li><strong style="color:var(--text)">مش بيحفظ بيانات حساسة في Local Storage</strong> — غير lang و dark فقط</li>
+    </ul>
+  </div>
+  <div class="alert alert-danger"><i class="fas fa-triangle-exclamation"></i><div><strong>قاعدة ذهبية:</strong> لو مش فاهم حاجة في الأمان، متلمسهاش. الأمان الحالي كويس ومبني صح. التعديلات الغلط ممكن تفتح ثغرات.</div></div>
+</div>
+
+<!-- 13. قائمة فحص -->
+<div class="section" id="sec-checklist">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(245,158,11,.1)">✅</div>
+    <div><h2>قائمة فحص دورية</div><div class="sec-num">اعمل دي كل شهر أو بعد كل تعديل كبير</div></div>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clipboard-check" style="color:var(--amber)"></i> فحص البيانات</h3>
+    <ul class="checklist">
+      <li>تأكد إن RLS مفعّل لكل الجداول</li>
+      <li>راجع Policies لكل جدول — محدش يقدر يعدّل بيانات غيره</li>
+      <li>تأكد إن عدد الموظفين منطقي (مش فيه أصفار أو تكرارات)</li>
+      <li>راجع أرصدة الإجازات — متطابقة مع عدد الإجازات الموافق عليها</li>
+      <li>تأكد إن إحداثيات المكتب والنطاق صحيحين</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clipboard-check" style="color:var(--green)"></i> فحص الأداء</h3>
+    <ul class="checklist">
+      <li>افتح الصفحة في Chrome واضغط <kbd>F12</kbd> → Lighthouse → Run — اللون الأخضر أكتر من 80</li>
+      <li>جرب تسجيل حضور من موبايل حقيقي — يشتغل بدون مشاكل</li>
+      <li>جرب تصدير CSV — الملف يفتح صح في Excel</li>
+      <li>جرب رفع ملف كبير (9MB) — يرفع بدون خطأ</li>
+      <li>اختبر مع أكثر من مستخدم في نفس الوقت</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clipboard-check" style="color:var(--sky)"></i> فحص الأمان</h3>
+    <ul class="checklist">
+      <li>افتح Console — مفيش أخطاء حمراء</li>
+      <li>افتح Network — مفيش طلبات فاشلة (4xx/5xx)</li>
+      <li>جرّب تسجيل دخول ببيانات غلط — يرفض صح</li>
+      <li>جرّب دخول موظف A يشوف بيانات موظف B — لازم يفشل</li>
+      <li>تأكد إن Service Role Key مش موجود في أي ملف JS</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-clipboard-check" style="color:var(--violet)"></i> فحص النسخ الاحتياطي</h3>
+    <ul class="checklist">
+      <li>نسخة احتياطية أخيرة منشأة خلال آخر 7 أيام</li>
+      <li>النسخة محفوظة في مكان آمن (مش على نفس الجهاز)</li>
+      <li>جرّب استعادة من نسخة قديمة — بتشتغل</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 14. أسئلة شائعة -->
+<div class="section" id="sec-faq">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(168,85,247,.1)">❓</div>
+    <div><h2>أسئلة شائعة للصيانة</div></div>
+  </div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>محتاج سيرفرBackend؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><p><strong style="color:var(--green)">لا.</strong> النظام كله Frontend + Supabase. Supabase هو الـ Backend. محتاج سيرفر استضافة فقط للملفات الثابتة (HTML/CSS/JS) — وده ممكن مجاني على Netlify أو Vercel.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>عايز أنقل المشروع لـ Supabase جديد — إيه الخطوات؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><ul><li>أنشئ مشروع جديد في Supabase</li><li>أنشئ كل الجداول (من الأفضل تستخدم SQL dump)</li><li>أنشئ Storage Bucket اسمه employee-files</li><li>فعّل RLS وضبط Policies</li><li>غيّر الرابط والـ Anon Key في app.js</li><li>أنشئ حساب admin@merge.com في Auth واضيفه في جدول employees</li></ul></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>عايز أضيف لغة تالتة (فرنسي مثلاً)؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><p>في كائن <kbd>T</kbd> في app.js، أضف قسم ثالث:</p>
+    <div class="code-block" style="margin-top:8px">fr: { welcome_back: 'Bienvenue', sign_in: 'Connexion', ... },</div>
+    <p>وعدّل دالة <kbd>toggleLang()</kbd> لتدعم التبديل بين 3 لغات.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>النظام بيشتغل أوفلاين؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><p>جزئياً. الـ Service Worker (sw.js) بيخزّن الملفات محلياً بعد أول زيارة. لكن العمليات (حضور، إجازات...) محتاج إنترنت عشان توصل لـ Supabase. لو الإنترنت قطع، المستخدم يقدر يفتح التطبيق لكن مش يقدر يسجّل حضور أو يبعت طلب.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>عايز أغيّر اسم النظام من MERGE HR لاسم الشركة؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><p>ابحث عن <kbd>MERGE</kbd> في 3 أماكن: <kbd>index.html</kbd> (في الـ HTML و manifest.json)، <kbd>app.js</kbd> (في renderLogin و emp-header)، <kbd>admin.js</kbd> (في hrApp header). استبدلها بالاسم الجديد.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><span>المشروع ده ممكن يتسع كام موظف؟</span><i class="fas fa-chevron-down"></i></div><div class="faq-a"><p>عملياً Supabase المجاني بيستحمل ملايين الصفوف. النظام مش هيواجه مشكلة حجم حتى لآلاف الموظفين. اللي ممكن يحصل هو بطء في عرض البيانات لو بتجيب آلاف سجلات مرة واحدة — والحل إنك تستخدم <kbd>.limit()</kbd> زي ما معمول فعلاً (60 سجل للسجل، 50 للإجازات...).</p></div></div>
+</div>
+
+<div class="footer">
+  <p>دليل الصيانة الشامل — MERGE HR v1.0</p>
+  <p style="margin-top:4px;font-size:11px">احفظ هذا الدليل كمرجع لأي شخص هيشتغل على النظام</p>
+</div>
+
+</div>
+
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-arrow-up"></i></button>
+
+<script>
+  const scrollBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => { scrollBtn.classList.toggle('visible', window.scrollY > 400); });
+
+  function scrollTo_(id) {
+    const el = document.getElementById(id);
+    if (el) { const top = el.getBoundingClientRect().top + window.pageYOffset - 20; window.scrollTo({top,behavior:'smooth'}); }
+  }
+
+  function toggleFaq(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = el.classList.contains('open');
+    document.querySelectorAll('.faq-q.open').forEach(q => { q.classList.remove('open'); q.nextElementSibling.classList.remove('open'); });
+    if (!isOpen) { el.classList.add('open'); answer.classList.add('open'); }
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.style.animationPlayState = 'running'; });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.section').forEach((sec, i) => {
+    sec.style.animationDelay = (i * 0.04) + 's';
+    sec.style.animationPlayState = 'paused';
+    observer.observe(sec);
+  });
+  const first = document.querySelector('.section');
+  if (first) first.style.animationPlayState = 'running';
+</script>
+</body>
+</html>
