@@ -447,7 +447,6 @@ async function openEditModal(id) {
 
   // حقن هذه القوائم في المودال (لأننا بنستخدم نفس الـ Modal للإضافة والتعديل)
   // لكن بما إننا عايزين بس التعديل هنا، سنستخدم insertAdjacentHTML
-  const modalBody = document.querySelector('#addEmpModal div[style*="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px"]');
   const modalContent = `
     <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;font-family:'Syne',sans-serif" id="addEmpTitle">${lang==='ar'?'تعديل بيانات الموظف':'Edit Employee'}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
