@@ -981,25 +981,49 @@ function toggleDark(e) {
 }
 
 // ═══ CUSTOM PAGE VIEW (EMPLOYEE) ═══
+// ═══ CUSTOM PAGE VIEW (DIAGNOSTIC VERSION) ═══
 async function renderCustomPage(slug) {
-  const {data:page} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
-  
-  if(!page) {
-    $('empContent').innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Page not found</div></div>`;
-    return;
+  // 1. نظهر لودينج عشان المستخدم يعرف إنه حصل استجابة
+  $('empContent').innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+
+  try {
+    console.log("Trying to load page with slug:", slug); // سجل الـ slug في الكونسول
+
+    // 2. جلب البيانات
+    const {data:page, error} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
+
+    // 3. فحص الأخطاء
+    if(error) {
+      throw new Error("Database Error: " + error.message);
+    }
+    if(!page) {
+      throw new Error("Page not found in database. Slug: " + slug);
+    }
+
+    // 4. عرض الصفحة إذا كل شيء تمام
+    $('empContent').innerHTML = `
+      <div style="margin-bottom:20px">
+        <h1 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
+        <div style="height:4px;width:50px;background:var(--indigo);border-radius:2px"></div>
+      </div>
+      <div class="card" style="padding:20px;line-height:1.7;color:var(--text);font-size:15px">
+        ${page.content ? page.content : '<span style="color:var(--muted)">لا يوجد محتوى (No content)</span>'}
+      </div>
+    `;
+
+  } catch (e) {
+    // 5. عرض الخطأ بوضوح للمستخدم (Root Fix: Transparency)
+    console.error("Custom Page Error:", e);
+    $('empContent').innerHTML = `
+      <div style="padding:20px;text-align:center;border:1px solid var(--red);border-radius:12px;color:var(--red)">
+        <h3 style="margin-bottom:10px">⚠️ Error Loading Page</h3>
+        <p style="margin-bottom:10px">${e.message}</p>
+        <p style="font-size:12px;color:var(--muted)">Slug you tried: ${slug}</p>
+        <button onclick="renderEmp('home')" class="primary-btn">Go Home</button>
+      </div>
+    `;
   }
-
-  $('empContent').innerHTML = `
-    <div style="margin-bottom:20px">
-      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
-      <div style="height:4px;width:50px;background:var(--indigo);border-radius:2px"></div>
-    </div>
-    <div class="card" style="padding:20px;line-height:1.7;color:var(--text);font-size:15px">
-      ${page.content || '<span style="color:var(--muted)">No content yet.</span>'}
-    </div>
-  `;
 }
-
 // ═══ INIT ═══
 function init() {
   applyDark();
