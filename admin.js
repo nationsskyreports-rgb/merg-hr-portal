@@ -138,8 +138,8 @@ async function renderHROverview() {
 
   const present = att.length;
   const absent  = (total||0) - present;
-  const {data:shiftSetting} = await sb.from('app_settings').select('value').eq('key','shift_start_time').single();
-  const shiftStart = (shiftSetting?.value || '09:15') + ':00';
+  const {data:officeSetting} = await sb.from('office_location').select('shift_start_time').eq('is_active',true).single();
+  const shiftStart = officeSetting?.shift_start_time || '09:15:00';
   const late   = att.filter(a => a.check_in_time && a.check_in_time > shiftStart);
   const onTime = att.filter(a => a.check_in_time && a.check_in_time <= shiftStart);
 
