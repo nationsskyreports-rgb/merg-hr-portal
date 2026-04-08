@@ -395,7 +395,7 @@ async function initEmp() {
     <div class="emp-content" id="empContent"></div>
 
     <!-- Bottom Nav -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottomNav">
       <button class="nav-item active" id="nav-home" onclick="showEmpTab('home',this)">
         ${navIcons.home}
         <span class="nav-label">${lang==='ar'?'الرئيسية':'Home'}</span>
@@ -424,6 +424,22 @@ async function initEmp() {
     </nav>
   `;
 
+  // ═══ LOAD CUSTOM PAGES INTO NAV ═══
+  const {data:customPages} = await sb.from('custom_pages').select('id,title,slug').order('title');
+  if(customPages && customPages.length > 0) {
+    const navContainer = $('bottomNav');
+    customPages.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-item';
+      btn.onclick = function() { showEmpTab(p.slug, this); };
+      btn.innerHTML = `
+        📄
+        <span class="nav-label">${p.title}</span>
+      `;
+      navContainer.appendChild(btn);
+    });
+  }
+
   renderEmp('home');
   fetchUnread();
 }
@@ -445,6 +461,10 @@ async function renderEmp(tab) {
   else if(tab==='notifs')  await renderNotifs();
   else if(tab==='tasks')   await renderEmpTasks();
   else if(tab==='profile') await renderProfile();
+  else {
+    // ═══ RENDER CUSTOM PAGE ═══
+    await renderCustomPage(tab);
+  }
 }
 
 // ═══ HOME ═══
@@ -958,6 +978,26 @@ async function renderProfile() {
 function toggleDark(e) {
   if(e) e.stopPropagation();
   darkMode=!darkMode; applyDark(); renderEmp(empTab);
+}
+
+// ═══ CUSTOM PAGE VIEW (EMPLOYEE) ═══
+async function renderCustomPage(slug) {
+  const {data:page} = await sb.from('custom_pages').select('*').eq('slug', slug).single();
+  
+  if(!page) {
+    $('empContent').innerHTML = `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Page not found</div></div>`;
+    return;
+  }
+
+  $('empContent').innerHTML = `
+    <div style="margin-bottom:20px">
+      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">${page.title}</h1>
+      <div style="height:4px;width:50px;background:var(--indigo);border-radius:2px"></div>
+    </div>
+    <div class="card" style="padding:20px;line-height:1.7;color:var(--text);font-size:15px">
+      ${page.content || '<span style="color:var(--muted)">No content yet.</span>'}
+    </div>
+  `;
 }
 
 // ═══ INIT ═══
